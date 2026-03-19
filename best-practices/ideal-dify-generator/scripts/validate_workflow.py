@@ -371,6 +371,44 @@ class WorkflowValidator:
             self.warnings.append(f"存在 {len(overlaps)} 处节点坐标重叠")
         self.results.append(("节点坐标", True, "布局合理"))
 
+    def check_dify_06_variable_fields(self) -> None:
+        """检查 Dify 0.6.0+ 必须的变量字段（value_type + value）
+        这是最常见的 DSL 导入失败原因：environment_variables 和 conversation_variables
+        必须同时包含 value 和 value_type 字段，否则 Dify API 返回 VariableError。
+        """
+        wf = self.data.get("workflow", {})
+        issues = []
+
+        # environment_variables: 每个必须有 value 和 value_type
+        env_vars = wf.get("environment_variables", [])
+        for var in env_vars:
+            name = var.get("name", "?")
+            missing = []
+            if "value" not in var:
+                missing.append("value")
+            if "value_type" not in var:
+                missing.append("value_type")
+            if missing:
+                issues.append(f"环境变量 '{name}' 缺少: {', '.join(missing)}")
+
+        # conversation_variables: 每个必须有 value 和 value_type
+        cv_vars = wf.get("conversation_variables", [])
+        for var in cv_vars:
+            name = var.get("name", "?")
+            missing = []
+            if "value" not in var:
+                missing.append("value")
+            if "value_type" not in var:
+                missing.append("value_type")
+            if missing:
+                issues.append(f"对话变量 '{name}' 缺少: {', '.join(missing)}")
+
+        if issues:
+            self.results.append(("Dify 0.6+ 变量字段", False, "; ".join(issues[:3])))
+        else:
+            self.results.append(("Dify 0.6+ 变量字段", True,
+                f"环境变量 {len(env_vars)} 个, 对话变量 {len(cv_vars)} 个, 全部字段完整"))
+
     def check_llm_config(self) -> None:
         """检查 LLM 节点配置"""
         nodes = self.data.get("workflow", {}).get("graph", {}).get("nodes", [])
@@ -391,6 +429,7 @@ class WorkflowValidator:
         self.check_edge_references()
         self.check_root_nodes()
         self.check_end_nodes()
+        self.check_dify_06_variable_fields()
         self.check_variable_references()
         self.check_error_handling()
         self.check_idempotency()

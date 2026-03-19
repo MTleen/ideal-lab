@@ -150,7 +150,7 @@ version: 1.0.0
 
 ## Step 3: DSL 生成规范
 
-### 完整文件结构（版本 0.3.0）
+### 完整文件结构（版本 0.3.0 → Dify 自动升级到 0.6.0）
 
 ```yaml
 app:
@@ -168,8 +168,14 @@ kind: app
 version: 0.3.0
 
 workflow:
+  # ⚠️ 必须包含 value + value_type，否则 Dify API 导入报错 "missing value type"
   conversation_variables: []
-  environment_variables: []
+  environment_variables:
+    - id: 'env_xxx'
+      name: 'API_BASE_URL'
+      value: 'https://api.example.com'
+      value_type: string   # 必须有
+      description: 'API地址'
   features:
     # 功能配置
   graph:
@@ -226,7 +232,7 @@ sourceHandle: success-branch  # 或 fail-branch
 python3 scripts/validate_workflow.py output.yml
 ```
 
-校验维度：
+校验维度（新增 Dify 0.6+ 变量字段检查）：
 
 | 检查项 | 说明 |
 |-------|------|
@@ -276,6 +282,9 @@ python3 scripts/validate_workflow.py output.yml
 - ✅ 变量引用格式正确：`{{#node_id.field#}}`
 - ✅ 节点 ID 全局唯一
 - ✅ 坐标位置合理，无重叠
+- ⚠️ **environment_variables 中每个变量必须有 `value` 和 `value_type` 字段**
+- ⚠️ **conversation_variables 中每个变量必须有 `value` 和 `value_type` 字段**
+- ⚠️ **导入 API 使用 `mode: yaml-content`（不是 overwrite）**
 
 ### 优秀标准（建议满足）
 - 🌟 提示词设计专业，角色定义清晰
@@ -297,13 +306,14 @@ python3 scripts/validate_workflow.py output.yml
 
 | 文件 | 用途 |
 |------|------|
-| `references/dsl-structure.md` | 完整 DSL 结构规范 |
+| `references/dsl-structure.md` | 完整 DSL 结构规范（含 0.6.0 变量字段要求） |
 | `references/node_types.md` | 20+ 节点类型详解 |
 | `references/edge_types.md` | 连接类型与验证规则 |
 | `references/node_positioning.md` | 节点坐标布局规范 |
 | `references/workflow_structure.md` | 工作流图结构详解 |
 | `references/node_selection.md` | 节点选型决策树 |
-| `scripts/validate_workflow.py` | 自动化校验脚本 |
+| `scripts/validate_workflow.py` | 自动化校验脚本（含 Dify 0.6 变量字段校验） |
+| `scripts/dify_import.py` | Dify API 导入脚本（推荐，比浏览器自动化更可靠） |
 | `scripts/generate_id.py` | 节点 ID 生成器 |
 | `assets/*.yml` | 7 个场景模板 |
 | `CHECKLIST.md` | 验证检查清单（人工核对版） |

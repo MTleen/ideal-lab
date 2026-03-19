@@ -70,6 +70,7 @@ conversation_variables:
   - id: 变量ID
     name: 变量名称
     value_type: string  # string | number | object | array
+    value: ''           # 必须有 value 字段（Dify 0.6.0+）
     description: 变量描述
 ```
 
@@ -80,8 +81,14 @@ environment_variables:
   - id: 环境变量ID
     name: 环境变量名
     value: 默认值
+    value_type: string   # 必须有 value_type 字段（Dify 0.6.0+）
     description: 变量说明
 ```
+
+> **⚠️ 关键注意（Dify 0.6.0+ 强制要求）**：
+> - `environment_variables` 中每个变量**必须同时包含** `value` 和 `value_type` 字段
+> - `conversation_variables` 中每个变量**必须同时包含** `value` 和 `value_type` 字段
+> - 如果缺少这两个字段，Dify API 导入时会返回 `VariableError: missing value type`
 
 ### features 功能配置
 
@@ -543,6 +550,9 @@ retry_config:
 
 | Dify 版本 | DSL 版本 | 兼容性 |
 |-----------|----------|--------|
-| 0.8.0+ | 0.3.0 | ✅ 完全支持 |
-| 0.6.0-0.7.x | 0.2.0 | ⚠️ 部分兼容 |
+| 0.8.0+ | 0.6.0 | ✅ 完全支持 |
+| 0.6.0-0.7.x | 0.3.0 | ⚠️ 部分兼容 |
 | < 0.6.0 | 0.1.0 | ❌ 不兼容 |
+
+> **当前实测**：Dify 1.13.2 使用 DSL 版本 0.6.0 完全兼容。
+> `version` 字段写 0.3.0 或 0.6.0 均可，API 会在导入时自动转换为最新版本。
