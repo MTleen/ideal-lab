@@ -1,0 +1,124 @@
+# 模板：AI Agent 工作流
+# 适用场景：复杂任务、自主规划、工具调用循环
+# 模式：agent-chat
+# 特点：Agent 节点 + 多工具 + 自主决策
+
+app:
+  name: '智能助手 Agent'
+  description: '自主规划型 AI Agent，可调用多种工具完成复杂任务'
+  icon: '🧠'
+  icon_background: '#E8EAF6'
+  mode: agent-chat
+  use_icon_as_answer_icon: false
+
+dependencies: []
+
+kind: app
+version: 0.3.0
+
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: true
+      allowed_file_types:
+        - image
+        - document
+      allowed_file_upload_methods:
+        - local_file
+        - remote_url
+      fileUploadConfig:
+        file_size_limit: 15
+        image_file_size_limit: 100
+        number_limits: 5
+    opening_statement: '您好！我是智能助手，可以帮您完成复杂任务。我会自主规划步骤并调用必要的工具。'
+  graph:
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1.0
+    nodes:
+      - data:
+          desc: ''
+          title: 开始
+          type: start
+          variables:
+            - label: 任务描述
+              max_length: 5000
+              options: []
+              required: true
+              type: paragraph
+              variable: task
+        id: 'start'
+        position:
+          x: 80
+          y: 282
+        type: custom
+      - data:
+          model:
+            completion_params:
+              temperature: 0.7
+              max_tokens: 2000
+            mode: agent
+            name: gpt-4o
+            provider: openai
+          prompt:
+            - role: system
+              text: |
+                你是一个智能助手（Agent），可以自主规划任务步骤并调用工具来完成任务。
+
+                可用工具：
+                - 搜索工具：用于查询实时信息
+                - 计算工具：用于数据计算
+                - 文档工具：用于读写文档
+
+                规划原则：
+                1. 分解任务为可执行的步骤
+                2. 每步选择一个合适的工具
+                3. 评估结果，决定下一步
+                4. 任务完成后给出最终回答
+            - role: user
+              text: '{{#start.task#}}'
+          title: Agent
+          type: agent
+        id: '1740000000060'
+        position:
+          x: 380
+          y: 282
+        type: custom
+      - data:
+          answer: "{{#1740000000060.text#}}"
+          title: 输出结果
+          type: answer
+          variables: []
+        id: 'answer'
+        position:
+          x: 680
+          y: 282
+        type: custom
+    edges:
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: start
+          targetType: agent
+        id: 'start-source-1740000000060-target'
+        source: 'start'
+        sourceHandle: source
+        target: '1740000000060'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: agent
+          targetType: answer
+        id: '1740000000060-source-answer-target'
+        source: '1740000000060'
+        sourceHandle: source
+        target: 'answer'
+        targetHandle: target
+        type: custom
+        zIndex: 0

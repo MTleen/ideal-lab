@@ -1,0 +1,283 @@
+# 模板：条件分支工作流
+# 适用场景：意图分流、场景分类、多路处理
+# 模式：advanced-chat
+# 特点：Question Classifier 多路分支，Variable Aggregator 汇合
+
+app:
+  name: '意图分流助手'
+  description: '根据用户意图自动分流到不同处理分支'
+  icon: '🔀'
+  icon_background: '#FFF3E0'
+  mode: advanced-chat
+  use_icon_as_answer_icon: false
+
+dependencies: []
+
+kind: app
+version: 0.3.0
+
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: '您好！请告诉我您需要什么帮助？'
+  graph:
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1.0
+    nodes:
+      - data:
+          desc: ''
+          title: 开始
+          type: start
+          variables:
+            - label: 用户输入
+              max_length: 2000
+              options: []
+              required: true
+              type: paragraph
+              variable: query
+        id: 'start'
+        position:
+          x: 80
+          y: 282
+        type: custom
+      - data:
+          categories:
+            - id: 'cat1'
+              label: 投诉建议
+            - id: 'cat2'
+              label: 技术支持
+            - id: 'cat3'
+              label: 业务咨询
+          model:
+            completion_params:
+              temperature: 0.3
+              max_tokens: 50
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          query:
+            - role: user
+              text: '{{#sys.query#}}'
+          reasoning_mode: prompt
+          title: 意图分类
+          type: question-classifier
+        id: '1740000000020'
+        position:
+          x: 380
+          y: 282
+        type: custom
+      - data:
+          context:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.7
+              max_tokens: 500
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: '1740000000021'
+              role: system
+              text: '你是客服助手。用户表达了投诉或建议，请专业、礼貌地回复，并记录用户反馈。'
+            - id: '1740000000022'
+              role: user
+              text: '{{#sys.query#}}'
+          title: 投诉处理
+          type: llm
+          vision:
+            enabled: false
+        id: '1740000000023'
+        position:
+          x: 680
+          y: 80
+        type: custom
+      - data:
+          context:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.7
+              max_tokens: 500
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: '1740000000024'
+              role: system
+              text: '你是技术支持助手。请根据用户的技术问题，提供清晰、一步步的解决方案。'
+            - id: '1740000000025'
+              role: user
+              text: '{{#sys.query#}}'
+          title: 技术支持
+          type: llm
+          vision:
+            enabled: false
+        id: '1740000000026'
+        position:
+          x: 680
+          y: 280
+        type: custom
+      - data:
+          context:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.7
+              max_tokens: 500
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: '1740000000027'
+              role: system
+              text: '你是业务顾问。请根据用户的需求，提供详细的产品或服务介绍。'
+            - id: '1740000000028'
+              role: user
+              text: '{{#sys.query#}}'
+          title: 业务咨询
+          type: llm
+          vision:
+            enabled: false
+        id: '1740000000029'
+        position:
+          x: 680
+          y: 480
+        type: custom
+      - data:
+          advanced_settings: null
+          groups:
+            - group_name: 回复聚合
+              output_type: string
+              variables:
+                - value_selector:
+                    - '1740000000023'
+                    - text
+                  variable: reply
+                - value_selector:
+                    - '1740000000026'
+                    - text
+                  variable: reply
+                - value_selector:
+                    - '1740000000029'
+                    - text
+                  variable: reply
+          title: 回复聚合
+          type: variable-aggregator
+        id: '1740000000030'
+        position:
+          x: 980
+          y: 282
+        type: custom
+      - data:
+          answer: "{{#1740000000030.output#}}"
+          title: 回复
+          type: answer
+          variables: []
+        id: 'answer'
+        position:
+          x: 1280
+          y: 282
+        type: custom
+    edges:
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: start
+          targetType: question-classifier
+        id: 'start-source-1740000000020-target'
+        source: 'start'
+        sourceHandle: source
+        target: '1740000000020'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: question-classifier
+          targetType: llm
+        id: '1740000000020-cat1-1740000000023-target'
+        source: '1740000000020'
+        sourceHandle: 投诉建议
+        target: '1740000000023'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: question-classifier
+          targetType: llm
+        id: '1740000000020-cat2-1740000000026-target'
+        source: '1740000000020'
+        sourceHandle: 技术支持
+        target: '1740000000026'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: question-classifier
+          targetType: llm
+        id: '1740000000020-cat3-1740000000029-target'
+        source: '1740000000020'
+        sourceHandle: 业务咨询
+        target: '1740000000029'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: llm
+          targetType: variable-aggregator
+        id: '1740000000023-source-1740000000030-target'
+        source: '1740000000023'
+        sourceHandle: source
+        target: '1740000000030'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: llm
+          targetType: variable-aggregator
+        id: '1740000000026-source-1740000000030-target'
+        source: '1740000000026'
+        sourceHandle: source
+        target: '1740000000030'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: llm
+          targetType: variable-aggregator
+        id: '1740000000029-source-1740000000030-target'
+        source: '1740000000029'
+        sourceHandle: source
+        target: '1740000000030'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: variable-aggregator
+          targetType: answer
+        id: '1740000000030-source-answer-target'
+        source: '1740000000030'
+        sourceHandle: source
+        target: 'answer'
+        targetHandle: target
+        type: custom
+        zIndex: 0

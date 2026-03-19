@@ -1,0 +1,227 @@
+# 模板：迭代循环工作流
+# 适用场景：批量文件处理、列表数据处理、批量生成
+# 模式：workflow
+# 特点：Iteration 节点对数组每个元素执行子流程
+
+app:
+  name: '批量内容处理'
+  description: '批量处理多条内容，逐条生成处理结果'
+  icon: '🔁'
+  icon_background: '#FFF8E1'
+  mode: workflow
+  use_icon_as_answer_icon: false
+
+dependencies: []
+
+kind: app
+version: 0.3.0
+
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+  graph:
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1.0
+    nodes:
+      - data:
+          desc: ''
+          title: 开始
+          type: start
+          variables:
+            - label: 待处理列表
+              max_length: 5000
+              options: []
+              required: true
+              type: paragraph
+              variable: item_list
+        id: 'start'
+        position:
+          x: 80
+          y: 282
+        type: custom
+      - data:
+          code: |
+            def main(item_list: str) -> dict:
+                # 将文本按行分割成列表
+                items = [line.strip() for line in item_list.strip().split('\n') if line.strip()]
+                return {
+                    "items": items,
+                    "count": len(items)
+                }
+          code_language: python3
+          outputs:
+            items:
+              type: array[string]
+            count:
+              type: integer
+          title: 解析列表
+          type: code
+          variables:
+            - value_selector:
+                - 'start'
+                - item_list
+              variable: item_list
+        id: '1740000000070'
+        position:
+          x: 380
+          y: 282
+        type: custom
+      - data:
+          iterator_selector:
+            - '1740000000070'
+            - items
+          output_selector:
+            - '1740000000072'
+            - result
+          output_type: string
+          startNodeType: code
+          start_node_id: '1740000000071start'
+          title: 批量处理
+          type: iteration
+        id: '1740000000071'
+        position:
+          x: 680
+          y: 282
+        type: custom
+      - data:
+          code: |
+            def main(item: str) -> dict:
+                # 这里可以对每个元素进行处理
+                return {
+                    "original": item,
+                    "result": f"[已处理] {item}",
+                    "length": len(item)
+                }
+          code_language: python3
+          outputs:
+            original:
+              type: string
+            result:
+              type: string
+            length:
+              type: integer
+          title: 单项处理
+          type: code
+          variables:
+            - value_selector:
+                - '1740000000070'
+                - items
+              variable: item
+        id: '1740000000072'
+        position:
+          x: 980
+          y: 282
+        type: custom
+      - data:
+          code: |
+            def main(processed_items: str, total_count: int) -> dict:
+                items = processed_items.split('|||') if processed_items else []
+                return {
+                    "summary": f"共处理 {len(items)}/{total_count} 条",
+                    "results": processed_items,
+                    "count": len(items)
+                }
+          code_language: python3
+          outputs:
+            summary:
+              type: string
+            results:
+              type: string
+            count:
+              type: integer
+          title: 结果汇总
+          type: code
+          variables:
+            - value_selector:
+                - '1740000000071'
+                - output
+              variable: processed_items
+            - value_selector:
+                - '1740000000070'
+                - count
+              variable: total_count
+        id: '1740000000073'
+        position:
+          x: 680
+          y: 550
+        type: custom
+      - data:
+          answer: |
+            {{#1740000000073.summary#}}
+
+            处理结果：
+            {{#1740000000073.results#}}
+          title: 输出
+          type: answer
+          variables: []
+        id: 'answer'
+        position:
+          x: 980
+          y: 550
+        type: custom
+    edges:
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: start
+          targetType: code
+        id: 'start-source-1740000000070-target'
+        source: 'start'
+        sourceHandle: source
+        target: '1740000000070'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: code
+          targetType: iteration
+        id: '1740000000070-source-1740000000071-target'
+        source: '1740000000070'
+        sourceHandle: source
+        target: '1740000000071'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: true
+          isInLoop: false
+          sourceType: code
+          targetType: code
+        id: '1740000000072-source-1740000000072-target'
+        source: '1740000000072'
+        sourceHandle: source
+        target: '1740000000072'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: iteration
+          targetType: code
+        id: '1740000000071-source-1740000000073-target'
+        source: '1740000000071'
+        sourceHandle: source
+        target: '1740000000073'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: code
+          targetType: answer
+        id: '1740000000073-source-answer-target'
+        source: '1740000000073'
+        sourceHandle: source
+        target: 'answer'
+        targetHandle: target
+        type: custom
+        zIndex: 0

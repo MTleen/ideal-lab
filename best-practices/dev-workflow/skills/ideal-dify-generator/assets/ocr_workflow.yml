@@ -1,0 +1,131 @@
+# 模板：OCR 识别工作流
+# 适用场景：图片文字识别、发票扫描、证件识别
+# 模式：advanced-chat
+# 特点：图片输入 + LLM Vision 识别
+
+app:
+  name: '图片文字识别'
+  description: '上传图片，自动识别并提取其中的文字内容'
+  icon: '📷'
+  icon_background: '#F3E5F5'
+  mode: advanced-chat
+  use_icon_as_answer_icon: false
+
+dependencies: []
+
+kind: app
+version: 0.3.0
+
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: true
+      allowed_file_types:
+        - image
+      allowed_file_upload_methods:
+        - local_file
+        - remote_url
+      fileUploadConfig:
+        file_size_limit: 15
+        image_file_size_limit: 100
+        number_limits: 3
+      image:
+        enabled: true
+        number_limits: 3
+        transfer_methods:
+          - local_file
+          - remote_url
+    speech_to_text:
+      enabled: false
+    text_to_speech:
+      enabled: false
+    opening_statement: '请上传需要识别的图片，我会提取其中的文字。'
+  graph:
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1.0
+    nodes:
+      - data:
+          desc: ''
+          title: 开始
+          type: start
+          variables:
+            - label: 上传图片
+              max_length: 0
+              options: []
+              required: true
+              type: file
+              variable: image_file
+        id: 'start'
+        position:
+          x: 80
+          y: 282
+        type: custom
+      - data:
+          context:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+              max_tokens: 4000
+            mode: chat
+            name: gpt-4o
+            provider: openai
+          prompt_template:
+            - id: '1740000000040'
+              role: system
+              text: '你是一个OCR识别专家。请仔细识别图片中的所有文字，保持原有格式和顺序，只输出识别到的文字内容，不要添加任何解释。'
+          title: 图片识别
+          type: llm
+          vision:
+            enabled: true
+            configs:
+              detail: high
+              variable_selector:
+                - 'start'
+                - image_file
+        id: '1740000000041'
+        position:
+          x: 380
+          y: 282
+        type: custom
+      - data:
+          answer: |
+            识别结果：
+            {{#1740000000041.text#}}
+          title: 输出识别结果
+          type: answer
+          variables: []
+        id: 'answer'
+        position:
+          x: 680
+          y: 282
+        type: custom
+    edges:
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: start
+          targetType: llm
+        id: 'start-source-1740000000041-target'
+        source: 'start'
+        sourceHandle: source
+        target: '1740000000041'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: llm
+          targetType: answer
+        id: '1740000000041-source-answer-target'
+        source: '1740000000041'
+        sourceHandle: source
+        target: 'answer'
+        targetHandle: target
+        type: custom
+        zIndex: 0

@@ -1,0 +1,220 @@
+# 模板：数据查询工作流
+# 适用场景：Text-to-SQL、数据库查询、数据可视化
+# 模式：workflow
+# 特点：LLM 生成 SQL → HTTP 调用 → Code 格式化 → LLM 生成图表
+
+app:
+  name: '数据查询助手'
+  description: '自然语言转 SQL 查询，自动生成数据可视化'
+  icon: '📊'
+  icon_background: '#E8F5E9'
+  mode: workflow
+  use_icon_as_answer_icon: false
+
+dependencies: []
+
+kind: app
+version: 0.3.0
+
+workflow:
+  conversation_variables: []
+  environment_variables:
+    - id: 'env_db_api'
+      name: 'DB_API_URL'
+      value: 'https://api.example.com/query'
+      description: '数据库查询 API'
+  features:
+    file_upload:
+      enabled: false
+  graph:
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1.0
+    nodes:
+      - data:
+          desc: ''
+          title: 开始
+          type: start
+          variables:
+            - label: 查询问题
+              max_length: 500
+              options: []
+              required: true
+              type: paragraph
+              variable: question
+        id: 'start'
+        position:
+          x: 80
+          y: 282
+        type: custom
+      - data:
+          context:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+              max_tokens: 500
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: '1740000000050'
+              role: system
+              text: |
+                你是一个 SQL 专家。根据用户的自然语言问题生成准确的 SQL 查询语句。
+                数据库表结构：
+                users(id, name, email, created_at)
+                orders(id, user_id, product, amount, status, created_at)
+
+                要求：
+                1. 只输出 SQL 语句，不要有其他说明
+                2. 确保 SQL 语法正确
+                3. 注意字段类型和表关系
+            - id: '1740000000051'
+              role: user
+              text: '{{#start.question#}}'
+          title: SQL生成
+          type: llm
+          vision:
+            enabled: false
+        id: '1740000000052'
+        position:
+          x: 380
+          y: 282
+        type: custom
+      - data:
+          authorization:
+            config:
+              api_key: ''
+            type: api-key
+          body:
+            data: '{"sql": "{{#1740000000052.text#}}"}'
+            type: json
+          headers: 'Content-Type: application/json'
+          method: post
+          timeout:
+            max_connect_timeout: 10
+            max_read_timeout: 30
+            max_write_timeout: 10
+          title: 执行查询
+          type: http-request
+          url: '{{#env.DB_API_URL#}}'
+          variables:
+            - value_selector:
+                - '1740000000052'
+                - text
+              variable: sql
+        id: '1740000000053'
+        position:
+          x: 680
+          y: 282
+        type: custom
+      - data:
+          code: |
+            def main(api_response: str) -> dict:
+                import json
+                try:
+                    data = json.loads(api_response)
+                    rows = data.get("data", [])
+                    # 提取列名和值
+                    if rows:
+                        headers = list(rows[0].keys())
+                        values = [[row.get(h, "") for h in headers] for row in rows]
+                        summary = f"查询到 {len(rows)} 条记录"
+                    else:
+                        headers = []
+                        values = []
+                        summary = "未查询到数据"
+                    return {
+                        "summary": summary,
+                        "headers": json.dumps(headers),
+                        "values": json.dumps(values)
+                    }
+                except Exception as e:
+                    return {
+                        "summary": f"数据处理失败: {str(e)}",
+                        "headers": "[]",
+                        "values": "[]"
+                    }
+          code_language: python3
+          error_strategy: default-value
+          outputs:
+            summary:
+              type: string
+            headers:
+              type: string
+            values:
+              type: string
+          title: 数据格式化
+          type: code
+          variables:
+            - value_selector:
+                - '1740000000053'
+                - body
+              variable: api_response
+        id: '1740000000054'
+        position:
+          x: 980
+          y: 282
+        type: custom
+      - data:
+          answer: |
+            查询结果摘要：{{#1740000000054.summary#}}
+          title: 输出结果
+          type: answer
+          variables: []
+        id: 'answer'
+        position:
+          x: 1280
+          y: 282
+        type: custom
+    edges:
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: start
+          targetType: llm
+        id: 'start-source-1740000000052-target'
+        source: 'start'
+        sourceHandle: source
+        target: '1740000000052'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: llm
+          targetType: http-request
+        id: '1740000000052-source-1740000000053-target'
+        source: '1740000000052'
+        sourceHandle: source
+        target: '1740000000053'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: http-request
+          targetType: code
+        id: '1740000000053-source-1740000000054-target'
+        source: '1740000000053'
+        sourceHandle: source
+        target: '1740000000054'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: code
+          targetType: answer
+        id: '1740000000054-source-answer-target'
+        source: '1740000000054'
+        sourceHandle: source
+        target: 'answer'
+        targetHandle: target
+        type: custom
+        zIndex: 0

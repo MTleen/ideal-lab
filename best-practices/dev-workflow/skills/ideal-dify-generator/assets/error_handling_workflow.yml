@@ -1,0 +1,245 @@
+# 模板：错误处理工作流
+# 适用场景：API 调用、数据处理、外部服务依赖
+# 模式：workflow
+# 特点：Code 节点带 fail-branch，成功/失败两路汇合
+
+app:
+  name: '带错误处理的工作流'
+  description: 'HTTP 请求 + 代码处理 + 错误恢复，支持失败自动降级'
+  icon: '🔄'
+  icon_background: '#E0F7FA'
+  mode: workflow
+  use_icon_as_answer_icon: false
+
+dependencies:
+  - current_identifier: null
+    type: marketplace
+    value:
+      marketplace_plugin_unique_identifier: 'langgenius/openai_api_compatible:0.0.16@哈希值'
+
+kind: app
+version: 0.3.0
+
+workflow:
+  conversation_variables: []
+  environment_variables:
+    - id: 'env_api_url'
+      name: 'API_URL'
+      value: 'https://api.example.com'
+      description: 'API 端点地址'
+  features:
+    file_upload:
+      enabled: false
+  graph:
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1.0
+    nodes:
+      - data:
+          desc: ''
+          title: 开始
+          type: start
+          variables:
+            - label: 输入数据
+              max_length: 1000
+              options: []
+              required: true
+              type: paragraph
+              variable: input_data
+        id: 'start'
+        position:
+          x: 80
+          y: 282
+        type: custom
+      - data:
+          authorization:
+            config: {}
+            type: no-auth
+          body:
+            data: '{"data": "{{#start.input_data#}}"}'
+            type: json
+          headers: 'Content-Type: application/json'
+          method: post
+          timeout:
+            max_connect_timeout: 10
+            max_read_timeout: 30
+            max_write_timeout: 10
+          title: HTTP请求
+          type: http-request
+          url: '{{#env.API_URL#}}/process'
+          variables:
+            - value_selector:
+                - 'start'
+                - input_data
+              variable: input_data
+        id: '1740000000010'
+        position:
+          x: 380
+          y: 282
+        type: custom
+      - data:
+          code: |
+            def main(api_response: str) -> dict:
+                import json
+                try:
+                    data = json.loads(api_response)
+                    return {
+                        "processed": True,
+                        "result": data.get("result", ""),
+                        "status": "success"
+                    }
+                except json.JSONDecodeError as e:
+                    raise ValueError(f"JSON解析失败: {e}")
+          code_language: python3
+          error_strategy: fail-branch
+          outputs:
+            processed:
+              type: boolean
+            result:
+              type: string
+            status:
+              type: string
+          title: 数据处理
+          type: code
+          variables:
+            - value_selector:
+                - '1740000000010'
+                - body
+              variable: api_response
+        id: '1740000000011'
+        position:
+          x: 680
+          y: 282
+        type: custom
+      - data:
+          advanced_settings: null
+          groups:
+            - group_name: 合并结果
+              output_type: string
+              variables:
+                - value_selector:
+                    - '1740000000011'
+                    - result
+                  variable: result
+                - value_selector:
+                    - '1740000000012'
+                    - error_message
+                  variable: error_msg
+          title: 结果聚合
+          type: variable-aggregator
+        id: '1740000000013'
+        position:
+          x: 1280
+          y: 282
+        type: custom
+      - data:
+          context:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.3
+              max_tokens: 500
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: '1740000000014'
+              role: system
+              text: '你是一个错误处理助手。请根据错误信息，给出用户友好的错误说明和解决建议。'
+            - id: '1740000000015'
+              role: user
+              text: '处理失败，请说明原因：{{#1740000000012.error_message#}}'
+          title: 错误恢复
+          type: llm
+          vision:
+            enabled: false
+        id: '1740000000012'
+        position:
+          x: 980
+          y: 468
+        type: custom
+      - data:
+          answer: |
+            处理结果：{{#1740000000013.output#}}
+          title: 输出结果
+          type: answer
+          variables: []
+        id: 'answer'
+        position:
+          x: 1580
+          y: 282
+        type: custom
+    edges:
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: start
+          targetType: http-request
+        id: 'start-source-1740000000010-target'
+        source: 'start'
+        sourceHandle: source
+        target: '1740000000010'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: http-request
+          targetType: code
+        id: '1740000000010-source-1740000000011-target'
+        source: '1740000000010'
+        sourceHandle: source
+        target: '1740000000011'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: code
+          targetType: variable-aggregator
+        id: '1740000000011-success-branch-1740000000013-target'
+        source: '1740000000011'
+        sourceHandle: success-branch
+        target: '1740000000013'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: code
+          targetType: llm
+        id: '1740000000011-fail-branch-1740000000012-target'
+        source: '1740000000011'
+        sourceHandle: fail-branch
+        target: '1740000000012'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: llm
+          targetType: variable-aggregator
+        id: '1740000000012-source-1740000000013-target'
+        source: '1740000000012'
+        sourceHandle: source
+        target: '1740000000013'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          isInLoop: false
+          sourceType: variable-aggregator
+          targetType: answer
+        id: '1740000000013-source-answer-target'
+        source: '1740000000013'
+        sourceHandle: source
+        target: 'answer'
+        targetHandle: target
+        type: custom
+        zIndex: 0
