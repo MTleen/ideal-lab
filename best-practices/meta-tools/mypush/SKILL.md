@@ -121,6 +121,39 @@ file_count, line_count = count_files(skill_path)
 
 ### Step 6: 执行推送
 
+本仓库使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式生成 commit message。
+
+**Commit Message 规范：**
+
+```
+<type>(<scope>): <subject>
+
+<body>
+```
+
+| Type | 使用场景 |
+|------|---------|
+| `feat` | 新增最佳实践 |
+| `fix` | 修复已有最佳实践中的问题 |
+| `docs` | 文档更新（README、注释） |
+| `refactor` | 重构（不改变功能） |
+| `chore` | 维护性变更（依赖、配置） |
+
+| Scope | 对应分类 |
+|-------|---------|
+| `technical-proposal` | technical-proposal-workflow/ |
+| `dev-workflow` | dev-workflow/ |
+| `dify` | ideal-dify-generator/ |
+| `content-tools` | content-tools/ |
+| `meta-tools` | meta-tools/ |
+| `doc-tools` | doc-tools/ |
+| `repo` | 仓库级别（README、配置等） |
+
+**Commit 生成规则：**
+- 新增 skill → `feat({scope}): add {skill_name}`
+- 更新 skill → `feat({scope}): update {skill_name}` 或 `fix({scope}): fix {description}`
+- 更新 README 或仓库配置 → `docs(repo): {description}`
+
 ```bash
 # 克隆仓库
 gh repo clone MTleen/ideal-lab /tmp/mypush_repo
@@ -136,7 +169,7 @@ done
 # Git 操作
 cd /tmp/mypush_repo
 git add best-practices/
-git commit -m "feat: add {skill_name}"
+git commit -m "feat({scope}): add {skill_name}"
 
 # 检查是否已有同名 skill（更新 vs 新增）
 if git diff --staged --quiet; then
