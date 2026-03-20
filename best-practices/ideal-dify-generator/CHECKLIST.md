@@ -32,6 +32,8 @@
 - [ ] 配置了 `prompt_template`（至少包含 system 或 user 角色）
 - [ ] 变量引用格式正确：`{{#node_id.field#}}`
 - [ ] Vision 节点正确配置了 `variable_selector`
+- [ ] **如果 prompt 中引用输入变量，必须声明 `variables` 节**
+- [ ] prompt 中的 `{{#变量名#}}` 在 `variables` 中有对应声明
 
 ### Code 节点
 - [ ] 配置了 `code_language`（python3 / javascript）
@@ -46,6 +48,8 @@
 - [ ] 定义了 `variables` 引用前置节点输出
 
 ### If-Else 节点
+- [ ] `case_id` 必须是字符串 `"true"` 或 `"false"`，不能用 `"high"/"case1"` 等
+- [ ] 对应边的 `sourceHandle` 必须与 case 的 `case_id` 完全一致
 - [ ] 配置了 `cases`（至少一个 case）
 - [ ] 每个 case 配置了 `comparison_operator` 和 `variable_selector`
 - [ ] 分支两边都有边连接到后续节点
@@ -157,6 +161,12 @@
 | 导入 Dify 失败 | YAML 语法错误 | 用 `python3 -c "import yaml"` 校验 |
 | 变量显示为空 | 变量引用节点 ID 错误 | 检查 `{{#node_id.field#}}` |
 | 分支不执行 | If-Else 条件始终为假 | 检查 `comparison_operator` |
+| 分支不执行 | case_id 与 sourceHandle 不匹配 | case_id 必须是 `"true"/"false"`，与边 sourceHandle 一致 |
 | Agent 死循环 | 工具调用未正确配置 | 检查 Agent prompt 和工具配置 |
 | 图片无法识别 | Vision 未启用 | 检查 `vision.enabled: true` |
 | API 调用失败 | 认证配置错误 | 检查 `authorization.type` |
+| 节点只显示输入不显示后续节点 | conversation_variables 非空 | 改为 `conversation_variables: []` |
+| 节点报错"变量引用错误" | LLM 节点缺少 variables 声明 | 添加 `variables` 节声明输入变量 |
+| 导入后节点显示不完整 | prompt 中引用了未在 variables 中声明的输入 | 补全 variables 声明 |
+| 导入成功但测试运行时节点报错 | HTTP 节点认证类型与实际配置不符 | api-key 类型时 api_key 不能为空，改为 no-auth |
+| completed-with-warnings | Dify DSL 版本转换 | 正常现象，warnings 来自 Dify 内部版本转换，不影响执行 |

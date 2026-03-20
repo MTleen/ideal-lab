@@ -423,6 +423,116 @@ class WorkflowValidator:
                 if not prompt:
                     self.warnings.append(f"LLM 节点 {node.get('id')} 缺少 prompt_template")
 
+    def check_conversation_variables_empty(self) -> None:
+        """检查 conversation_variables 是否为空（必须为空数组）"""
+        wf = self.data.get("workflow", {})
+        cv = wf.get("conversation_variables", [])
+        if cv and len(cv) > 0:
+            names = [v.get("name", "?") for v in cv]
+            self.results.append(("conversation_variables", False,
+                f"必须为空数组，当前包含 {len(cv)} 个: {names[:3]}"))
+        else:
+            self.results.append(("conversation_variables", True, "为空数组（正确）"))
+
+    def check_if_else_case_id_matches_edge(self) -> None:
+        """检查 if-else 节点的 case_id 与对应边的 sourceHandle 是否匹配"""
+        nodes = self.data.get("workflow", {}).get("graph", {}).get("nodes", [])
+        edges = self.data.get("workflow", {}).get("graph", {}).get("edges", [])
+
+        issues = []
+        for node in nodes:
+            if node.get("data", {}).get("type") == "if-else":
+                nid = node.get("id", "")
+                cases = node.get("data", {}).get("cases", [])
+                valid_case_ids = {str(c.get("case_id", "")) for c in cases}
+
+                # 检查每个 case 的 id 字段
+                for c in cases:
+                    case_id = str(c.get("id", ""))
+                    if case_id not in ("true", "false"):
+                        issues.append(f"{nid} case.id='{case_id}' 必须是 'true' 或 'false'")
+
+                # 检查每条从该 if-else 出的边
+                for edge in edges:
+                    if edge.get("source") == nid:
+                        sh = str(edge.get("sourceHandle", ""))
+                        if sh not in ("true", "false"):
+                            issues.append(f"{nid} 边的 sourceHandle='{sh}' 必须是 'true' 或 'false'")
+                        elif sh not in valid_case_ids:
+                            issues.append(
+                                f"{nid} 边 sourceHandle='{sh}' 与 case_id {valid_case_ids} 不匹配")
+
+        if issues:
+            self.results.append(("if-else case_id 与 sourceHandle", False,
+                "; ".join(issues[:3])))
+        else:
+            self.results.append(("if-else case_id 与 sourceHandle", True, "全部匹配"))
+
+    def check_llm_node_variables_declared(self) -> None:
+        """检查 LLM 节点 prompt 中引用的输入变量是否在 variables 中声明"""
+        nodes = self.data.get("workflow", {}).get("graph", {}).get("nodes", [])
+        var_pattern = re.compile(r'\{\{#([^#}]+)#\}\}')
+
+        issues = []
+        for node in nodes:
+            if node.get("data", {}).get("type") != "llm":
+                continue
+            nid = node.get("id", "")
+            prompt = node.get("data", {}).get("prompt_template", [])
+            variables = node.get("data", {}).get("variables", [])
+
+            # 提取 prompt 中所有 {{#xxx#}} 形式的变量引用
+            prompt_vars = set()
+            for pblock in prompt:
+                for match in var_pattern.finditer(str(pblock.get("text", ""))):
+                    inner = match.group(1)
+                    # 排除上游节点引用（如 {{#node_id.text#}}）和系统变量
+                    parts = inner.split(".")
+                    if len(parts) == 1 and inner not in ("sys", "env", "conversation"):
+                        prompt_vars.add(inner)
+
+            # 检查 variables 中是否都有声明
+            declared_vars = {v.get("variable", "") for v in variables}
+            for pv in prompt_vars:
+                if pv not in declared_vars:
+                    issues.append(f"{nid}: prompt 中 '{{#'{pv}'#}}' 未在 variables 中声明")
+
+        if issues:
+            self.results.append(("LLM 节点 variables 声明", False, "; ".join(issues[:3])))
+        else:
+            self.results.append(("LLM 节点 variables 声明", True, "全部声明正确"))
+
+    def check_code_node_variables_declared(self) -> None:
+        """检查 Code 节点 variables 中声明的变量是否与函数参数匹配"""
+        nodes = self.data.get("workflow", {}).get("graph", {}).get("nodes", [])
+        import_pattern = re.compile(r'def main\(([^)]*)\)')
+
+        issues = []
+        for node in nodes:
+            if node.get("data", {}).get("type") != "code":
+                continue
+            nid = node.get("id", "")
+            code = node.get("data", {}).get("code", "")
+            variables = node.get("data", {}).get("variables", [])
+
+            # 提取函数参数
+            m = import_pattern.search(code)
+            if not m:
+                continue
+            params_str = m.group(1)
+            params = {p.strip().split(":")[0].strip() for p in params_str.split(",") if p.strip()}
+
+            # 检查 variables 中声明的 variable 名是否在函数参数中
+            declared_vars = {v.get("variable", "") for v in variables}
+            for dv in declared_vars:
+                if dv and dv not in params:
+                    issues.append(f"{nid}: variable '{dv}' 未在函数参数中声明")
+
+        if issues:
+            self.results.append(("Code 节点变量与函数参数匹配", False, "; ".join(issues[:3])))
+        else:
+            self.results.append(("Code 节点变量与函数参数匹配", True, "全部匹配"))
+
     def validate(self) -> None:
         """执行所有校验"""
         self.check_node_ids()
@@ -435,6 +545,10 @@ class WorkflowValidator:
         self.check_idempotency()
         self.check_positions()
         self.check_llm_config()
+        self.check_conversation_variables_empty()
+        self.check_if_else_case_id_matches_edge()
+        self.check_llm_node_variables_declared()
+        self.check_code_node_variables_declared()
 
     def print_report(self) -> bool:
         """输出结构化报告"""

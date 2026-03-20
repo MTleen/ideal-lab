@@ -66,14 +66,10 @@ plugin_author/database_plugin:版本@哈希值
 ### conversation_variables 对话变量
 
 ```yaml
-conversation_variables:
-  - id: 变量ID
-    name: 变量名称
-    value_type: string  # string | number | object | array
-    value: ''           # 必须有 value 字段（Dify 0.6.0+）
-    description: 变量描述
+conversation_variables: []   # ⚠️ 必须为空数组，不要在此定义任何变量
 ```
 
+> **重要**：Dify DSL 导入时 `conversation_variables` 必须为空数组 `[]`。如果填入任何变量，会导致导入时报错或工作流节点显示异常。涉及跨节点状态传递时，使用 Code 节点的返回值或 HTTP Response 变量。
 ### environment_variables 环境变量
 
 ```yaml
@@ -216,6 +212,59 @@ edges:
 
 ### 5.2 LLM 节点
 
+> ⚠️ **必须包含 `variables` 声明**：当 prompt 模板中引用了输入变量（而非直接硬编码）时，必须在 `variables` 节中声明这些输入变量，并在 prompt 中使用变量名（而非 `{{#node_id.field#}}` 形式）。
+
+```yaml
+- data:
+    context:
+      enabled: false
+      variable_selector: []
+    model:
+      completion_params:
+        temperature: 0.7
+        max_tokens: 2000
+        top_p: 0.9
+        frequency_penalty: 0
+        presence_penalty: 0
+      mode: chat
+      name: gpt-4
+      provider: openai
+    prompt_template:
+      - id: '提示词块ID'
+        role: system
+        text: 系统提示词
+      - id: '提示词块ID'
+        role: user
+        text: '用户提示词：合同类型为 {{#contract_type#}}，内容为 {{#contract_text#}}'
+    title: LLM节点
+    type: llm
+    # ⚠️ 如果 prompt 中引用了输入变量，必须声明 variables
+    variables:
+      - value_selector:
+          - 'start'
+          - contract_type
+        variable: contract_type
+      - value_selector:
+          - '1740700000002'
+          - text
+        variable: contract_text
+    vision:
+      enabled: false
+      configs:
+        detail: high
+        variable_selector: []
+  id: '节点ID'
+  position:
+    x: 380
+    y: 282
+  type: custom
+```
+
+**prompt 中变量引用规则**：
+- `{{#contract_type#}}` — 引用本地 `variables` 中 `variable: contract_type` 的值（推荐）
+- `{{#start.contract_type#}}` — 直接引用节点 ID（⚠️ 不推荐，可能绕过 variables 链路验证）
+- `{{#node_id.text#}}` — 引用上游节点输出（用于 context 等字段）
+
 ```yaml
 - data:
     context:
@@ -323,15 +372,25 @@ edges:
 ```yaml
 - data:
     cases:
-      - case_id: case1
+      - case_id: 'true'    # ⚠️ 必须是字符串 "true"，不能是 "high"/"case1" 等
         conditions:
-          - comparison_operator: contains  # is | is not | contains | not contains | empty | not empty | start with | end with | > | < | >= | <=
+          - comparison_operator: is  # is | is not | contains | not contains | empty | not empty | > | < | >= | <=
             id: '条件ID'
-            value: '期望值'
+            value: 'HIGH'
             variable_selector:
               - '节点ID'
               - 变量名
-        id: case1
+        id: 'true'
+        logical_operator: and
+      - case_id: 'false'  # ⚠️ 必须是字符串 "false"，不能是 "else"
+        conditions:
+          - comparison_operator: is
+            id: '条件ID2'
+            value: 'MEDIUM'
+            variable_selector:
+              - '节点ID'
+              - 变量名
+        id: 'false'
         logical_operator: and
     logical_operator: or  # and | or
     title: 条件判断
@@ -342,6 +401,8 @@ edges:
     y: 300
   type: custom
 ```
+
+> **关键规则**：`case_id` 必须是字符串 `"true"` 或 `"false"`，**不是** `"high"/"medium"/"case1"` 等业务语义值。对应边的 `sourceHandle` 也必须是 `'true'` 或 `'false'`，与 case_id 完全一致。
 
 ### 5.6 Tool 工具节点
 

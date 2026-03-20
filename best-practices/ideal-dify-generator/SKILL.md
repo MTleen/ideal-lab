@@ -214,6 +214,91 @@ const nodeId = Date.now().toString()
 - Code 节点：`{{#node_id.自定义输出名#}}`
 - System：`{{#sys.query#}}`、`{{#sys.files#}}`
 
+### LLM 节点变量声明规范（关键！）
+
+**所有接收输入变量的 LLM 节点，必须声明 `variables` 节：**
+
+```yaml
+data:
+  prompt_template:
+    - id: 'sys1'
+      role: system
+      text: '你是一个合同审查助手。'
+    - id: 'user1'
+      role: user
+      text: '合同类型：{{#contract_type#}}\n合同文本：{{#contract_text#}}'
+  title: 合规审查
+  type: llm
+  # ⚠️ 必须在 variables 中声明 prompt 中引用的输入变量
+  variables:
+    - value_selector:
+        - 'start'
+        - contract_type
+      variable: contract_type        # prompt 中 {{#contract_type#}} 的来源
+    - value_selector:
+        - '1740700000002'
+        - text
+      variable: contract_text        # prompt 中 {{#contract_text#}} 的来源
+```
+
+**注意**：prompt 中使用 `{{#变量名#}}` 时，变量名是 `variables` 中 `variable` 字段的值，而非节点 ID。
+
+### if-else 节点规范（case_id 必须匹配）
+
+```yaml
+data:
+  cases:
+    - case_id: 'true'         # ⚠️ 必须是字符串 "true"，不是 "high" 或 "case_high"
+      conditions:
+        - comparison_operator: is
+          variable_selector:
+            - '节点ID'
+            - 字段名
+          value: 'HIGH'
+    - case_id: 'false'        # ⚠️ 必须是字符串 "false"
+      conditions:
+        - comparison_operator: is
+          variable_selector:
+            - '节点ID'
+            - 字段名
+          value: 'MEDIUM'
+  logical_operator: or
+```
+
+**对应的边连接**：
+```yaml
+# true 分支的边
+sourceHandle: 'true'    # 必须与 case_id: 'true' 完全一致
+# false 分支的边
+sourceHandle: 'false'   # 必须与 case_id: 'false' 完全一致
+```
+
+### Code 节点变量声明规范
+
+```yaml
+data:
+  variables:
+    - value_selector:
+        - '上游节点ID'
+        - 输出字段名
+      variable: 输入参数名   # 与函数 def main(输入参数名) 的参数名一致
+```
+
+### HTTP Request 节点认证规范
+
+```yaml
+# 场景1: 无需认证
+authorization:
+  type: no-auth
+  config: {}
+
+# 场景2: API Key 认证（⚠️ api_key 不能为空字符串）
+authorization:
+  type: api-key
+  config:
+    api_key: 'your-actual-api-key'
+```
+
 ### 错误处理配置
 
 ```yaml
@@ -283,8 +368,10 @@ python3 scripts/validate_workflow.py output.yml
 - ✅ 节点 ID 全局唯一
 - ✅ 坐标位置合理，无重叠
 - ⚠️ **environment_variables 中每个变量必须有 `value` 和 `value_type` 字段**
-- ⚠️ **conversation_variables 中每个变量必须有 `value` 和 `value_type` 字段**
 - ⚠️ **导入 API 使用 `mode: yaml-content`（不是 overwrite）**
+- ⚠️ **`conversation_variables` 必须为空数组 `[]`，不得包含任何变量**
+- ⚠️ **if-else 节点的 `case_id` 必须是字符串 `"true"` 或 `"false"`，不能是其他值**
+- ⚠️ **if-else 边的 `sourceHandle` 必须与对应 case 的 `case_id` 完全一致**
 
 ### 优秀标准（建议满足）
 - 🌟 提示词设计专业，角色定义清晰
