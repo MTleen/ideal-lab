@@ -72,17 +72,19 @@ YOLO 自动循环：
 循环（永不停止，除非满足终止条件）：
   1. 读取 流程状态.md → current_phase, status, yolo_mode
   2. 检查终止条件（见下方）→ 满足则输出结果，停止循环
-  3. 确定当前阶段 X
+  3. 确定当前阶段 X = 第一个未完成的阶段
+     （遍历 P1→P2→...→P15，查找第一个状态不为 completed/approved 的阶段）
+     ⚠️ 序列完整性校验：X 序号 <= current_phase → 前置阶段被跳过，输出警告并停住
   4. 如果 X 是产物阶段（P1/P3/P5/P7/P9/P11/P13）：
        → 调用 Phase Skill（内部 spawn sub-agent 完成所有工作）
        → 等待 Skill 返回
        → 验证产物文件存在且非空
-       → 更新 flow state：current_phase → X+1，状态设为 completed/approved
+       → 更新 flow state：X > current_phase 时才推进 current_phase → X，状态设为 completed/approved
        → 立即回到循环起点（步骤 1）
   5. 如果 X 是评审阶段（P2/P4/P6/P8/P10/P12/P14）：
        → 调用 ideal-yolo 执行评审
        → 等待评审结果
-       → 如果 "通过" → 更新为 approved → 立即回到循环起点
+       → 如果 "通过" → 更新为 approved（current_phase 不回退）→ 立即回到循环起点
        → 如果 "熔断" → 输出熔断报告 → 停止循环，等待人工介入
   6. 如果 X 是交付阶段（P15）：
        → 调用 ideal-delivery
@@ -90,6 +92,13 @@ YOLO 自动循环：
        → 更新状态为 "已完成"
        → 输出流程完成摘要 → 停止循环
 ```
+
+**步骤 3 的阶段序列完整性校验（新增）**：
+
+| 场景 | 检测逻辑 | 处理方式 |
+|------|----------|----------|
+| X 序号 == current_phase + 1 | 正常，下一阶段 | 继续执行 |
+| X 序号 <= current_phase | **前置阶段被跳过** | 输出警告：跳过了 P{current_phase} 之前的某些阶段，停止循环，等待人工确认 |
 
 **终止条件**（满足任一即停止）：
 - `status: 已完成` 或 `status: 已交付`
@@ -256,6 +265,7 @@ YOLO 模式下，主智能体永不停止，直到流程完成或熔断：
 ### YOLO 模式下每次循环迭代必须验证
 
 - [ ] flow state 文件格式正确（YAML frontmatter 有效）
+- [ ] **阶段序列完整性：查找到的第一个未完成阶段序号 <= current_phase + 1**
 - [ ] 当前阶段的前置条件已满足（completed/approved）
 - [ ] 产物文件已写入正确路径
 - [ ] 产物内容非空

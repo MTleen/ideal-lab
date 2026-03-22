@@ -50,6 +50,23 @@ NO REQUIREMENT QUESTIONS WITHOUT READING PROJECT CONTEXT FIRST
 
 ---
 
+## 核心原则：需求文档聚焦"做什么"，不包含"怎么做"
+
+**需求文档只回答：**
+- 背景：现状是什么？为什么需要改变？
+- 目标：重构后要达到什么效果？
+- 范围：涉及哪些模块？不涉及哪些？
+- 验收标准：怎么算完成？
+
+**需求文档不包含（属于技术方案阶段）：**
+- 技术选型、架构设计
+- 实施步骤、依赖关系
+- 接口变更、数据迁移
+- 测试策略、详细设计
+- 代码实现细节
+
+---
+
 ## 0. 项目背景（必须）
 
 读取优先级：CLAUDE.md → README.md → docs/项目状态.md
@@ -97,7 +114,7 @@ NO REQUIREMENT QUESTIONS WITHOUT READING PROJECT CONTEXT FIRST
 |------|----------|
 | software-feature | title, problem_statement, goal, features, acceptance_functional |
 | bug-fix | title, bug_title, preconditions, step_1, expected_behavior, actual_behavior |
-| refactoring | title, current_state, problems, goals, solution_overview |
+| refactoring | title, current_state, problems, goals, acceptance_functional |
 
 ---
 
