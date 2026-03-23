@@ -145,32 +145,23 @@ else
     echo "  目录: $INPUT_SOURCE"
     echo "  匹配: $FILE_PATTERN"
 
-    # 查找并排序文件（Python实现，兼容macOS bash 3.2）
-    PYTHON_FILES=$(python3 -c "
-import glob, os
-pattern = os.path.join('$INPUT_SOURCE', '${FILE_PATTERN}')
-files = sorted(glob.glob(pattern))
-if not files:
-    exit(1)
-for f in files:
-    print(f)
-")
-    if [ -z "$PYTHON_FILES" ]; then
+    # 查找并排序文件
+    mapfile -t FILES < <(find "$INPUT_SOURCE" -maxdepth 1 -name "$FILE_PATTERN" -type f | sort)
+    if [ ${#FILES[@]} -eq 0 ]; then
         echo "错误: 未找到匹配的文件: $INPUT_SOURCE/$FILE_PATTERN"
         exit 1
     fi
-    FILE_COUNT=$(echo "$PYTHON_FILES" | grep -c .)
-    echo "  找到 ${FILE_COUNT} 个文件"
+    echo "  找到 ${#FILES[@]} 个文件"
 
-    while IFS= read -r file; do
+    for file in "${FILES[@]}"; do
         echo "  合并: $(basename "$file")"
         echo -e "\n\n" >> "$TEMP_MERGED"
         cat "$file" >> "$TEMP_MERGED"
-    done <<< "$PYTHON_FILES"
+    done
 fi
 
 # ============================================================
-# 步骤2: 预处理格式（仅做格式规范化，数学公式由 pandoc 直接处理）
+# 步骤2: 预处理 Markdown
 # ============================================================
 echo "=== 步骤2: 预处理格式 ==="
 python3 << 'PYTHON_SCRIPT'
@@ -199,33 +190,34 @@ content = re.sub(r'(\$\$[^\$]+\$\$)\n([^\n])', r'\1\n\n\2', content)
 # 5. 清理行尾空格
 content = re.sub(r' +\n', '\n', content)
 
-# 6. 确保表格头行和分隔行之间没有空行
+# 6. 【关键修复】确保表格头行和分隔行之间没有空行
+#   Markdown表格格式：| xxx | xxx | 后面紧跟 |---|---|
 content = re.sub(r'(\|[^\n]+\|)\n\n(\|[-:| ]+\|)', r'\1\n\2', content)
 
-# 7. 确保表格前后有空行
+# 7. 确保表格前后有空行（但表格内部没有多余空行）
 content = re.sub(r'([^\n])\n(\|[^\n]+\|\n\|[-:| ]+\|)', r'\1\n\n\2', content)
 
 with open('_temp_cleaned.md', 'w', encoding='utf-8') as f:
     f.write(content)
 
-print("  格式清理完成（数学公式由 pandoc 直接处理，不做预处理）")
+print("  格式清理完成")
 PYTHON_SCRIPT
 
 # ============================================================
-# 步骤3: Pandoc 转换（直接输出 OMML，不再 --mathml）
+# 步骤3: Pandoc 转换
 # ============================================================
 echo "=== 步骤3: Pandoc 转换 ==="
 pandoc "$TEMP_CLEANED" \
     -o "$OUTPUT_FILE" \
     --from=markdown+pipe_tables+tex_math_dollars \
     --to=docx \
+    --mathml \
     --wrap=none \
     --standalone \
-    --resource-path=".:sections:images" \
     --metadata title="技术方案"
 
 # ============================================================
-# 步骤4: 后处理 Word 格式 + 公式 fallback 处理
+# 步骤4: 后处理 Word 格式
 # ============================================================
 echo "=== 步骤4: Word 格式后处理 ==="
 python3 << 'PYTHON_SCRIPT'
@@ -236,108 +228,13 @@ try:
     from docx.enum.table import WD_TABLE_ALIGNMENT
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
-    import re
     import sys
 except ImportError:
     print("  警告: python-docx 未安装，跳过后处理")
     print("  提示: 运行 'pip3 install python-docx' 安装")
     sys.exit(0)
 
-# LaTeX → Unicode 符号映射表（用于 fallback 处理 pandoc 无法转换的公式）
-latex_map = [
-    ('\\Alpha', 'Α'), ('\\Beta', 'Β'), ('\\Gamma', 'Γ'), ('\\Delta', 'Δ'),
-    ('\\Theta', 'Θ'), ('\\Lambda', 'Λ'), ('\\Xi', 'Ξ'), ('\\Pi', 'Π'),
-    ('\\Sigma', 'Σ'), ('\\Phi', 'Φ'), ('\\Psi', 'Ψ'), ('\\Omega', 'Ω'),
-    ('\\alpha', 'α'), ('\\beta', 'β'), ('\\gamma', 'γ'), ('\\delta', 'δ'),
-    ('\\theta', 'θ'), ('\\lambda', 'λ'), ('\\mu', 'μ'), ('\\nu', 'ν'),
-    ('\\xi', 'ξ'), ('\\pi', 'π'), ('\\rho', 'ρ'), ('\\sigma', 'σ'),
-    ('\\tau', 'τ'), ('\\phi', 'φ'), ('\\chi', 'χ'), ('\\psi', 'ψ'),
-    ('\\omega', 'ω'), ('\\eta', 'η'), ('\\zeta', 'ζ'), ('\\iota', 'ι'),
-    ('\\kappa', 'κ'), ('\\varepsilon', 'ε'), ('\\varpi', 'ϖ'),
-    ('\\cdot', '·'), ('\\times', '×'), ('\\div', '÷'), ('\\pm', '±'), ('\\mp', '∓'),
-    ('\\geq', '≥'), ('\\le', '≤'), ('\\neq', '≠'), ('\\approx', '≈'), ('\\equiv', '≡'),
-    ('\\forall', '∀'), ('\\exists', '∃'), ('\\infty', '∞'),
-    ('\\partial', '∂'), ('\\nabla', '∇'),
-    ('\\in', '∈'), ('\\notin', '∉'), ('\\subset', '⊂'), ('\\subseteq', '⊆'),
-    ('\\supset', '⊃'), ('\\supseteq', '⊇'), ('\\cup', '∪'), ('\\cap', '∩'),
-    ('\\emptyset', '∅'), ('\\setminus', '∖'),
-    ('\\land', '∧'), ('\\wedge', '∧'), ('\\lor', '∨'), ('\\vee', '∨'),
-    ('\\neg', '¬'), ('\\lnot', '¬'), ('\\implies', '⟹'),
-    ('\\rightarrow', '→'), ('\\leftarrow', '←'), ('\\leftrightarrow', '↔'),
-    ('\\Rightarrow', '⇒'), ('\\Leftarrow', '⇐'), ('\\Leftrightarrow', '⟺'),
-    ('\\to', '→'), ('\\gets', '←'), ('\\iff', '⟺'),
-    ('\\ldots', '…'), ('\\cdots', '⋯'), ('\\vdots', '⋮'), ('\\ddots', '⋱'),
-    ('\\prime', '′'), ('\\degree', '°'),
-    ('\\mid', '|'), ('\\vert', '|'),
-    ('\\quad', '  '), ('\\qquad', '    '),
-    ('\\backslash', '∖'),
-    ('\\text{', ''),
-    ('\\mathbf{', ''), ('\\mathit{', ''), ('\\mathsf{', ''),
-    ('\\mathtt{', ''), ('\\mathbb{', ''), ('\\mathcal{', ''),
-    ('\\hat{', ''), ('\\tilde{', ''), ('\\bar{', ''),
-    ('\\vec{', ''), ('\\dot{', ''), ('\\ddot{', ''),
-    ('\\widehat{', ''), ('\\widetilde{', ''),
-]
-
-def apply_latex_map(text):
-    for latex, unicode_sym in latex_map:
-        text = text.replace(latex, unicode_sym)
-    return text
-
-def clean_latex(text):
-    """清理残留 LaTeX 命令和多余括号"""
-    text = apply_latex_map(text)
-    # 清理 \left( → (  \right) → )
-    text = re.sub(r'\\left\s*(\()', r'\1', text)
-    text = re.sub(r'\\right\s*(\))', r'\1', text)
-    text = re.sub(r'\\left\s*(\{)', r'\1', text)
-    text = re.sub(r'\\right\s*(\})', r'\1', text)
-    text = re.sub(r'\\left\s*(\[)', r'\1', text)
-    text = re.sub(r'\\right\s*(\])', r'\1', text)
-    text = re.sub(r'\\left\s*\.', '', text)
-    text = re.sub(r'\\right\s*\.', '', text)
-    text = re.sub(r'\\bigl\s*', '', text)
-    text = re.sub(r'\\bigr\s*', '', text)
-    text = re.sub(r'\\Bigl\s*', '', text)
-    text = re.sub(r'\\Bigr\s*', '', text)
-    text = re.sub(r'\\big\s*', '', text)
-    text = re.sub(r'\\Big\s*', '', text)
-    # 清理 \\, \; \: 等间距命令
-    text = re.sub(r'\\[;,:\!]', ' ', text)
-    # 清理 \\, \\, 等换行命令
-    text = re.sub(r'\\\\', ' ', text)
-    # 清理 \\\\drule 等残留
-    text = re.sub(r'\\+\w+', '', text)
-    # 清理多余空格
-    text = re.sub(r'  +', ' ', text)
-    text = re.sub(r' *([{}|]) *', r'\1', text)
-    return text.strip()
-
-def laatex_to_unicode(text):
-    """将 LaTeX 数学符号转为 Unicode（用于 fallback）"""
-    text = clean_latex(text)
-    # 保留 $$ 包裹的显示公式，去除外层 $$
-    m = re.match(r'^\$\$(.+)\$\$$', text.strip(), re.DOTALL)
-    if m:
-        return m.group(1).strip()
-    # 保留 $ 包裹的行内公式
-    m = re.match(r'^\$(.+)\$$', text.strip())
-    if m:
-        return m.group(1).strip()
-    return text.strip()
-
-# 检测段落是否包含 pandoc fallback 的原始 LaTeX（而非 OMML 公式）
-# 如果段落以 $$ 开头/结尾，或包含未转换的 begin/end，则认为需要 fallback
-def looks_like_unconverted_math(text):
-    if not text.strip():
-        return False
-    # 如果文本包含典型的 LaTeX 数学命令但不是 OMML，则需要 fallback
-    has_latex = bool(re.search(r'\\frac|\\begin|\\left|\\right|\\tau|\\gamma|\\sigma', text))
-    # 检查是否已经是纯 Unicode（无反斜杠）
-    is_clean = '\\' not in text
-    return has_latex and not is_clean
-
-output_file = '最终方案.docx'
+output_file = sys.argv[1] if len(sys.argv) > 1 else '技术方案_完整版.docx'
 doc = Document(output_file)
 
 def set_run_font(run, font_name='宋体', font_size=12):
@@ -357,24 +254,9 @@ def set_run_font(run, font_name='宋体', font_size=12):
     rPr.insert(0, rFonts)
 
 # 处理段落
-fallback_count = 0
 for i, para in enumerate(doc.paragraphs):
     text = para.text.strip()
     is_heading = para.style.name.startswith('Heading') if para.style else False
-
-    # 检查是否是 pandoc fallback 的 LaTeX 公式段落
-    if looks_like_unconverted_math(text) and not is_heading:
-        # 将 LaTeX 转为 Unicode text
-        unicode_text = laatex_to_unicode(text)
-        # 清空段落内容并重新设置文本
-        for run in para.runs:
-            run._element.getparent().remove(run._element)
-        # 添加新的 Unicode 文本
-        new_run = para.add_run(unicode_text)
-        new_run.font.name = 'Cambria Math'
-        new_run.font.size = Pt(12)
-        set_run_font(new_run, 'Cambria Math', 12)
-        fallback_count += 1
 
     if not is_heading and text:
         # 正文格式：首行缩进、1.5倍行距、无段前段后间距
@@ -408,33 +290,6 @@ for i, para in enumerate(doc.paragraphs):
         pageBreak = OxmlElement('w:pageBreakBefore')
         pPr.append(pageBreak)
 
-# 处理图片段落居中
-for para in doc.paragraphs:
-    # 判断段落是否包含图片（Drawing元素）
-    has_image = False
-    for run in para.runs:
-        drawing = run._element.find('.//' + qn('w:drawing'))
-        if drawing is not None:
-            has_image = True
-            break
-        # mc:AlternateContent 使用原始命名空间避免 KeyError
-        mc_ns = '{http://schemas.openxmlformats.org/markup-compatibility/2006}AlternateContent'
-        inline_drawing = run._element.find('.//' + mc_ns)
-        if inline_drawing is not None:
-            has_image = True
-            break
-    if has_image:
-        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        # 图片段落不加首行缩进
-        para.paragraph_format.first_line_indent = None
-
-# 处理题注居中（图 X-Y、表 X-Y）
-caption_pattern = re.compile(r'^(图\s*\d+[-\s]\d+|表\s*\d+[-\s]\d+)\s*[：:].*')
-for para in doc.paragraphs:
-    text = para.text.strip()
-    if caption_pattern.match(text):
-        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
 # 处理表格
 for table in doc.tables:
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -449,8 +304,8 @@ for table in doc.tables:
                         run.font.bold = True  # 表头加粗
 
 doc.save(output_file)
-print(f"  Word 格式后处理完成（公式 fallback 处理: {fallback_count} 个段落）")
-PYTHON_SCRIPT
+print("  Word 格式后处理完成")
+PYTHON_SCRIPT "$OUTPUT_FILE"
 
 # ============================================================
 # 步骤5: 清理临时文件
