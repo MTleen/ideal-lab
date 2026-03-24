@@ -1,4 +1,4 @@
-# Deep Research Skill for Claude Code
+# Ideal Deep Research Skill for Claude Code
 
 Enterprise-grade research engine for Claude Code. Produces citation-backed reports with source credibility scoring, multi-provider search, and automated validation.
 
@@ -6,7 +6,9 @@ Enterprise-grade research engine for Claude Code. Produces citation-backed repor
 
 ```bash
 # Clone into Claude Code skills directory
-git clone https://github.com/199-biotechnologies/claude-deep-research-skill.git ~/.claude/skills/deep-research
+git clone https://github.com/MTleen/ideal-lab.git best-practices/dev-workflow/ideal-deep-research
+# or copy manually to:
+~/.claude/skills/ideal-deep-research
 ```
 
 No additional dependencies required for basic usage.
@@ -24,10 +26,6 @@ search config set keys.brave YOUR_KEY  # configure at least one provider
 
 ```
 deep research on the current state of quantum computing
-```
-
-```
-deep research in ultradeep mode: compare PostgreSQL vs Supabase for our stack
 ```
 
 ## Research Modes
@@ -53,7 +51,16 @@ Key features:
 
 ## Output
 
-Reports saved to `~/Documents/[Topic]_Research_[Date]/`:
+**Priority-based output location:**
+
+1. **Iteration Directory** (if in CC-Workflow iteration context):
+   ```
+   docs/迭代/{iteration_name}/research/{topic}_YYYYMMDD/
+   ```
+
+2. **Ask User** (otherwise): Prompt user for output location
+
+Reports include:
 - Markdown (primary source of truth)
 - HTML (McKinsey-style, auto-opened in browser)
 - PDF (professional print via WeasyPrint)
@@ -80,7 +87,7 @@ Reports >18K words auto-continue via recursive agent spawning with context prese
 ## Architecture
 
 ```
-deep-research/
+ideal-deep-research/
 ├── SKILL.md                          # Skill entry point (lean, ~100 lines)
 ├── reference/
 │   ├── methodology.md                # 8-phase pipeline details
@@ -108,11 +115,7 @@ deep-research/
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.3.1 | 2026-03-19 | Template/validator harmonization, structured evidence, critique loop-back, multi-persona red teaming |
-| 2.3 | 2026-03-19 | Contract harmonization, search-cli integration, dynamic year detection, disk-persisted citations, validation loops |
-| 2.2 | 2025-11-05 | Auto-continuation system for unlimited length |
-| 2.1 | 2025-11-05 | Progressive file assembly |
-| 1.0 | 2025-11-04 | Initial release |
+| 1.0 | 2026-03-24 | Initial ideal-deep-research fork with CC-Workflow iteration output support |
 
 ## License
 
