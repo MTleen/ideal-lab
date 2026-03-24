@@ -29,6 +29,7 @@ Task(
 进度：
 - [ ] Step 0:   项目背景          ⚠️ REQUIRED
 - [ ] Step 0.5: 迭代类型          ⚠️ REQUIRED
+- [ ] Step 0.6: Worktree 检查      ⚠️ REQUIRED
 - [ ] Step 1:   类型识别
 - [ ] Step 2:   模板处理
 - [ ] Step 3:   需求收集（苏格拉底式对话）
@@ -37,6 +38,46 @@ Task(
 - [ ] Step 6:   生成文档
 - [ ] Step 7:   完成
 ```
+
+---
+
+## 0.6 Worktree 检查（必须）
+
+**整个迭代必须在 Git Worktree 中执行**，P1 开始前就要完成 worktree 创建。
+
+### 检查流程
+
+```
+1. 检查当前是否在 worktree 中
+   pwd | grep worktrees  # 或 git worktree list
+
+2. 如不在 worktree 中：
+   ├─ 读取 project-config.md 获取分支命名规范
+   ├─ 生成分支名：feature/{short-name}
+   ├─ 调用 /api/git/worktrees/derive 创建 worktree
+   └─ ★ 创建完成后立即调用 EnterWorktree 切换到新 worktree
+```
+
+### 自动切换（关键）
+
+**创建 worktree 后必须立即切换**，否则后续所有操作都在原分支执行：
+
+```
+创建 worktree 成功后，立即执行：
+  EnterWorktree({ name: "feature-{short-name}" })
+
+如果 EnterWorktree 失败（已存在同名 worktree），使用：
+  ExitWorktree({ action: "keep" }) 先退出，再重新进入
+```
+
+### 分支命名
+
+| 类型 | 格式 | 示例 |
+|------|------|------|
+| 功能分支 | `feature/<short-name>` | `feature/mat5-multi-layer-memory` |
+| 修复分支 | `fix/<short-name>` | `fix/chat-api-timeout` |
+
+> **short-name 规则**：需求 ID（如 MAT-5）+ 简短描述，不超过 50 字符
 
 ---
 
@@ -168,15 +209,63 @@ NO REQUIREMENT QUESTIONS WITHOUT READING PROJECT CONTEXT FIRST
 
 ### 目录命名
 
-- 单一需求：`docs/迭代/YYYY-MM-DD-[进行中]-{需求名称}/`
-- 拆分需求：父迭代 + 子迭代子目录
+#### 父迭代（单一需求）
+
+```
+docs/迭代/YYYY-MM-DD-[状态]-{需求名称}/
+├── P1-需求文档.md
+└── 流程状态.md
+```
+
+#### 拆分需求（父迭代 + 子迭代）
+
+> **重要**：每个子迭代都是完整的 CCWorkflow 迭代（独立执行 P1-P15），因此命名规范与父迭代完全一致。
+
+```
+docs/迭代/YYYY-MM-DD-[状态]-{父需求名称}/
+├── P1-需求文档.md              # 父迭代总览文档
+├── 流程状态.md                 # 父迭代流程状态
+├── YYYY-MM-DD-[状态]-子迭代A-{子迭代名称}/
+│   ├── P1-需求文档.md
+│   └── 流程状态.md
+├── YYYY-MM-DD-[状态]-子迭代B-{子迭代名称}/
+│   ├── P1-需求文档.md
+│   └── 流程状态.md
+└── YYYY-MM-DD-[状态]-子迭代C-{子迭代名称}/
+    ├── P1-需求文档.md
+    └── 流程状态.md
+```
+
+**命名规则**：
+- 父迭代：`YYYY-MM-DD-[状态]-{需求名称}`
+- 子迭代：`YYYY-MM-DD-[状态]-子迭代{A|B|C|...}-{简短名称}`
+- 状态：`[待启动]` / `[进行中]` / `[已完成]` / `[已交付]`
+- 每个子迭代独立执行完整 15 阶段流程（P1-P15）
+- 子迭代文件夹内**不需要**包含父迭代的 `流程状态.md`
 
 ### 输出文件
 
 | 文件 | 说明 |
 |------|------|
 | `P1-需求文档.md` | 填充模板 + 学术风格 |
-| `流程状态.md` | current_phase: P1, status: in_progress |
+| `流程状态.md` | current_phase: P1, status: in_progress, worktree 字段 |
+
+**流程状态.md 必须包含 worktree 信息**：
+
+```yaml
+---
+requirement_name: {需求名称}
+current_phase: P1
+status: in_progress
+yolo_mode: false
+worktree:
+  branch: feature/{short-name}
+  path: {repoRoot}/worktrees/feature-{short-name}
+  created_at: {YYYY-MM-DD}
+created_at: {创建时间}
+updated_at: {更新时间}
+---
+```
 
 ### 生成流程
 

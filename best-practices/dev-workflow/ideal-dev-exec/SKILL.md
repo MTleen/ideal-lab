@@ -78,7 +78,9 @@ Step 1: 加载上下文
   └─ 读取 project-config.md
 
 Step 2: 环境检查
-  └─ 检查是否在 Git worktree 中
+  ├─ 读取 flow state 中的 worktree.path
+  ├─ 验证当前目录是否为 worktree.path
+  └─ 若不在正确的 worktree 中，终止并报告错误
 
 Step 3: 验证干净基线
   └─ 运行测试套件，确认基线通过

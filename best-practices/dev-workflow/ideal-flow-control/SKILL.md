@@ -159,6 +159,124 @@ Phase Skill 是 **team lead**，它负责：
 
 ---
 
+## Git Worktree 协议
+
+### 基本原则
+
+**整个迭代生命周期（P1 ~ P15）必须在独立的 Git Worktree 中执行**，禁止在 main 分支或 release 分支上直接进行任何迭代相关工作。
+
+### Worktree 路径规范
+
+```
+<repo_toplevel>/worktrees/<branch>
+```
+
+| 组成部分 | 说明 |
+|----------|------|
+| `repo_parent` | 仓库父目录（`git rev-parse --show-toplevel` 的父目录） |
+| `repo_name` | 仓库名称（不含 `.git` 后缀） |
+| `branch` | 功能分支名（sanitized，`/` 替换为 `-`） |
+
+**示例**：
+- 仓库路径：`/Users/foo/projects/IdealClaw`
+- 功能分支：`feature/mat5-multi-layer-memory`
+- Worktree 路径：`/Users/foo/projects/IdealClaw/worktrees/feature-mat5-multi-layer-memory`
+
+### 分支命名规范
+
+| 类型 | 格式 | 示例 |
+|------|------|------|
+| 功能分支 | `feature/<short-name>` | `feature/mat5-multi-layer-memory` |
+| 修复分支 | `fix/<short-name>` | `fix/chat-api-timeout` |
+| 重构分支 | `refactor/<short-name>` | `refactor/session-manager` |
+
+> **short-name 规则**：需求 ID（如 MAT-5）+ 简短描述，不超过 50 字符
+
+### 流程状态 Worktree 字段
+
+在 `流程状态.md` 的 YAML frontmatter 中新增 `worktree` 字段：
+
+```yaml
+---
+requirement_name: {需求名称}
+current_phase: P5
+status: in_progress
+yolo_mode: false
+worktree:
+  branch: feature/mat5-multi-layer-memory
+  path: /Users/foo/projects/IdealClaw/worktrees/feature-mat5-multi-layer-memory
+  created_at: {YYYY-MM-DD}
+created_at: {创建时间}
+updated_at: {更新时间}
+---
+```
+
+### Worktree 执行时机
+
+```
+[创建 worktree，分支名 feature/<short-name>]
+    ↓
+P1 需求编写 → P2 需求评审 → P3 技术方案 → P4 编码计划 → ... → P14 维基评审
+    ↓
+[P15 成果提交后删除 worktree]
+```
+
+**注意**：Worktree 在 **P1 开始前创建**，整个迭代生命周期（包含调研、文档编写、编码、测试）都在 worktree 中进行。
+
+### IdealClaw App Worktree 派生
+
+如果项目使用 IdealClaw App 的 worktree 管理功能（`/api/git/worktrees/derive`），**必须通过 App 派生 worktree**，禁止手动 `git worktree add`。App 派生可以：
+- 自动创建关联的 session
+- 正确管理 worktree 的 dirty 状态
+- 维护 session 与 worktree 的映射关系
+
+### 手动创建 Worktree（无 App 时）
+
+当项目没有 worktree 派生功能时，使用以下命令：
+
+```bash
+# 计算 worktree 路径
+REPO_PATH=$(git rev-parse --show-toplevel)
+BRANCH="feature/mat5-multi-layer-memory"
+SANITIZED_BRANCH=$(echo "$BRANCH" | sed 's/\//-/g')
+WORKTREE_PATH="$REPO_PATH/worktrees/$SANITIZED_BRANCH"
+
+# 创建 worktree（在仓库根目录下创建 worktrees/ 子目录）
+mkdir -p "$REPO_PATH/worktrees"
+git worktree add -b "$BRANCH" "$WORKTREE_PATH"
+```
+
+### 自动切换（关键）
+
+**创建或识别到 worktree 后，必须立即切换进去**：
+
+```
+1. 检查当前是否在 worktree 中：
+   pwd | grep worktrees
+
+2. 如不在 worktree 中：
+   ├─ 根据 worktree.path 调用 EnterWorktree 切换
+   └─ 切换成功后才开始执行后续步骤
+
+3. 切换命令：
+   EnterWorktree({ name: "feature-{short-name}" })
+
+   如果已有同名 worktree 存在，先用 ExitWorktree({ action: "keep" }) 退出再进入
+```
+
+**重要**：切换到 worktree 后，后续所有操作都在 worktree 分支上执行，直到 P15 完成后才退出。
+
+### 质量检查清单（Worktree）
+
+- [ ] P1 开始前已创建 worktree
+- [ ] **已调用 EnterWorktree 切换到 worktree 中**
+- [ ] 当前分支是 feature/fix/refactor 分支，不是 main/release
+- [ ] `流程状态.md` 中已记录 worktree 路径
+- [ ] P15 完成后已删除 worktree
+- [ ] Worktree 删除后才能合并主分支
+
+---
+
 ## 流程状态文件协议
 
 **路径**：`docs/迭代/{需求名称}/流程状态.md`
@@ -273,9 +391,14 @@ YOLO 模式下，主智能体永不停止，直到流程完成或熔断：
 - [ ] 流程状态.md 中状态字段正确反映当前阶段
 - [ ] 熔断信号被正确识别并处理（停止循环，报告问题）
 - [ ] 流程完成时输出完整执行摘要
+- [ ] **当前在 worktree 中执行（pwd 包含 worktrees）**
 
 ### 通用质量要求
 
 - [ ] P2 评审阶段已展示 YOLO 模式选项提示
 - [ ] 主智能体未直接执行任何阶段内工作（全部由 Skill 调度 sub-agent 完成）
 - [ ] YOLO 模式下阶段完成后立即回到循环起点，不停下来等待用户
+- [ ] P1 开始前已创建 worktree（路径格式：`<repo_toplevel>/worktrees/<branch>`）
+- [ ] **已调用 EnterWorktree 切换到 worktree 中**
+- [ ] 当前分支是 feature/fix/refactor 分支，不是 main/release
+- [ ] `流程状态.md` 中已记录 worktree 路径
