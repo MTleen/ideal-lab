@@ -223,16 +223,9 @@ P1 需求编写 → P2 需求评审 → P3 技术方案 → P4 编码计划 → 
 
 **注意**：Worktree 在 **P1 开始前创建**，整个迭代生命周期（包含调研、文档编写、编码、测试）都在 worktree 中进行。
 
-### IdealClaw App Worktree 派生
+### 创建 Worktree
 
-如果项目使用 IdealClaw App 的 worktree 管理功能（`/api/git/worktrees/derive`），**必须通过 App 派生 worktree**，禁止手动 `git worktree add`。App 派生可以：
-- 自动创建关联的 session
-- 正确管理 worktree 的 dirty 状态
-- 维护 session 与 worktree 的映射关系
-
-### 手动创建 Worktree（无 App 时）
-
-当项目没有 worktree 派生功能时，使用以下命令：
+使用 git 命令创建 worktree：
 
 ```bash
 # 计算 worktree 路径
@@ -253,23 +246,22 @@ git worktree add -b "$BRANCH" "$WORKTREE_PATH"
 ```
 1. 检查当前是否在 worktree 中：
    pwd | grep worktrees
+   git branch --show-current | grep -E '^feature/|^fix/|^refactor/'
 
-2. 如不在 worktree 中：
-   ├─ 根据 worktree.path 调用 EnterWorktree 切换
-   └─ 切换成功后才开始执行后续步骤
+2. 如不在 worktree 中，使用以下命令切换到 worktree 目录：
+   cd /path/to/repo/worktrees/feature-{short-name}
 
-3. 切换命令：
-   EnterWorktree({ name: "feature-{short-name}" })
-
-   如果已有同名 worktree 存在，先用 ExitWorktree({ action: "keep" }) 退出再进入
+3. 验证切换成功：
+   pwd  # 确认路径包含 worktrees
+   git branch --show-current  # 确认是 feature/xxx 分支
 ```
 
-**重要**：切换到 worktree 后，后续所有操作都在 worktree 分支上执行，直到 P15 完成后才退出。
+**重要**：切换到 worktree 后，后续所有操作都在 worktree 分支上执行，直到 P15 完成后才退出。**必须使用 `cd` 命令真正切换目录，而不仅仅是创建 worktree**。
 
 ### 质量检查清单（Worktree）
 
 - [ ] P1 开始前已创建 worktree
-- [ ] **已调用 EnterWorktree 切换到 worktree 中**
+- [ ] **已使用 `cd` 切换到 worktree 目录**
 - [ ] 当前分支是 feature/fix/refactor 分支，不是 main/release
 - [ ] `流程状态.md` 中已记录 worktree 路径
 - [ ] P15 完成后已删除 worktree
@@ -399,6 +391,6 @@ YOLO 模式下，主智能体永不停止，直到流程完成或熔断：
 - [ ] 主智能体未直接执行任何阶段内工作（全部由 Skill 调度 sub-agent 完成）
 - [ ] YOLO 模式下阶段完成后立即回到循环起点，不停下来等待用户
 - [ ] P1 开始前已创建 worktree（路径格式：`<repo_toplevel>/worktrees/<branch>`）
-- [ ] **已调用 EnterWorktree 切换到 worktree 中**
+- [ ] **已使用 `cd` 切换到 worktree 目录**
 - [ ] 当前分支是 feature/fix/refactor 分支，不是 main/release
 - [ ] `流程状态.md` 中已记录 worktree 路径

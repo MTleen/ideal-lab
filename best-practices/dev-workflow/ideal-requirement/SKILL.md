@@ -54,8 +54,8 @@ Task(
 2. 如不在 worktree 中：
    ├─ 读取 project-config.md 获取分支命名规范
    ├─ 生成分支名：feature/{short-name}
-   ├─ 调用 /api/git/worktrees/derive 创建 worktree
-   └─ ★ 创建完成后立即调用 EnterWorktree 切换到新 worktree
+   ├─ 使用 git worktree add 创建 worktree
+   └─ ★ 创建完成后立即切换到新 worktree 目录
 ```
 
 ### 自动切换（关键）
@@ -64,10 +64,11 @@ Task(
 
 ```
 创建 worktree 成功后，立即执行：
-  EnterWorktree({ name: "feature-{short-name}" })
+  cd /path/to/repo/worktrees/feature-{short-name}
 
-如果 EnterWorktree 失败（已存在同名 worktree），使用：
-  ExitWorktree({ action: "keep" }) 先退出，再重新进入
+验证切换成功：
+  pwd  # 确认路径包含 worktrees
+  git branch --show-current  # 确认是 feature/xxx 分支
 ```
 
 ### 分支命名
