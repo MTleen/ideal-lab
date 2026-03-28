@@ -1,14 +1,10 @@
-import path from "node:path";
-import { readFile } from "node:fs/promises";
 import type { CliArgs } from "../types";
 
 export function getDefaultModel(): string {
   return process.env.OPENAI_IMAGE_MODEL || "gpt-image-1.5";
 }
 
-type OpenAIImageResponse = { data: Array<{ url?: string; b64_json?: string }> };
-
-export function parseAspectRatio(ar: string): { width: number; height: number } | null {
+function parseAspectRatio(ar: string): { width: number; height: number } | null {
   const match = ar.match(/^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/);
   if (!match) return null;
   const w = parseFloat(match[1]!);
@@ -23,7 +19,7 @@ type SizeMapping = {
   portrait: string;
 };
 
-export function getOpenAISize(
+function getOpenAISize(
   model: string,
   ar: string | null,
   quality: CliArgs["quality"]
@@ -68,76 +64,22 @@ export async function generateImage(
   const baseURL = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
-    throw new Error(
-      "OPENAI_API_KEY is required. Codex/ChatGPT desktop login does not automatically grant OpenAI Images API access to this script."
-    );
-  }
+  if (!apiKey) throw new Error("OPENAI_API_KEY is required");
 
-  if (process.env.OPENAI_IMAGE_USE_CHAT === "true") {
-    return generateWithChatCompletions(baseURL, apiKey, prompt, model);
+  if (args.referenceImages.length > 0) {
+    console.error("Warning: Reference images not supported with OpenAI, ignoring.");
   }
 
   const size = args.size || getOpenAISize(model, args.aspectRatio, args.quality);
 
-  if (args.referenceImages.length > 0) {
-    if (model.includes("dall-e-2") || model.includes("dall-e-3")) {
-      throw new Error(
-        "Reference images with OpenAI in this skill require GPT Image models. Use --model gpt-image-1.5 (or another gpt-image model)."
-      );
-    }
-    return generateWithOpenAIEdits(baseURL, apiKey, prompt, model, size, args.referenceImages, args.quality);
-  }
-
-  return generateWithOpenAIGenerations(baseURL, apiKey, prompt, model, size, args.quality);
-}
-
-async function generateWithChatCompletions(
-  baseURL: string,
-  apiKey: string,
-  prompt: string,
-  model: string
-): Promise<Uint8Array> {
-  const res = await fetch(`${baseURL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenAI API error: ${err}`);
-  }
-
-  const result = (await res.json()) as { choices: Array<{ message: { content: string } }> };
-  const content = result.choices[0]?.message?.content ?? "";
-
-  const match = content.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
-  if (match) {
-    return Uint8Array.from(Buffer.from(match[1]!, "base64"));
-  }
-
-  throw new Error("No image found in chat completions response");
-}
-
-async function generateWithOpenAIGenerations(
-  baseURL: string,
-  apiKey: string,
-  prompt: string,
-  model: string,
-  size: string,
-  quality: CliArgs["quality"]
-): Promise<Uint8Array> {
-  const body: Record<string, any> = { model, prompt, size };
+  const body: Record<string, any> = {
+    model,
+    prompt,
+    size,
+  };
 
   if (model.includes("dall-e-3")) {
-    body.quality = quality === "2k" ? "hd" : "standard";
+    body.quality = args.quality === "2k" ? "hd" : "standard";
   }
 
   const res = await fetch(`${baseURL}/images/generations`, {
@@ -154,62 +96,7 @@ async function generateWithOpenAIGenerations(
     throw new Error(`OpenAI API error: ${err}`);
   }
 
-  const result = (await res.json()) as OpenAIImageResponse;
-  return extractImageFromResponse(result);
-}
-
-async function generateWithOpenAIEdits(
-  baseURL: string,
-  apiKey: string,
-  prompt: string,
-  model: string,
-  size: string,
-  referenceImages: string[],
-  quality: CliArgs["quality"]
-): Promise<Uint8Array> {
-  const form = new FormData();
-  form.append("model", model);
-  form.append("prompt", prompt);
-  form.append("size", size);
-
-  if (model.includes("gpt-image")) {
-    form.append("quality", quality === "2k" ? "high" : "medium");
-  }
-
-  for (const refPath of referenceImages) {
-    const bytes = await readFile(refPath);
-    const filename = path.basename(refPath);
-    const mimeType = getMimeType(filename);
-    const blob = new Blob([bytes], { type: mimeType });
-    form.append("image[]", blob, filename);
-  }
-
-  const res = await fetch(`${baseURL}/images/edits`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: form,
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenAI edits API error: ${err}`);
-  }
-
-  const result = (await res.json()) as OpenAIImageResponse;
-  return extractImageFromResponse(result);
-}
-
-export function getMimeType(filename: string): string {
-  const ext = path.extname(filename).toLowerCase();
-  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
-  if (ext === ".webp") return "image/webp";
-  if (ext === ".gif") return "image/gif";
-  return "image/png";
-}
-
-export async function extractImageFromResponse(result: OpenAIImageResponse): Promise<Uint8Array> {
+  const result = (await res.json()) as { data: Array<{ url?: string; b64_json?: string }> };
   const img = result.data[0];
 
   if (img?.b64_json) {
