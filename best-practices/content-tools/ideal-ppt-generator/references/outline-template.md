@@ -208,6 +208,22 @@ Layout: [optional: layout name from gallery]
 [Clean, impactful composition]
 ```
 
+## Metadata Fields (DO NOT Include in Image Content)
+
+The following fields are for file organization ONLY and must NOT be passed to the image generator:
+
+```markdown
+**Slide**: X of N
+**Type**: Cover/Content/Back Cover
+**Filename**: {NN}-slide-{slug}.png
+```
+
+When assembling prompts for image generation, **exclude all metadata fields** (Slide, Type, Filename) from the content sent to the AI. Include only:
+- Narrative Goal
+- Key Content (Headline, Sub-headline, Body)
+- Visual description
+- Layout guidance
+
 ## STYLE_INSTRUCTIONS Block
 
 The `<STYLE_INSTRUCTIONS>` block is the SINGLE SOURCE OF TRUTH for style information in this outline.

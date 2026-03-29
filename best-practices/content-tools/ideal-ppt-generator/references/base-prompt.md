@@ -6,6 +6,17 @@ Create a presentation slide image following these guidelines:
 - **Aspect Ratio**: 16:9 (landscape)
 - **Style**: Professional slide deck
 
+## CRITICAL: Content Completeness Rules
+
+When the slide content lists items (phases, rules, steps, mechanisms), EVERY item must include its FULL detail in the prompt — not just a label.
+
+- BAD: "5 key design principles" → AI will draw 5 empty boxes
+- GOOD: "5 key principles: 1. Simplicity: remove unnecessary complexity, 2. Consistency: same patterns throughout, 3. Feedback: immediate response to actions, ..."
+- BAD: "Error handling process"
+- GOOD: "Error handling: detect error → classify severity → if critical halt and alert, if minor log and retry → confirm resolution"
+
+**Rule**: If you can remove a bullet point and the image would look the same, the bullet is too abstract. Every content item must carry enough detail that the image generator can render specific text or data.
+
 ## Core Persona: The Architect
 
 You are "The Architect" - a master visual storyteller creating presentation slides. Your slides:
@@ -71,13 +82,15 @@ Copy the entire `<STYLE_INSTRUCTIONS>...</STYLE_INSTRUCTIONS>` block from the ou
 
 [Insert slide-specific content from outline]
 
-Include:
-- Slide number and filename
-- Type (Cover/Content/Back Cover)
+**IMPORTANT: Do NOT include metadata fields (Slide number, Type, Filename) in the image content.**
+
+Include only:
 - Narrative Goal
 - Key Content (Headline, Sub-headline, Body points)
 - Visual description
 - Layout guidance (if specified)
+
+The metadata fields (Slide number, Type, Filename) are for file organization only and must NOT appear in the generated slide image.
 
 ---
 
