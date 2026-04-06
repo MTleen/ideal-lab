@@ -159,6 +159,68 @@ Phase Skill 是 **team lead**，它负责：
 
 ---
 
+## 子迭代父状态同步协议
+
+**关键规则**：当子迭代完成任何阶段（P1-P15），主智能体**必须**同步更新父迭代的 `流程状态.md`。
+
+### 检测子迭代
+
+```
+1. 读取当前迭代的 流程状态.md
+2. 检查 frontmatter 中是否存在 parent 字段
+3. 如存在 → 当前是子迭代，需要执行父状态同步
+4. 如不存在 → 当前是父迭代或独立迭代，无需同步
+```
+
+### 同步时机
+
+| 事件 | 同步动作 |
+|------|---------|
+| 子迭代首次开始执行（P1） | 父迭代目录从 `[待启动]` 重命名为 `[进行中]`，更新所有子迭代的 `parent.path` |
+| 子迭代任一阶段完成 | 更新父迭代 `sub_iterations` 中对应子迭代的 `current_phase` |
+| 子迭代 P15 完成 | 额外更新 `status: 已完成` 和 `completed_at` |
+| 所有子迭代 P15 完成 | 父迭代目录从 `[进行中]` 重命名为 `[已完成]` |
+
+### 同步操作
+
+```
+1. 从子迭代 流程状态.md 的 parent.path 获取父迭代目录路径
+2. 读取父迭代的 流程状态.md
+3. 在 sub_iterations 列表中找到当前子迭代（匹配 id）
+4. 更新该子迭代的 status 和 current_phase
+5. 更新父迭代的 updated_at 为当前时间
+6. 写回父迭代的 流程状态.md
+```
+
+### 父迭代 flow state 中的子迭代格式
+
+```yaml
+sub_iterations:
+  - id: A
+    name: 后端图谱API服务
+    status: 已完成          # 待启动 | 进行中 | 已完成
+    current_phase: P15      # 子迭代当前阶段
+    completed_at: 2026-04-03  # 仅在已完成时有值
+  - id: B
+    name: 前端图谱渲染
+    status: 进行中
+    current_phase: P9
+```
+
+> **⚠️ 如果不执行父状态同步，会导致父迭代的子迭代列表永远显示"待启动"，无法正确追踪项目进度。**
+
+Phase Skill 是 **team lead**，它负责：
+
+| Phase Skill 负责 | Phase Skill 不负责 |
+|------------------|-------------------|
+| 读取 P1 等前置文档 | 更新 flow state |
+| spawn sub-agent 调研和分析 | 验证前置条件 |
+| spawn sub-agent 写文档 | 决定评审结果 |
+| 写入产物文件 | 调度其他 Phase Skill |
+| 返回执行摘要 | |
+
+---
+
 ## Git Worktree 协议
 
 ### 基本原则
@@ -258,6 +320,26 @@ git worktree add -b "$BRANCH" "$WORKTREE_PATH"
 
 **重要**：切换到 worktree 后，后续所有操作都在 worktree 分支上执行，直到 P15 完成后才退出。**必须使用 `cd` 命令真正切换目录，而不仅仅是创建 worktree**。
 
+### 子迭代 Worktree 继承（关键）
+
+**子迭代不创建独立 worktree，直接继承父迭代的 worktree。**
+
+```
+1. 检测当前迭代是否为子迭代（parent 字段是否存在）
+2. 如是子迭代：
+   ├─ 从 parent.path 读取父迭代目录路径
+   ├─ 从父迭代的 流程状态.md 读取 worktree 信息
+   ├─ 切换到父 worktree 目录：cd {worktree.path}
+   └─ 验证：pwd 包含 worktrees，分支正确
+3. 如不是子迭代：
+   └─ 按正常流程创建 worktree（见上方"创建 Worktree"）
+```
+
+**禁止操作**：
+- ❌ 为子迭代创建独立 worktree
+- ❌ 子迭代完成后删除 worktree
+- ❌ 子迭代完成后删除 feature branch
+
 ### 质量检查清单（Worktree）
 
 - [ ] P1 开始前已创建 worktree
@@ -275,15 +357,40 @@ git worktree add -b "$BRANCH" "$WORKTREE_PATH"
 
 **格式**：
 
+独立迭代 / 父迭代：
 ```yaml
 ---
 requirement_name: {需求名称}
 current_phase: P1
 status: in_progress
 yolo_mode: false
+is_parent: true
+sub_iterations:
+  - id: A
+    name: {子迭代名称}
+    status: 待启动
+    current_phase: P1
 created_at: {创建时间}
 updated_at: {更新时间}
 ---
+```
+
+子迭代（**必须**包含 parent 字段）：
+```yaml
+---
+requirement_name: 子迭代{X}-{名称}
+current_phase: P1
+status: in_progress
+yolo_mode: false
+parent:
+  name: {父需求名称}
+  path: docs/迭代/{YYYY-MM-DD-[状态]-{父需求名称}}
+created_at: {创建时间}
+updated_at: {更新时间}
+---
+```
+
+> **⚠️ `parent` 字段是区分父子迭代的唯一标识**。没有 `parent` 字段 = 父迭代/独立迭代；有 `parent` 字段 = 子迭代。所有依赖父子迭代判断的 skill 都通过此字段识别。
 
 ## 阶段状态
 
@@ -384,6 +491,7 @@ YOLO 模式下，主智能体永不停止，直到流程完成或熔断：
 - [ ] 熔断信号被正确识别并处理（停止循环，报告问题）
 - [ ] 流程完成时输出完整执行摘要
 - [ ] **当前在 worktree 中执行（pwd 包含 worktrees）**
+- [ ] **如是子迭代，父迭代的 sub_iterations 状态已同步更新**
 
 ### 通用质量要求
 

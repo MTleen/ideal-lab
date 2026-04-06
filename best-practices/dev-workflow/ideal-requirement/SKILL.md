@@ -48,22 +48,41 @@ Task(
 ### 检查流程
 
 ```
-1. 检查当前是否在 worktree 中
+1. 判断当前迭代是否为子迭代
+   ├─ 检查父迭代的 流程状态.md 中 is_parent: true
+   ├─ 检查当前需求名称是否匹配 sub_iterations 列表中的某一项
+   └─ 如是子迭代 → 进入"子迭代 Worktree 继承"流程（见下方）
+
+2. 检查当前是否在 worktree 中
    pwd | grep worktrees  # 或 git worktree list
 
-2. 如不在 worktree 中：
+3. 如不在 worktree 中：
    ├─ 读取 project-config.md 获取分支命名规范
    ├─ 生成分支名：feature/{short-name}
    ├─ 使用 git worktree add 创建 worktree
    └─ ★ 创建完成后立即切换到新 worktree 目录
 ```
 
-### 自动切换（关键）
+### 子迭代 Worktree 继承
 
-**创建 worktree 后必须立即切换**，否则后续所有操作都在原分支执行：
+**子迭代不创建独立 worktree，直接使用父迭代的 worktree。**
 
 ```
-创建 worktree 成功后，立即执行：
+1. 读取父迭代的 流程状态.md
+2. 获取父 worktree 信息：branch, path
+3. 检查父 worktree 是否存在：ls {path}
+4. 切换到父 worktree：cd {path}
+5. 验证：pwd, git branch --show-current
+```
+
+> **⚠️ 禁止为子迭代创建独立 worktree**。所有子迭代共享父迭代的 worktree 和 branch。
+
+### 自动切换（关键）
+
+**创建 worktree 后（或继承父 worktree 后）必须立即切换**，否则后续所有操作都在原分支执行：
+
+```
+切换成功后，立即执行：
   cd /path/to/repo/worktrees/feature-{short-name}
 
 验证切换成功：
@@ -253,12 +272,19 @@ docs/迭代/YYYY-MM-DD-[状态]-{父需求名称}/
 
 **流程状态.md 必须包含 worktree 信息**：
 
+父迭代：
 ```yaml
 ---
 requirement_name: {需求名称}
 current_phase: P1
 status: in_progress
 yolo_mode: false
+is_parent: true
+sub_iterations:
+  - id: A
+    name: {子迭代名称}
+    status: 待启动
+    current_phase: P1
 worktree:
   branch: feature/{short-name}
   path: {repoRoot}/worktrees/feature-{short-name}
@@ -267,6 +293,27 @@ created_at: {创建时间}
 updated_at: {更新时间}
 ---
 ```
+
+子迭代（**必须**包含 parent 字段）：
+```yaml
+---
+requirement_name: 子迭代{X}-{名称}
+current_phase: P1
+status: in_progress
+yolo_mode: false
+parent:
+  name: {父需求名称}
+  path: docs/迭代/{YYYY-MM-DD-[状态]-{父需求名称}}
+worktree:
+  branch: feature/{short-name}
+  path: {repoRoot}/worktrees/feature-{short-name}
+  created_at: {YYYY-MM-DD}
+created_at: {创建时间}
+updated_at: {更新时间}
+---
+```
+
+> **⚠️ `parent` 字段是区分父子迭代的唯一标识**。没有 `parent` 字段 = 父迭代/独立迭代；有 `parent` 字段 = 子迭代。所有依赖父子迭代判断的 skill 都通过此字段识别。
 
 ### 生成流程
 

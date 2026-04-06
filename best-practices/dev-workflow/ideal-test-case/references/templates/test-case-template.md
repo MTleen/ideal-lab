@@ -17,6 +17,7 @@
 | 功能测试 | {func_count} | {func_pct}% |
 | 边界测试 | {boundary_count} | {boundary_pct}% |
 | 异常测试 | {exception_count} | {exception_pct}% |
+| 截图测试 | {screenshot_count} | {screenshot_pct}% |
 | **总计** | {total} | 100% |
 
 ---
@@ -93,6 +94,30 @@
 - 系统返回错误码: {error_code}
 - 错误消息: {error_message}
 - 系统状态: {expected_state}
+
+---
+
+## 前端截图测试用例（仅当 P5 包含前端任务时）
+
+### TC-S-001: {截图测试名称}
+
+| 项目 | 内容 |
+|------|------|
+| **用例编号** | TC-S-001 |
+| **用例名称** | {name} |
+| **优先级** | P0 / P1 / P2 |
+| **截图类型** | 空状态 / 加载中 / 数据正常 / 交互后 / 完整页面 |
+| **关联组件** | {component_name} |
+| **截图路径** | `docs/迭代/{需求名称}/screenshots/TC-S-001_{name}.png` |
+
+**测试步骤**:
+1. {step_1}（如：打开页面 xxx）
+2. {step_2}（如：等待渲染完成）
+
+**预期结果**:
+- 截图保存到 `docs/迭代/{需求名称}/screenshots/TC-S-001_{name}.png`
+- 截图文件 > 10KB
+- 页面无空白区域、无渲染错误
 
 ---
 
