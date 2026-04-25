@@ -1,0 +1,8 @@
+{
+  "name": "ideal-lab-maintainer",
+  "version": "1.0.0",
+  "description": "ideal-lab 插件库维护工具 — 自动化 commit、新增 skill/plugin、发布、校验",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["maintainer", "tooling", "automation"]
+}

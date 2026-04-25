@@ -1,0 +1,14 @@
+{
+  "name": "ideal-lab",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": ["plugins/*"],
+  "scripts": {
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset tag"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.0"
+  }
+}

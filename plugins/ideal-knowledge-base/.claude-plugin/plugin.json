@@ -1,0 +1,8 @@
+{
+  "name": "ideal-knowledge-base",
+  "version": "1.0.0",
+  "description": "知识库构建编排工作流：材料分析→文档规划→并行生成→汇总评审",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["knowledge-base", "documentation", "workflow"]
+}

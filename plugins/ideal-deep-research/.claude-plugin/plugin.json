@@ -1,0 +1,8 @@
+{
+  "name": "ideal-deep-research",
+  "version": "1.0.0",
+  "description": "企业级深度调研：多源综合、引用追踪、可信度评分",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["research", "analysis", "citation"]
+}

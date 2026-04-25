@@ -1,0 +1,178 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate plugins and marketplace
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Claude plugin validation if available
+        run: |
+          set -euo pipefail
+
+          if command -v claude >/dev/null 2>&1; then
+            for plugin in plugins/*/; do
+              echo "Validating ${plugin}"
+              claude plugin validate "${plugin}"
+            done
+            claude plugin validate .
+          else
+            echo "claude CLI is not installed; trying npx @anthropic-ai/claude-code."
+            if npx --yes @anthropic-ai/claude-code plugin validate .; then
+              for plugin in plugins/*/; do
+                echo "Validating ${plugin}"
+                npx --yes @anthropic-ai/claude-code plugin validate "${plugin}"
+              done
+            else
+              echo "Claude plugin validation is unavailable; continuing with local structural validation."
+            fi
+          fi
+
+      - name: Validate plugin structure and metadata
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const root = process.cwd();
+          const errors = [];
+
+          function fail(message) {
+            errors.push(message);
+          }
+
+          function readJson(file) {
+            try {
+              return JSON.parse(fs.readFileSync(file, 'utf8'));
+            } catch (error) {
+              fail(`${file}: invalid JSON (${error.message})`);
+              return null;
+            }
+          }
+
+          function hasFrontmatterFields(content, file) {
+            if (!content.startsWith('---\n') && !content.startsWith('---\r\n')) {
+              fail(`${file}: missing opening frontmatter delimiter`);
+              return;
+            }
+
+            const normalized = content.replace(/\r\n/g, '\n');
+            const end = normalized.indexOf('\n---\n', 4);
+            if (end === -1) {
+              fail(`${file}: missing closing frontmatter delimiter`);
+              return;
+            }
+
+            const frontmatter = normalized.slice(4, end).split('\n');
+            const fields = new Map();
+            for (const line of frontmatter) {
+              const match = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+              if (match) fields.set(match[1], match[2].trim());
+            }
+
+            for (const field of ['name', 'description']) {
+              if (!fields.get(field)) {
+                fail(`${file}: frontmatter missing non-empty ${field}`);
+              }
+            }
+          }
+
+          const marketplacePath = path.join(root, '.claude-plugin', 'marketplace.json');
+          const marketplace = readJson(marketplacePath);
+          if (marketplace) {
+            if (!Array.isArray(marketplace.plugins)) {
+              fail(`${marketplacePath}: plugins must be an array`);
+            } else {
+              for (const [index, plugin] of marketplace.plugins.entries()) {
+                if (!plugin || typeof plugin !== 'object' || Array.isArray(plugin)) {
+                  fail(`${marketplacePath}: plugins[${index}] must be an object`);
+                  continue;
+                }
+                for (const field of ['name', 'source']) {
+                  if (typeof plugin[field] !== 'string' || plugin[field].trim() === '') {
+                    fail(`${marketplacePath}: plugins[${index}] missing non-empty ${field}`);
+                  }
+                }
+              }
+            }
+          }
+
+          const pluginsDir = path.join(root, 'plugins');
+          if (!fs.existsSync(pluginsDir)) {
+            fail(`${pluginsDir}: missing plugins directory`);
+          } else {
+            const pluginDirs = fs.readdirSync(pluginsDir, { withFileTypes: true })
+              .filter((entry) => entry.isDirectory())
+              .map((entry) => path.join(pluginsDir, entry.name))
+              .sort();
+
+            if (pluginDirs.length === 0) {
+              fail(`${pluginsDir}: no plugin directories found`);
+            }
+
+            for (const pluginDir of pluginDirs) {
+              const pluginJsonPath = path.join(pluginDir, '.claude-plugin', 'plugin.json');
+              const packageJsonPath = path.join(pluginDir, 'package.json');
+              const skillsDir = path.join(pluginDir, 'skills');
+
+              if (!fs.existsSync(pluginJsonPath)) {
+                fail(`${pluginJsonPath}: missing plugin metadata`);
+              }
+              if (!fs.existsSync(packageJsonPath)) {
+                fail(`${packageJsonPath}: missing package metadata`);
+              }
+
+              const pluginJson = fs.existsSync(pluginJsonPath) ? readJson(pluginJsonPath) : null;
+              const packageJson = fs.existsSync(packageJsonPath) ? readJson(packageJsonPath) : null;
+              if (pluginJson && packageJson && pluginJson.version !== packageJson.version) {
+                fail(`${pluginDir}: plugin.json version (${pluginJson.version}) does not match package.json version (${packageJson.version})`);
+              }
+
+              if (!fs.existsSync(skillsDir)) {
+                fail(`${skillsDir}: missing skills directory`);
+                continue;
+              }
+
+              const skillDirs = fs.readdirSync(skillsDir, { withFileTypes: true })
+                .filter((entry) => entry.isDirectory())
+                .map((entry) => path.join(skillsDir, entry.name))
+                .sort();
+
+              for (const skillDir of skillDirs) {
+                const skillPath = path.join(skillDir, 'SKILL.md');
+                if (!fs.existsSync(skillPath)) {
+                  fail(`${skillPath}: missing SKILL.md`);
+                  continue;
+                }
+                hasFrontmatterFields(fs.readFileSync(skillPath, 'utf8'), skillPath);
+              }
+            }
+          }
+
+          if (errors.length > 0) {
+            console.error(errors.map((error) => `- ${error}`).join('\n'));
+            process.exit(1);
+          }
+
+          console.log('Local plugin validation passed.');
+          NODE

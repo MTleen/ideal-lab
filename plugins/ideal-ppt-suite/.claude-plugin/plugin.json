@@ -1,0 +1,8 @@
+{
+  "name": "ideal-ppt-suite",
+  "version": "1.0.0",
+  "description": "PPT 全链路生成：调研→策略→大纲→提示词→生成→配图→导出",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["ppt", "presentation", "design", "slides"]
+}

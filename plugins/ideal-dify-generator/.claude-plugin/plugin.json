@@ -1,0 +1,8 @@
+{
+  "name": "ideal-dify-generator",
+  "version": "1.0.0",
+  "description": "Dify 工作流 DSL YAML 端到端生成与校验",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["dify", "workflow", "dsl", "generator"]
+}

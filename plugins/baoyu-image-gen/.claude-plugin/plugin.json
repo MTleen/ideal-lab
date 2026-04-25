@@ -1,0 +1,8 @@
+{
+  "name": "baoyu-image-gen",
+  "version": "1.0.0",
+  "description": "多 Provider AI 图片生成工具",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["image", "generation", "ai"]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "ideal-lab",
+  "owner": {
+    "name": "MTleen"
+  },
+  "metadata": {
+    "description": "Claude Code 最佳实践插件库 — 开发流程、PPT 生成、文档写作、知识库构建、深度调研",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "ideal-dev-workflow",
+      "source": "./plugins/ideal-dev-workflow",
+      "description": "15 阶段开发流程工作流：需求→方案→计划→编码→测试→评审→交付",
+      "category": "development",
+      "keywords": ["workflow", "development", "requirement", "testing", "review"]
+    },
+    {
+      "name": "ideal-ppt-suite",
+      "source": "./plugins/ideal-ppt-suite",
+      "description": "PPT 全链路生成：调研→策略→大纲→提示词→生成→配图→导出",
+      "category": "content",
+      "keywords": ["ppt", "presentation", "design", "slides"]
+    },
+    {
+      "name": "ideal-document-workflow",
+      "source": "./plugins/ideal-document-workflow",
+      "description": "结构化文档写作工作流：需求分析→大纲→写作→配图→渲染",
+      "category": "content",
+      "keywords": ["document", "writing", "workflow"]
+    },
+    {
+      "name": "ideal-knowledge-base",
+      "source": "./plugins/ideal-knowledge-base",
+      "description": "知识库构建编排工作流：材料分析→文档规划→并行生成→汇总评审",
+      "category": "knowledge",
+      "keywords": ["knowledge-base", "documentation", "workflow"]
+    },
+    {
+      "name": "baoyu-image-gen",
+      "source": "./plugins/baoyu-image-gen",
+      "description": "多 Provider AI 图片生成工具",
+      "category": "content",
+      "keywords": ["image", "generation", "ai"]
+    },
+    {
+      "name": "ideal-deep-research",
+      "source": "./plugins/ideal-deep-research",
+      "description": "企业级深度调研：多源综合、引用追踪、可信度评分",
+      "category": "research",
+      "keywords": ["research", "analysis", "citation"]
+    },
+    {
+      "name": "ideal-dify-generator",
+      "source": "./plugins/ideal-dify-generator",
+      "description": "Dify 工作流 DSL YAML 端到端生成与校验",
+      "category": "development",
+      "keywords": ["dify", "workflow", "dsl", "generator"]
+    },
+    {
+      "name": "ideal-lab-maintainer",
+      "source": "./plugins/ideal-lab-maintainer",
+      "description": "ideal-lab 插件库维护工具 — 自动化 commit、新增 skill/plugin、发布、校验",
+      "category": "development",
+      "keywords": ["maintainer", "tooling", "automation"]
+    }
+  ]
+}

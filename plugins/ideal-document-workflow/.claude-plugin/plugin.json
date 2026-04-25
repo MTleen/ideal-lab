@@ -1,0 +1,8 @@
+{
+  "name": "ideal-document-workflow",
+  "version": "1.0.0",
+  "description": "结构化文档写作工作流：需求分析→大纲→写作→配图→渲染",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["document", "writing", "workflow"]
+}
