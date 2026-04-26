@@ -1,0 +1,61 @@
+---
+project_name: {project_name}
+work_type: {work_type}
+created_date: {created_date}
+last_updated: {updated_date}
+---
+
+# 项目配置
+
+## 项目元信息
+
+| 配置项 | 值 |
+|--------|-----|
+| 项目名称 | {project_name} |
+| 工作类型 | {work_type} |
+| 初始化时间 | {init_date} |
+| 工作流版本 | {workflow_version} |
+
+---
+
+## 工作类型说明
+
+> `work_type` 决定了各 Skill 读取哪些模板、执行什么逻辑
+
+### 当前工作类型：{work_type}
+
+{work_type_description}
+
+### 各 Skill 行为差异
+
+| Skill | 软件开发 | 文档撰写 | 汇报材料 |
+|-------|----------|----------|----------|
+| ideal-requirement | 功能需求模板 | 文档需求模板 | 汇报需求模板 |
+| ideal-dev-solution | 技术方案 | 文档大纲 | PPT 大纲 |
+| ideal-test-case | 测试用例 | 评审标准 | 评审标准 |
+| ideal-test-exec | 运行测试脚本 | LLM 角色模拟 | LLM 演练模拟 |
+
+---
+
+## 领域配置
+
+{domain_config_section}
+
+---
+
+## 工作流集成
+
+本项目已通过 `ideal-init` 接入 CC-Workflow 工作流体系。
+
+### 可用命令
+
+| 命令 | 说明 |
+|------|------|
+| `/ideal-requirement` | 开始新需求（P1） |
+| `/ideal-init` | 重新初始化项目配置 |
+| `ideal status` | 查看当前流程状态 |
+
+### 相关文档
+
+- [CLAUDE.md](../CLAUDE.md) - 项目指令文件
+- 当前迭代状态：`docs/迭代/` 目录下各需求文件夹中的 `流程状态.md`
