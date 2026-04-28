@@ -63,6 +63,13 @@
       "description": "ideal-lab 插件库维护工具 — 自动化 commit、新增 skill/plugin、发布、校验",
       "category": "development",
       "keywords": ["maintainer", "tooling", "automation"]
+    },
+    {
+      "name": "ideal-ralph",
+      "source": "./plugins/ideal-ralph",
+      "description": "苏格拉底式任务澄清 + 持久小步迭代验证循环",
+      "category": "development",
+      "keywords": ["ralph", "iteration", "verification", "socratic", "loop"]
     }
   ]
 }
