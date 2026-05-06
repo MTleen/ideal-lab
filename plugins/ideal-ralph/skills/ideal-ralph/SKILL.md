@@ -48,7 +48,7 @@ CLARIFY（澄清）        LOOP（迭代循环）
 | 脚本 | 路径 | 用途 |
 |------|------|------|
 | **ralph_state.py** | `scripts/ralph_state.py` | JSON 状态管理器。管理 `state.json` 和 `contract.json` 的读写、初始化、查询。 |
-| **ralph_stop_hook.py** | `scripts/ralph_stop_hook.py` | Claude Code Stop Hook。主 Agent 尝试停止时检查是否有未完成任务，若有则阻止停止。 |
+| **ralph_stop_hook.py** | `scripts/ralph_stop_hook.py` | Claude Code Stop Hook。阻止停止时使用 continuation-template.md 生成结构化 prompt，引导 Agent 继续工作。模板不存在时回退到纯文本。 |
 | **ralph_verify.py** | `scripts/ralph_verify.py` | 验证执行器。根据 `verify_type` 执行 script / llm_judgment / hybrid 验证并更新状态。 |
 
 ### Hook 注册方式
@@ -214,10 +214,33 @@ Iteration N:
     └─ iteration++
 
   Step 6: 检查终止条件
-    ├─ 所有标准通过 -> 生成 report.md，结束
+    ├─ 所有标准通过 -> 执行全局审计（Step 6.1）
+    │   ├─ 审计通过 -> 生成 report.md，结束
+    │   └─ 审计发现遗漏 -> 追加新标准到 state.json，回到 Step 1
     ├─ 超过最大迭代次数 -> 报告进度，等用户决策
     ├─ 连续 3 次同标准失败 -> 报告卡点，等用户决策
     └─ 否则 -> 回到 Step 1
+```
+
+### 全局审计（Step 6.1）
+
+所有单项验收标准通过后、生成 report.md 之前，必须执行全局审计。详细指南见 `references/global-audit-guide.md`。
+
+```
+全局审计流程：
+
+1. 重述目标 — 从 contract.json 读取 description，拆解为具体交付物
+2. 构建清单 — 每个交付物对应一行：预期 → 实际证据 → 是否覆盖
+3. 检查证据 — 读取实际文件/运行测试/检查命令输出（禁止依赖记忆）
+4. 识别遗漏 — 缺失、部分完成、仅靠代理信号验证的都算遗漏
+5. 决策：
+   ├─ 无遗漏 → 生成 report.md
+   └─ 有遗漏 → 为每个遗漏创建新标准（source: "global_audit"），回到 LOOP
+```
+
+**约束**：
+- 全局审计最多执行 1 轮。追加新标准后不再执行第二次全局审计。
+- 新追加的标准使用 `llm_judgment` 验证方式，`affected_files` 为空。
 ```
 
 ### 重新验证机制
@@ -275,6 +298,7 @@ JUDGE:    两部分都通过 -> 通过；任一失败 -> 失败
 | 3 | **不空承诺** | 每个"通过"必须有新鲜证据。禁止"应该可以了"、"理论上没问题"。必须展示具体证据。 |
 | 4 | **小步前进** | 每次只做最小可验证步骤。不要一次改 5 个文件然后才验证。 |
 | 5 | **卡点上报** | 连续 3 次同标准失败 -> 暂停，报告卡点，等用户决策。不要无限重试。 |
+| 6 | **不代理** | 禁止用代理信号替代需求完成验证。"测试通过"≠"需求完成"。必须从目标出发逐项核实。全局审计是最后一道防线。 |
 
 ---
 
@@ -533,6 +557,8 @@ ideal-ralph 是上层编排器，可委托执行：
 |------|------|
 | `references/contract-template.md` | 合约完整模板 + 字段填写说明 |
 | `references/verification-guide.md` | 三种验证方式的详细指南 |
+| `references/continuation-template.md` | Stop Hook continuation prompt 模板 |
+| `references/global-audit-guide.md` | 全局审计详细指南 |
 | `../../scripts/ralph_state.py` | JSON 状态管理器（硬约束） |
 | `../../scripts/ralph_stop_hook.py` | Stop Hook 脚本（硬约束） |
 | `../../scripts/ralph_verify.py` | 验证执行器（硬约束） |
@@ -554,5 +580,6 @@ ideal-ralph 是上层编排器，可委托执行：
 - [ ] 每个标准通过时有新鲜证据（非空承诺）
 - [ ] 修改已通过标准相关文件时，标准状态重置为 pending
 - [ ] 连续 3 次同标准失败已上报
-- [ ] 所有标准通过后生成了 `report.md`
+- [ ] 所有标准通过后执行了全局审计（非代理信号）
+- [ ] 全局审计通过后生成了 `report.md`
 - [ ] 合约中的标准一个不少

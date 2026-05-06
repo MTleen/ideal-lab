@@ -41,7 +41,9 @@ from typing import Dict, Any, List, Optional, Tuple
 
 RALPH_DIR_NAME = ".ralph"
 STATE_FILENAME = "state.json"
+CONTRACT_FILENAME = "contract.json"
 BLOCK_HASH_FILENAME = ".last-block-hash"
+TEMPLATE_FILENAME = "continuation-template.md"
 MAX_OUTPUT_LENGTH = 500
 
 # ---------------------------------------------------------------------------
@@ -147,19 +149,112 @@ def _truncate(text: str, limit: int = MAX_OUTPUT_LENGTH) -> str:
     return text[:limit] + "..."
 
 
-def _build_block_reason(state: Dict[str, Any], next_criterion: Optional[Dict[str, Any]]) -> str:
-    """Build the reason string for a block decision."""
+def _load_contract(state_path: Path) -> Optional[Dict[str, Any]]:
+    """Load contract.json from the same task directory as state.json."""
+    contract_path = state_path.parent / CONTRACT_FILENAME
+    if not contract_path.exists():
+        return None
+    try:
+        return json.loads(contract_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def _find_template(state_path: Path) -> Optional[str]:
+    """
+    Locate the continuation template relative to the plugin installation.
+    Search order: plugin references dir -> script dir -> fallback None.
+    """
+    candidates = [
+        # From .ralph/{task}/state.json -> plugins/ideal-ralph/skills/ideal-ralph/references/
+        state_path.parent.parent.parent / "plugins" / "ideal-ralph" / "skills" / "ideal-ralph" / "references" / TEMPLATE_FILENAME,
+        # From script dir (if run from plugin root)
+        Path(__file__).resolve().parent.parent / "skills" / "ideal-ralph" / "references" / TEMPLATE_FILENAME,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            try:
+                return candidate.read_text(encoding="utf-8")
+            except Exception:
+                continue
+    return None
+
+
+def _build_block_reason(state: Dict[str, Any], next_criterion: Optional[Dict[str, Any]], state_path: Path) -> str:
+    """
+    Build the block reason using continuation template if available,
+    otherwise fall back to plain-text generation.
+    """
+    template = _find_template(state_path)
+    contract = _load_contract(state_path)
+
+    if template and contract:
+        return _fill_template(template, state, next_criterion, contract)
+    return _build_fallback_reason(state, next_criterion)
+
+
+def _fill_template(template: str, state: Dict[str, Any], next_criterion: Optional[Dict[str, Any]], contract: Dict[str, Any]) -> str:
+    """Fill continuation template with current state variables."""
+    criteria = state.get("criteria", [])
+    iteration = state.get("iteration", 0)
+    max_iterations = state.get("max_iterations", 20)
+
+    passed = [c for c in criteria if c.get("status") in ("passed", "manual_accept")]
+    pending = [c for c in criteria if c.get("status") in ("pending", "in_progress", "failed")]
+
+    progress_summary = (
+        f"{len(passed)} passed / {len(pending)} pending / {len(criteria)} total"
+    )
+
+    completed_lines = []
+    for c in passed:
+        ev = c.get("evidence") or "N/A"
+        completed_lines.append(f"  - #{c.get('id')}: {_truncate(ev)}")
+    completed_work = "\n".join(completed_lines) if completed_lines else "None yet"
+
+    if next_criterion:
+        next_id = str(next_criterion.get("id", "?"))
+        next_desc = next_criterion.get("desc", "N/A")
+        next_verify_type = next_criterion.get("verify_type", "N/A")
+        hint_parts = []
+        if next_criterion.get("command"):
+            hint_parts.append(f"  Run command: `{next_criterion['command']}`")
+        if next_criterion.get("status") == "failed" and next_criterion.get("last_error"):
+            hint_parts.append(f"  Last failure: {_truncate(next_criterion['last_error'])}")
+        next_hint = "\n".join(hint_parts) if hint_parts else ""
+    else:
+        next_id = "?"
+        next_desc = "No un-passed criteria remaining"
+        next_verify_type = "N/A"
+        next_hint = ""
+
+    objective = contract.get("description", "N/A")
+
+    return (
+        template
+        .replace("{{ iteration }}", str(iteration))
+        .replace("{{ max_iterations }}", str(max_iterations))
+        .replace("{{ objective }}", objective)
+        .replace("{{ progress_summary }}", progress_summary)
+        .replace("{{ completed_work }}", completed_work)
+        .replace("{{ next_id }}", next_id)
+        .replace("{{ next_desc }}", next_desc)
+        .replace("{{ next_verify_type }}", next_verify_type)
+        .replace("{{ next_hint }}", next_hint)
+    )
+
+
+def _build_fallback_reason(state: Dict[str, Any], next_criterion: Optional[Dict[str, Any]]) -> str:
+    """Fallback plain-text block reason when template is unavailable."""
     lines: List[str] = []
 
     criteria = state.get("criteria", [])
     iteration = state.get("iteration", 0)
     max_iterations = state.get("max_iterations", 20)
 
-    # Header
     lines.append(f"## Ralph Loop: iteration {iteration}/{max_iterations}")
     lines.append("")
 
-    # Criteria summary
     passed = [c for c in criteria if c.get("status") in ("passed", "manual_accept")]
     pending = [c for c in criteria if c.get("status") in ("pending", "in_progress", "failed")]
     blocked = [c for c in criteria if c.get("status") == "blocked"]
@@ -170,7 +265,6 @@ def _build_block_reason(state: Dict[str, Any], next_criterion: Optional[Dict[str
     )
     lines.append("")
 
-    # Un-passed criteria list
     if pending:
         lines.append("### Un-passed criteria:")
         for c in pending:
@@ -178,7 +272,6 @@ def _build_block_reason(state: Dict[str, Any], next_criterion: Optional[Dict[str
             lines.append(f"  - #{c.get('id')} [{c.get('status')}] {c.get('desc')}{detail}")
         lines.append("")
 
-    # Next criterion to work on
     if next_criterion:
         lines.append(f"### Next criterion to work on:")
         lines.append(f"  **#{next_criterion.get('id')}** ({next_criterion.get('verify_type')}): {next_criterion.get('desc')}")
@@ -188,9 +281,7 @@ def _build_block_reason(state: Dict[str, Any], next_criterion: Optional[Dict[str
             lines.append(f"  Last failure: {_truncate(next_criterion['last_error'])}")
         lines.append("")
 
-    # Encouragement
     lines.append("Keep working on the above criterion. Do NOT stop until all criteria pass.")
-
     return "\n".join(lines)
 
 
@@ -269,7 +360,7 @@ def process_hook(input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     _save_last_block_hash(state_path, block_hash)
 
     # Block stop
-    reason = _build_block_reason(state, next_c)
+    reason = _build_block_reason(state, next_c, state_path)
     return {
         "decision": "block",
         "reason": reason,
