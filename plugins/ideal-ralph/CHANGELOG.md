@@ -1,5 +1,15 @@
 # ideal-ralph
 
+## 0.6.0
+
+### Minor Changes
+
+- Add structured continuation prompt template and global audit step
+
+### Patch Changes
+
+- Add PREFLIGHT phase to auto-register Stop Hook before LOOP
+
 ## 0.4.0
 
 ### Minor Changes

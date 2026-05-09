@@ -100,6 +100,72 @@ python3 scripts/ralph_state.py mark-modified \
 
 ---
 
+## Phase 0: PREFLIGHT（前置检查）
+
+在开始 CLARIFY 之前，**必须**执行以下检查。如果检查不通过， Ralph LOOP 的铁律"不停止"无法执行。
+
+### Step 1: 检查 Stop Hook 注册
+
+读取项目级 `.claude/settings.json`，检查 `hooks.Stop` 中是否包含 `ralph_stop_hook.py`：
+
+```bash
+cat {project_root}/.claude/settings.json | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+hooks = data.get('hooks', {}).get('Stop', [])
+found = any('ralph_stop_hook' in h.get('command','') for group in hooks for h in group.get('hooks', []))
+print('registered' if found else 'not_registered')
+"
+```
+
+如果结果为 `not_registered` → 继续 Step 2。
+
+### Step 2: 添加 Hook 配置
+
+先检测插件安装路径：
+
+```bash
+find ~/.claude/plugins -name "ralph_stop_hook.py" -path "*/ideal-ralph/*" 2>/dev/null | head -1
+```
+
+然后向用户说明：
+
+> Ralph 需要 Stop Hook 来阻止 Agent 在验收标准未全部通过时停止。检测到项目级 `.claude/settings.json` 中未注册该 Hook，是否添加？
+
+用户确认后，读取现有 `{project_root}/.claude/settings.json`（不存在则创建空对象），合并以下配置（不覆盖已有的其他 hooks）：
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 {检测到的脚本绝对路径}"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+写入后通知用户配置已添加。
+
+### Step 3: 验证 Hook 可执行
+
+```bash
+echo '{"cwd":"{project_root}"}' | python3 {脚本路径}
+```
+
+应输出 `{"decision": "block", ...}` 或无输出（取决于是否有活跃 Ralph 任务），不应报错。
+
+验证通过后继续到 Phase 1: CLARIFY。
+
+---
+
 ## Phase 1: CLARIFY（苏格拉底式澄清）
 
 通过苏格拉底式询问，逐一明确 4 个维度。一次只问一个维度。
@@ -566,6 +632,11 @@ ideal-ralph 是上层编排器，可委托执行：
 ---
 
 ## 质量检查清单
+
+### PREFLIGHT 阶段
+- [ ] 检查了项目级 `.claude/settings.json` 的 Stop Hook 注册
+- [ ] 如未注册，已向用户确认并添加
+- [ ] Hook 脚本可执行性已验证
 
 ### CLARIFY 阶段
 - [ ] 4 个维度逐一确认（输入、输出、验证、实施）
