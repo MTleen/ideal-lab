@@ -9,6 +9,8 @@
 
 [插件清单](#插件清单) · [快速开始](#快速开始) · [使用方式](#使用方式) · [开发](#开发) · [迁移](#迁移说明)
 
+![ideal-lab overview](docs/ideal-lab-infographic.png)
+
 ---
 
 ## 概览
