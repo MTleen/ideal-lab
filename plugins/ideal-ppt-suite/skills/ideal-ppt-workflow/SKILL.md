@@ -20,10 +20,10 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 ### 主智能体绝对不做
 
 - ❌ 读取源素材或分析内容
-- ❌ 生成大纲、提示词或 SVG
+- ❌ 生成大纲、提示词或 HTML
 - ❌ 做风格推荐或内容策略决策
 - ❌ 直接生成图像或导出文件
-- ❌ 验证 SVG 质量
+- ❌ 验证 HTML 质量
 
 所有上述工作由各 Phase Skill 内部完成。
 
@@ -45,8 +45,8 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 | **P8** | 评审 | *(用户审核)* | 提示词审核 | 用户确认的生成指令 |
 | **P9** | 产物 | `ideal-ppt-image` | 图像生成 | `images/*.png` |
 | **P10** | 评审 | *(用户审核)* | 图像审核 | 用户确认的配图 |
-| **P11** | 产物 | `ideal-ppt-executor` | SVG 执行 | `NN-slide-*.svg` |
-| **P12** | 评审 | *(用户审核)* | SVG 审核 | 用户确认的最终幻灯片 |
+| **P11** | 产物 | `ideal-ppt-executor` | HTML 执行 | `NN-slide-*.html` |
+| **P12** | 评审 | *(用户审核)* | HTML 审核 | 用户确认的最终幻灯片 |
 | **P13** | 产物 | `ideal-ppt-export` | 导出交付 | `.pptx` + `.pdf` |
 
 ### 阶段分组
@@ -55,7 +55,7 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 |------|------|------|
 | **研究与规划** | P1 → P4 | 理解需求，制定策略 |
 | **内容工程** | P5 → P8 | 生成大纲和提示词 |
-| **视觉制作** | P9 → P12 | 生成图像和 SVG |
+| **视觉制作** | P9 → P12 | 生成图像和 HTML |
 | **交付** | P13 | 导出最终文件 |
 
 ### 条件跳过
@@ -259,7 +259,7 @@ updated_at: {YYYY-MM-DD HH:mm}
 | P5 | `ideal-ppt-outline` | `outline.md` | P4 approved |
 | P7 | `ideal-ppt-prompt` | `prompts/*.md` | P5 completed |
 | P9 | `ideal-ppt-image` | `images/*.png` | P7 completed, image_approach=ai-generated |
-| P11 | `ideal-ppt-executor` | `NN-slide-*.svg` | P7 completed |
+| P11 | `ideal-ppt-executor` | `NN-slide-*.html` | P7 completed |
 | P13 | `ideal-ppt-export` | `.pptx` + `.pdf` | P11 completed |
 
 ---
@@ -320,11 +320,11 @@ updated_at: {YYYY-MM-DD HH:mm}
 # 仅生成大纲
 /ideal-ppt-workflow content.md --outline-only
 
-# 生成大纲+提示词，跳过 SVG
+# 生成大纲+提示词，跳过 HTML
 /ideal-ppt-workflow content.md --prompts-only
 
-# 从现有提示词生成 SVG
-/ideal-ppt-workflow slide-deck/topic/ --svg-only
+# 从现有提示词生成 HTML
+/ideal-ppt-workflow slide-deck/topic/ --html-only
 ```
 
 ### 命令行选项
@@ -340,7 +340,7 @@ updated_at: {YYYY-MM-DD HH:mm}
 | `--slides <数量>` | 指定幻灯片数量 |
 | `--outline-only` | 仅执行 P1-P5，到大纲为止 |
 | `--prompts-only` | 执行到 P7，到提示词为止 |
-| `--svg-only` | 从 P11 开始，从现有提示词生成 SVG |
+| `--html-only` | 从 P11 开始，从现有提示词生成 HTML |
 | `--image-approach <方式>` | 图像策略：none / user-provided / ai-generated / placeholders |
 
 ### 典型流程
@@ -352,7 +352,7 @@ updated_at: {YYYY-MM-DD HH:mm}
   → P1 需求研究 → P2 确认 → P3 策略规划 → P4 策略确认 [BLOCKING]
   → P5 大纲生成 → P6 大纲审核 → P7 提示词工程 → P8 提示词审核
   → P9 图像生成（条件） → P10 图像审核（条件）
-  → P11 SVG 执行 → P12 SVG 审核 → P13 导出交付
+  → P11 HTML 执行 → P12 HTML 审核 → P13 导出交付
 ```
 
 #### 从中断恢复
@@ -371,7 +371,7 @@ updated_at: {YYYY-MM-DD HH:mm}
 # 修改第 3 页提示词后重新生成
 /ideal-ppt-workflow slide-deck/my-topic/ --regenerate 3
   → 读取 prompts/03-slide-xxx.md
-  → 调用 ideal-ppt-executor 生成 03-slide-xxx.svg
+  → 调用 ideal-ppt-executor 生成 03-slide-xxx.html
   → 调用 ideal-ppt-export 重新导出
 ```
 
@@ -386,15 +386,17 @@ slide-deck/{topic-slug}/
 ├── analysis.md              ← P1 产出：需求分析
 ├── strategy.md              ← P3 产出：策略规划
 ├── outline.md               ← P5 产出：幻灯片大纲
-├── prompts/                 ← P7 产出：SVG 生成提示词
+├── prompts/                 ← P7 产出：HTML 生成提示词
 │   ├── 01-slide-cover.md
 │   ├── 02-slide-intro.md
 │   └── ...
 ├── images/                  ← P9 产出：AI 生成图像（条件）
 │   ├── 01-hero.png
 │   └── ...
-├── 01-slide-cover.svg       ← P11 产出：最终 SVG
-├── 02-slide-intro.svg
+├── html_output/                ← P11 产出：HTML 幻灯片
+│   ├── 01-slide-cover.html
+│   ├── 02-slide-intro.html
+│   └── ...
 ├── ...
 ├── {topic-slug}.pptx        ← P13 产出：PowerPoint
 └── {topic-slug}.pdf         ← P13 产出：PDF

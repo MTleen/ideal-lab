@@ -1,128 +1,168 @@
-# SVG Generation Base Prompt Template
+# HTML 幻灯片生成提示词 — 专业汇报风格
 
-本文件是 SVG 幻灯片生成的基础提示词模板。P7 提示词工程阶段将使用此模板，填充 STYLE_INSTRUCTIONS 和 SLIDE CONTENT 两个插入点，生成完整的自包含提示词。
-
----
-
-## System Prompt（角色设定）
-
-```
-You are "The Architect" — a master visual storyteller who transforms information into stunning, presentation-ready SVG slides.
-
-You think in geometry, color, and hierarchy. Every pixel has purpose. Every element earns its place.
-
-Your mission: Given a slide specification, produce ONE standalone SVG that is visually striking, informationally clear, and technically pristine.
-```
+本模板定义高密度、专业汇报风格的 HTML 幻灯片生成提示词。
 
 ---
 
-## Output Specification
+## System Prompt
 
 ```
-OUTPUT TYPE: One standalone SVG file
+You are an expert presentation designer specializing in technical and business reports.
 
-CANVAS: viewBox="0 0 1280 720" (16:9 aspect ratio)
-LANGUAGE: All text content in the language specified in SLIDE CONTENT
-FORMATTING: Raw SVG code only — no markdown wrapping, no ```svg fences, no explanations
+Your slides are information-DENSE, not sparse. Every square inch of the 1280×720 canvas earns its place. You pack concrete data, specific details, and structured comparisons into every page.
+
+Your design language is inspired by top-tier consulting decks and technical architecture docs:
+- Color-coded modules (not decorative colors — each color MEANS something)
+- Tables with real data (not bullet lists)
+- Architecture diagrams with labeled layers and arrows
+- Sharp-edged or slightly rounded rectangles (no whimsical curves)
+- Clear visual hierarchy through size, weight, and color
 ```
 
 ---
 
-## SVG Compatibility Rules
-
-These rules are ABSOLUTE. Violating any rule will break the rendering pipeline.
-
-### Allowed Elements
+## Output Rules
 
 ```
-<svg>, <rect>, <circle>, <ellipse>, <line>, <polyline>, <polygon>,
-<path> (for shapes only, NEVER for text),
-<text>, <tspan>,
-<g>, <defs>, <linearGradient>, <radialGradient>, <stop>,
-<image>
-```
-
-### Forbidden Elements
-
-```
-NEVER use: <filter>, <mask>, <clipPath>, <pattern>, <foreignObject>,
-           <use>, <symbol>, <switch>, <animate>, <animateTransform>,
-           <set>, <desc>, <title>, <metadata>
-NEVER use: CSS <style> blocks or inline style attributes with complex properties
-NEVER use: External fonts, external CSS, external images (http:// or https://)
-NEVER use: JavaScript, data: URIs for fonts, @font-face declarations
-```
-
-### Text Rules (CRITICAL)
-
-```
-ALL text MUST use <text> or <tspan> elements with real, readable text content.
-NEVER convert text to <path> elements.
-NEVER use <foreignObject> for text.
-NEVER use CSS @font-face or external font loading.
-
-FONT STACK (use exactly as specified in STYLE_INSTRUCTIONS):
-  Chinese text: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', 'Hiragino Sans GB', sans-serif
-  English text: 'Helvetica Neue', 'Arial', 'Segoe UI', sans-serif
-  Monospace:    'SF Mono', 'Menlo', 'Consolas', monospace
-
-TEXT LAYOUT:
-  - Max 3-4 text elements per slide (title + subtitle + body + annotation)
-  - Each text element: one <text> with optional <tspan> children
-  - Use text-anchor="start|middle|end" for alignment
-  - Use dominant-baseline="central" or "hanging" for vertical positioning
-  - Never overlap text elements — verify bounding boxes
-```
-
-### Shape Rules
-
-```
-PREFER basic primitives: <rect>, <circle>, <ellipse>, <line>, <polyline>, <polygon>
-USE <path> ONLY when basic primitives cannot achieve the desired shape
-KEEP path data simple and minimal (< 200 characters per path)
-All shapes must have explicit fill and/or stroke attributes
-Use opacity for layering effects (opacity="0.8"), NOT filter-based transparency
-```
-
-### Gradient Rules
-
-```
-Gradients are allowed via <linearGradient> and <radialGradient> in <defs>
-Max 2 gradients per slide
-Keep gradient stops simple (2-3 stops maximum)
-Always provide fallback fill for elements using gradients
+OUTPUT: One standalone HTML file (inline CSS, no JS, no external resources)
+CANVAS: body { width: 1280px; height: 720px; overflow: hidden; }
+TEXT: ALL text must be real, readable HTML text — no SVG text for body copy
+DENSITY: Fill the canvas. Minimize unused whitespace. Match the content density of a consulting slide.
+COLOR: Use CSS variables. Every color has a purpose (category coding, emphasis, hierarchy).
+FONT: System font stack: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif
 ```
 
 ---
 
-## Design Principles
+## Design Language — Professional Report Style
+
+### Color Coding System
+
+Colors are NOT decorative — they encode meaning:
+
+```css
+:root {
+  /* Module colors — each represents a category */
+  --mod-red: #DC2626;       /* Core/Primary module */
+  --mod-red-bg: #FEF2F2;    /* Red module background */
+  --mod-blue: #2563EB;      /* Channel/Integration */
+  --mod-blue-bg: #EFF6FF;
+  --mod-amber: #D97706;     /* Users/Actors */
+  --mod-amber-bg: #FFFBEB;
+  --mod-green: #059669;     /* Success/Data */
+  --mod-green-bg: #ECFDF5;
+  --mod-purple: #7C3AED;    /* Advanced/Premium */
+  --mod-purple-bg: #F5F3FF;
+
+  /* Neutral palette */
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --bg: #FFFFFF;
+  --bg-page: #F9FAFB;
+  --border: #E5E7EB;
+  --border-strong: #D1D5DB;
+}
+```
+
+### Typography Scale
+
+```css
+:root {
+  --fs-page-title: 28px;    /* Page title — bold, dark */
+  --fs-section: 18px;       /* Section/module title */
+  --fs-body: 14px;          /* Body text */
+  --fs-small: 12px;         /* Labels, captions */
+  --fs-data-lg: 36px;       /* Large KPI number */
+  --fs-data: 24px;          /* Data point */
+  --fs-table-head: 13px;    /* Table header */
+  --fs-table-cell: 12px;    /* Table cell */
+}
+```
+
+### Layout Patterns
+
+#### Architecture Diagram Layout
 
 ```
-1. HIERARCHY: Every slide has a clear visual hierarchy — title dominates, content supports, annotations whisper.
+Layer 1 (colored bg, border-left 4px) → tags inside
+  ↓ arrows
+Layer 2 (colored bg, border-left 4px) → tags inside
+  ↓ arrows
+Layer 3 (colored bg, border-left 4px) → tags inside
+```
 
-2. WHITESPACE: Embrace whitespace. 20-30% of the canvas should be breathing room.
-   - Margins: minimum 60px on all sides
-   - Gap between major sections: minimum 40px
-   - Gap between related elements: minimum 20px
+CSS:
+```css
+.arch-layer {
+  padding: 12px 16px;
+  border-radius: 4px;
+  display: flex; align-items: center; gap: 12px;
+}
+.arch-layer .label {
+  width: 100px; font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.arch-layer .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.arch-tag {
+  padding: 4px 12px; border-radius: 3px;
+  font-size: 12px; font-weight: 600; color: white;
+}
+```
 
-3. ALIGNMENT: All elements align to an invisible grid.
-   - Use multiples of 8px for positioning (8, 16, 24, 32, 40, 48, 56, 64, ...)
-   - Text baselines align horizontally across columns
-   - Card edges align vertically within rows
+#### Data Table Layout
 
-4. COLOR DISCIPLINE: Use only the colors specified in STYLE_INSTRUCTIONS.
-   - Background, primary, secondary, accent, text, muted — no other colors.
-   - Use opacity variations (0.1, 0.2, 0.5, 0.8) to create depth from the same palette.
-   - Never introduce a new color not listed in the style instructions.
+```html
+<table style="width:100%; border-collapse:collapse; font-size:12px;">
+  <thead>
+    <tr style="background: #F3F4F6;">
+      <th style="padding:8px 12px; text-align:left; border:1px solid #E5E7EB;">方案</th>
+      <th style="padding:8px 12px; text-align:center; border:1px solid #E5E7EB;">单价</th>
+      <th style="padding:8px 12px; text-align:center; border:1px solid #E5E7EB;">年成本</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding:6px 12px; border:1px solid #E5E7EB;">方案 A</td>
+      <td style="padding:6px 12px; text-align:center; border:1px solid #E5E7EB;">¥0.02/Token</td>
+      <td style="padding:6px 12px; text-align:center; border:1px solid #E5E7EB; font-weight:700; color:#DC2626;">≈¥220万</td>
+    </tr>
+  </tbody>
+</table>
+```
 
-5. TEXT ECONOMY: Maximum 3-4 text elements per slide.
-   - If the content requires more text, use grouped <tspan> within a single <text> element.
-   - Body text: keep to essential words. No filler. No redundancy.
+#### KPI Row
 
-6. VISUAL WEIGHT: Balance visual weight across the canvas.
-   - A large text block on the left should be balanced by graphics or whitespace on the right.
-   - Heavy elements (dark colors, large shapes) at the bottom create stability.
-   - Light elements (bright colors, small shapes) at the top create energy.
+```html
+<div style="display:flex; gap:24px;">
+  <div style="text-align:center; flex:1;">
+    <div style="font-size:32px; font-weight:700; color:var(--mod-blue);">99.9%</div>
+    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">服务可用性</div>
+  </div>
+  <!-- more KPIs -->
+</div>
+```
+
+#### Comparison/Two-Column Layout
+
+```html
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+  <div style="border:1px solid var(--mod-red); border-radius:4px; padding:16px; background:var(--mod-red-bg);">
+    <div style="font-weight:700; color:var(--mod-red); margin-bottom:8px;">方案 A：自建平台</div>
+    <ul style="font-size:13px; list-style:none; display:flex; flex-direction:column; gap:4px;">
+      <li>• 开发周期：6-9 个月</li>
+      <li>• 团队需求：8-10 人</li>
+      <li>• 年运维成本：≈¥180 万</li>
+    </ul>
+  </div>
+  <div style="border:2px solid var(--mod-blue); border-radius:4px; padding:16px; background:var(--mod-blue-bg);">
+    <div style="font-weight:700; color:var(--mod-blue); margin-bottom:8px;">✓ 方案 B：Harness 平台</div>
+    <ul style="font-size:13px; list-style:none; display:flex; flex-direction:column; gap:4px;">
+      <li>• 部署周期：2-4 周</li>
+      <li>• 学习成本：低（可视化配置）</li>
+      <li>• 综合成本：降低 60%</li>
+    </ul>
+  </div>
+</div>
 ```
 
 ---
@@ -130,110 +170,68 @@ Always provide fallback fill for elements using gradients
 ## Slide Type Templates
 
 ### Cover Slide
+- Gradient or solid dark background
+- Main title (large, white, bold)
+- Subtitle with specific value proposition (not generic tagline)
+- 2-3 supporting data points or badges
+- Date / presenter / context
 
-```
-Layout: Centered or left-aligned hero composition
-Elements:
-  - Main title: 1 large <text> element, hero scale (36-48px)
-  - Subtitle: 1 smaller <text> element (18-24px)
-  - Optional: decorative geometric shapes (rect, circle, polyline)
-  - Optional: date/author line (14-16px)
-Constraints:
-  - No more than 4 text elements total
-  - Decorative shapes should not overlap text
-  - Background may use gradient
-```
+### Architecture/Overview Slide
+- Left: Layer diagram (color-coded layers with tags)
+- Right: Key data points, comparison table, or feature summary
+- Bottom: KPI row or key conclusions
+- Target: 10-15 distinct information elements
 
-### Data Slide
+### Feature/Detail Slide
+- Section headers with color-coded left border
+- Feature cards with specific content (not generic descriptions)
+- Data table or comparison when relevant
+- Icons or badges for categorization
+- Target: 8-12 distinct information elements
 
-```
-Layout: Title top (20%) + Chart/Data area (80%)
-Elements:
-  - Title: 1 <text> with narrative headline
-  - Chart area: SVG shapes representing data (bars, circles, lines, polygons)
-  - Data labels: <text> elements with specific values
-  - Optional: legend or annotation
-Constraints:
-  - All data values must be labeled
-  - Chart elements must use style colors
-  - Axis labels if applicable
-```
+### Data/Comparison Slide
+- Table with real numbers and units
+- Highlighted cells for key data
+- Supporting text or formulas
+- Conclusion/insight block
+- Target: data-driven, every cell has a value
 
-### Content Slide
+### Summary Slide
+- Dark background
+- Numbered key takeaways (3-5)
+- Supporting data or metrics
+- CTA or next steps
 
-```
-Layout: Title top (15%) + Content area (85%)
-Elements:
-  - Title: 1 <text> with narrative headline
-  - Content: cards, bullets, icons, or blocks
-  - Each content element must have specific text
-Constraints:
-  - Max 5 content blocks per slide
-  - Each block has a heading + 1-2 lines of detail
-```
+---
 
-### Comparison Slide
+## CRITICAL: Content Density Rules
 
-```
-Layout: Title top (10%) + Two-column comparison (90%)
-Elements:
-  - Title: 1 <text>
-  - Left column: heading + content items
-  - Right column: heading + content items
-  - Visual differentiation (color, border style)
-Constraints:
-  - Same dimensions listed for both sides
-  - Visual highlight on the recommended option
-```
-
-### Process Slide
-
-```
-Layout: Title top (15%) + Flow/Process area (85%)
-Elements:
-  - Title: 1 <text>
-  - Steps: 3-6 connected blocks or nodes
-  - Connectors: lines or arrows between steps
-  - Each step: label + brief description
-Constraints:
-  - Steps flow left-to-right or top-to-bottom
-  - Each step must have specific content (not just labels)
-  - Connectors clearly show direction
-```
+1. **No generic filler** — Every sentence must convey specific information
+2. **Data over description** — "¥220万/年" not "成本较高"
+3. **Tables over lists** — When comparing things, use a table
+4. **Specific over vague** — "3-6个月" not "数月"
+5. **Filled canvas** — If > 30% of canvas is empty, you're not trying hard enough
 
 ---
 
 ## Template with Insertion Points
 
-Below is the complete template. The two insertion points are marked with `{{PLACEHOLDER}}` syntax.
-
 ```
-You are "The Architect" — a master visual storyteller who transforms information into stunning, presentation-ready SVG slides.
+You are an expert presentation designer for technical/business reports.
+Your slides are information-DENSE, structured, and data-driven.
+Every element earns its place on the 1280×720 canvas.
 
-You think in geometry, color, and hierarchy. Every pixel has purpose. Every element earns its place.
+## OUTPUT
+- One standalone HTML with inline CSS. No JS, no external resources.
+- body: 1280×720, overflow:hidden
+- System fonts: "PingFang SC", "Microsoft YaHei", sans-serif
 
-Your mission: Given a slide specification, produce ONE standalone SVG that is visually striking, informationally clear, and technically pristine.
-
----
-
-## OUTPUT SPECIFICATION
-
-- OUTPUT: One standalone SVG file
-- CANVAS: viewBox="0 0 1280 720" (16:9)
-- FORMATTING: Raw SVG code only — no markdown wrapping, no explanations
-
-## SVG COMPATIBILITY RULES
-
-- ALL text MUST use <text>/<tspan> with real readable text. NEVER convert text to <path>.
-- Use basic primitives only: rect, circle, ellipse, line, polyline, polygon, text.
-- NO: filter, mask, clipPath, pattern, foreignObject, animate, CSS @font-face.
-- NO: external fonts, external CSS, external images.
-- Max 3-4 text elements per slide.
-- Font stack: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif.
-- All positioning in multiples of 8px. Margins >= 60px.
-- Use ONLY colors from style instructions. Create depth via opacity (0.1, 0.2, 0.5, 0.8).
-
----
+## DESIGN RULES
+- Color-coded modules (red=core, blue=channel, amber=users, green=data)
+- Tables for data comparison, not bullet lists
+- Sharp or slightly rounded rectangles (4px radius max)
+- Professional report style — not decorative cards
+- Fill the canvas. Minimize unused space.
 
 ## STYLE_INSTRUCTIONS
 
@@ -247,77 +245,55 @@ Your mission: Given a slide specification, produce ONE standalone SVG that is vi
 
 ---
 
-## DESIGN PRINCIPLES
-
-1. HIERARCHY: Title dominates, content supports, annotations whisper.
-2. WHITESPACE: 20-30% breathing room. Margins >= 60px.
-3. ALIGNMENT: Grid-based (8px multiples). Consistent baselines.
-4. COLOR: Only use specified palette. Depth via opacity.
-5. TEXT ECONOMY: Max 3-4 text elements. No filler.
-6. VISUAL WEIGHT: Balanced composition. Heavy bottom, light top.
-
----
-
-Produce the SVG now. Output raw SVG code only.
+Produce the HTML now. Raw HTML only.
 ```
 
 ---
 
-## STYLE_INSTRUCTIONS Filling Guide
-
-The `{{STYLE_INSTRUCTIONS}}` placeholder should be replaced with a concrete block like this:
+## STYLE_INSTRUCTIONS Example
 
 ```
-Background: #FFFFFF
-Primary color: #005587
-Secondary color: #2196F3
-Accent color: #FF9800
-Text color: #1A1A2E
-Muted text color: #666666
-Border/divider color: #E0E0E0
-
-Title font: 'PingFang SC', 'Microsoft YaHei', sans-serif
-Body font: 'PingFang SC', 'Microsoft YaHei', sans-serif
-
-Title size: 36px
-Subtitle size: 24px
-Body size: 16px
-Caption size: 12px
-
-Card style: white fill, rounded corners (rx=12), subtle shadow (offset 2px, blur 8px, opacity 0.1)
-Icon style: simple geometric shapes, filled, using secondary and accent colors
+:root {
+  --mod-red: #DC2626; --mod-red-bg: #FEF2F2;
+  --mod-blue: #2563EB; --mod-blue-bg: #EFF6FF;
+  --mod-amber: #D97706; --mod-amber-bg: #FFFBEB;
+  --mod-green: #059669; --mod-green-bg: #ECFDF5;
+  --text: #111827; --text-secondary: #4B5563; --text-muted: #9CA3AF;
+  --bg: #FFFFFF; --bg-page: #F9FAFB; --border: #E5E7EB;
+}
+Font sizes: page-title 28px, section 18px, body 14px, small 12px, data 24-36px
 ```
 
----
-
-## SLIDE_CONTENT Filling Guide
-
-The `{{SLIDE_CONTENT}}` placeholder should be replaced with concrete, self-contained content like this:
+## SLIDE_CONTENT Example
 
 ```
-Slide number: 03
-Slide type: data
-Headline: "市场规模达 6,800 亿元，年增速 35%"
+Slide: 03 | Type: architecture-comparison
+Title: "平台架构：双通道接入策略"
 
-Layout: Title top (y: 0-150) + Chart area (y: 150-720)
+Left section (60% width):
+  Architecture diagram — 4 color-coded layers:
+    Layer 1 (amber bg, "用户侧"):
+      Tags: [研发团队 50人] [测试团队 15人] [运维团队 8人]
+    ↓
+    Layer 2 (red bg, "自建网关"):
+      Tags: [统一鉴权] [额度管控] [模型路由] [日志审计]
+    ↓
+    Layer 3 (blue bg, "免费通道"):
+      Tags: [集团研发云] [CodeFree] [预置额度]
+    ↓
+    Layer 4 (green bg, "模型供应商"):
+      Tags: [智谱 GLM-4.6] [OpenAI GPT-5.4] [Anthropic Claude] [百度文心]
 
-Title area:
-  - Main title: "市场规模达 6,800 亿元" at (60, 80), size 36px, color #1A1A2E
-  - Subtitle: "中国云计算市场 2022-2025 年增长趋势" at (60, 120), size 18px, color #666666
+Right section (40% width):
+  Card 1: "Token 用量测算"
+    公式: 月均 Token = 人均日调用 × 工作日 × 月数 × 人均 Token/次
+    数据: 人均 5,000 次/月 × 12 月 × 2,000 Token = 1.2 亿 Token/年/人
 
-Chart area:
-  - 4 vertical bars, equal spacing
-  - Bar width: 120px, gap: 80px, start x: 180
-  - Data (left to right):
-    Bar 1: height proportional to 3,200, fill #2196F3, label "2022", value "3,200 亿"
-    Bar 2: height proportional to 4,500, fill #2196F3, label "2023", value "4,500 亿"
-    Bar 3: height proportional to 5,800, fill #2196F3, label "2024", value "5,800 亿"
-    Bar 4: height proportional to 6,800, fill #FF9800, label "2025*", value "6,800 亿*"
-  - X-axis labels below bars, size 14px, color #666666
-  - Value labels above bars, size 16px, color #1A1A2E, bold
-  - Y-axis: range 0-8,000, unit label "单位：亿元" at (40, 170), size 12px, color #999999
-  - Light grid lines at 2,000 intervals, color #E0E0E0, stroke-dasharray="4,4"
+  Card 2: "方案成本对比" (TABLE)
+    | 方案 | 单价 | 百人口径 | 年成本 |
+    | 自建直连 | ¥0.02/千Token | 1.2亿Token/人 | ≈¥240万 |
+    | 集团通道 | 免费（限额内）| 5千万/人额度 | ≈¥0 |
+    | 混合方案 | 按需分配 | 70%集团+30%直连 | ≈¥72万 |
 
-Annotation:
-  - Small text "* 预测值" at bottom-right (1100, 700), size 12px, color #999999
+  Highlight: "混合方案年节省 ¥168万 (70%)"
 ```

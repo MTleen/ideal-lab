@@ -1,111 +1,116 @@
 ---
 name: ideal-ppt-export
-description: Use when P12 SVG review is completed and export/delivery phase begins. Converts SVG slides to editable PPTX and PDF. Triggered by ideal-ppt-workflow at P13.
+description: Use when P12 review is completed and export/delivery phase begins. Converts HTML slides to editable PPTX (native shapes/text/tables) and PDF. Triggered by ideal-ppt-workflow at P13.
 ---
 
 # Ideal PPT Export (P13)
 
-导出交付 — 将 SVG 幻灯片转换为可编辑 PPTX 和 PDF，生成最终交付物。
+导出交付 — 将 HTML 幻灯片解析转换为**可编辑** PPTX（原生形状/文本框/表格）和 PDF。
 
 ## 角色定义
 
 | 属性 | 值 |
 |------|-----|
 | 角色 | Export & Delivery Specialist |
-| 输入工件 | `svg_output/*.svg` 或 `svg_final/*.svg` + `notes/total.md` |
-| 输出工件 | `{topic-slug}.pptx` + `{topic-slug}.pdf` |
+| 输入工件 | `html_output/*.html` + `notes/total.md` |
+| 输出工件 | `{topic-slug}.pptx`（可编辑）+ `{topic-slug}.pdf` |
 
 ## 前置检查
 
-- `svg_output/` 或 `svg_final/` 目录存在且包含 SVG 文件
+- `html_output/` 目录存在且包含 HTML 文件
 - P12 评审已完成
 
 ## 依赖
 
 - **Python 3.8+**
 - **python-pptx**: `pip install python-pptx`
-- **rsvg-convert**: SVG 转 PNG（macOS: `brew install librsvg`）
-- **PyPDF2**: PDF 合并（`pip install PyPDF2`）
+- **beautifulsoup4**: `pip install beautifulsoup4`（HTML 解析）
+- **Playwright**（PDF 导出用）: `pip install playwright && playwright install chromium`
 
 ## 工作流程
 
-### Step 1: 验证 SVG 文件
+### Step 1: 验证 HTML 文件
 
-确认所有 SVG 文件有效：
-- viewBox 属性存在且正确
-- 无禁止元素（clipPath, mask, style, foreignObject, script, animate）
-- XML 合法（`&` 转义为 `&amp;` 等）
-- 文件大小 > 0
+确认所有 HTML 文件有效：
+- `body` 元素有 `width: 1280px; height: 720px`
+- 内容非空
 
-### Step 2: 分割演讲备注
+### Step 2: 导出 PPTX（原生元素模式）
 
-将 `notes/total.md` 按页分割为独立文件：
+**核心方案：HTML DOM → python-pptx 原生形状/文本框/表格，完全可编辑。**
+
+```bash
+python3 ${SKILL_DIR}/scripts/html-to-pptx-native.py html_output/ -o {topic-slug}.pptx
+```
+
+**HTML → PPTX 元素映射**：
+
+| HTML 元素/CSS 类 | PPTX 原生元素 | 说明 |
+|-------------------|--------------|------|
+| `<h1>` | TextBox + 大号加粗字体 | 页面标题 |
+| `<h2>` / `<h3>` | TextBox + 中号字体 | 卡片/模块标题 |
+| `<p>` / `<span>` | TextBox + 正文字体 | 正文文本 |
+| `.card` / `.layer` | Rectangle + TextBox | 卡片/层容器 |
+| `.stat-number` | TextBox + 超大号加粗字体 | KPI 数字 |
+| `.stat-label` | TextBox + 小号字体 | KPI 标签 |
+| `<ul>` / `<ol>` | TextBox + 项目符号 | 列表 |
+| `<table>` | Table（python-pptx 原生表格） | 数据表格 |
+| `.badge` / `.tag` | Rectangle（小号圆角）+ TextBox | 标签/徽章 |
+| `.arrow-row` / 流程箭头 | Line + Freeform | 流程连线 |
+| 内嵌 `<svg>` | 截图后作为 Image 嵌入 | SVG 图形（不可编辑，但清晰） |
+| `<img>` | Image 嵌入 | AI 生成图片 |
+
+**坐标转换**：
+
+- HTML px → PPTX EMU: `px * 9525`（96 DPI 标准）
+- HTML (0,0) 在左上角 → PPTX 也是左上角
+- PPTX 页面尺寸：`Inches(13.333) × Inches(7.5)` = 1280×720 px 映射
+- 元素位置：读取 HTML `getBoundingClientRect()` 的 x/y/width/height
+
+**文本映射规则**：
+
+```
+HTML font-size: 56px  → PPTX Pt(42)    # 封面标题
+HTML font-size: 36px  → PPTX Pt(27)    # 页面标题
+HTML font-size: 24px  → PPTX Pt(18)    # 章节标题
+HTML font-size: 20px  → PPTX Pt(15)    # 卡片标题
+HTML font-size: 16px  → PPTX Pt(12)    # 正文
+HTML font-size: 14px  → PPTX Pt(10.5)  # 辅助文字
+HTML font-size: 12px  → PPTX Pt(9)     # 脚注
+HTML font-size: 40px+ → PPTX Pt(30+)   # KPI 数字
+
+HTML font-weight: 700  → bold
+HTML font-weight: 600  → bold
+HTML font-weight: 400  → normal
+
+HTML color: var(--primary) → 读取 CSS 变量值转为 RGBColor
+HTML color: #1A56DB       → RGBColor(0x1A, 0x56, 0xDB)
+```
+
+**实现方式**：
+
+脚本使用 Playwright 渲染 HTML 并提取每个元素的 `getBoundingClientRect()`，然后用 python-pptx 创建对应的原生元素：
+
+1. Playwright 打开 HTML，执行 JS 提取所有可见元素的 bbox 和样式
+2. 读取 CSS 变量值（`:root` 上计算后的值）
+3. 按层级创建 PPTX 元素：背景矩形 → 卡片矩形 → 文本框 → 表格 → 图片
+4. SVG 元素单独截图为 PNG，作为 Image 嵌入
+
+### Step 3: 分割演讲备注
 
 ```bash
 python3 ${SKILL_DIR}/scripts/split-notes.py <slide-deck-dir>
 ```
 
-### Step 3: SVG 后处理（如未执行）
-
-如果 `svg_final/` 目录不存在或为空，先将 `svg_output/` 复制到 `svg_final/`：
+### Step 4: 导出 PDF
 
 ```bash
-cp svg_output/*.svg svg_final/
+python3 ${SKILL_DIR}/scripts/html-to-pdf.py html_output/ -o {topic-slug}.pdf
 ```
 
-同时修复 XML 实体转义（`&` → `&amp;`）：
+使用 Playwright 将每页 HTML 渲染为单页 PDF，合并输出。
 
-```bash
-python3 ${SKILL_DIR}/../ideal-ppt-executor/scripts/sanitize-svg.py svg_output/ -o svg_final/
-```
-
-### Step 4: 导出 PPTX（Native Shapes 模式）
-
-**核心方案：SVG → DrawingML 原生形状，完全可编辑。**
-
-使用 ppt-master 的 `svg_to_shapes.py` 将每个 SVG 元素转换为 DrawingML XML：
-
-```bash
-python3 ${SKILL_DIR}/scripts/native-export.py <slide-deck-dir>
-```
-
-**工作原理**：
-1. 用 `python-pptx` 创建基础 PPTX（设置画布尺寸）
-2. 解压 PPTX 为 ZIP
-3. 对每个 SVG，调用 `svg_to_shapes.convert_svg_to_slide_shapes()` 生成 DrawingML XML
-4. 用生成的 XML 替换幻灯片内容
-5. 嵌入演讲备注（notesSlide XML）
-6. 重新打包为 PPTX
-
-**SVG → DrawingML 映射**：
-
-| SVG 元素 | DrawingML 形状 | PPT 可编辑 |
-|----------|---------------|-----------|
-| `<rect>` | `<a:prstGeom prst="rect">` | 矩形/圆角矩形 |
-| `<circle>` / `<ellipse>` | `<a:prstGeom prst="ellipse">` | 椭圆 |
-| `<line>` | `<a:custGeom>` (moveTo + lnTo) | 自由线条 |
-| `<polygon>` | `<a:custGeom>` (闭合路径) | 自由形状 |
-| `<text>` | `<p:sp txBox="1">` + `<a:r>` | 文本框 |
-| `<path>` | `<a:custGeom>` (贝塞尔曲线) | 自由形状 |
-
-**坐标系统**：
-- SVG 像素 → EMU: `px * 9525`（96 DPI）
-- 文本 baseline 偏移：`y - fontSize * 0.85`
-- text-anchor 对齐：start → l, middle → ctr, end → r
-
-**Fallback**：如果 native 模式失败，fallback 到 SVG 嵌入模式（需右键"转换为形状"）。
-
-### Step 5: 导出 PDF
-
-```bash
-python3 ${SKILL_DIR}/scripts/merge-to-pdf.py <slide-deck-dir>
-```
-
-**流程**：
-1. `rsvg-convert` 将每个 SVG 转为单页 PDF
-2. `PyPDF2` 合并所有页面为一个 PDF
-
-### Step 6: 交付摘要
+### Step 5: 交付摘要
 
 输出交付报告：
 
@@ -113,28 +118,33 @@ python3 ${SKILL_DIR}/scripts/merge-to-pdf.py <slide-deck-dir>
 ## 交付完成
 
 主题：{主题}
-风格：{预设名称}
 幻灯片：共 N 页
 
 交付物：
-- PPTX：{topic-slug}.pptx（可编辑）
+- HTML 源文件：html_output/*.html
+- PPTX：{topic-slug}.pptx（可编辑：原生文本框/形状/表格）
 - PDF：{topic-slug}.pdf
 - 演讲备注：notes/*.md
-- SVG 源文件：svg_final/*.svg
 ```
 
-## 文件发现规则
+## 输出目录结构
 
-- SVG 文件正则：`^(\d+)-slide-.*\.svg$`
-- 按序号排序
-- 备注文件匹配：`notes/total.md` 或 `notes/NN_*.md`
+```
+slide-deck/{topic-slug}/
+├── html_output/
+│   ├── 01-slide-cover.html
+│   └── ...
+├── notes/
+│   └── total.md
+├── {topic-slug}.pptx    ← 可编辑
+└── {topic-slug}.pdf
+```
 
 ## 错误处理
 
 | 错误 | 处理 |
 |------|------|
-| svg_to_shapes 转换失败 | 报告错误元素，跳过该元素继续 |
-| python-pptx 未安装 | 提示 `pip install python-pptx` |
-| rsvg-convert 未安装 | PDF 导出跳过，仅导出 PPTX |
-| XML 解析错误 | 修复实体转义后重试 |
-| SVG 验证失败 | 报告具体问题 |
+| Playwright 未安装 | 提示安装 |
+| beautifulsoup4 未安装 | 提示 `pip install beautifulsoup4` |
+| HTML 解析失败 | 报告错误元素，跳过该页 |
+| PPTX 元素创建失败 | fallback 为截图模式（不可编辑） |

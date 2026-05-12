@@ -64,14 +64,12 @@ description: Use when P3 strategy review is completed and content outline genera
 
 ### Step 4: 生成 STYLE_INSTRUCTIONS
 
-从 `design-spec.md` 提取视觉参数，生成统一的 STYLE_INSTRUCTIONS 块：
-- Design Aesthetic
-- Background
-- Typography
-- Color Palette（含 HEX 值）
-- Visual Elements
-- Density Guidelines
-- Style Rules（Do / Don't）
+从 `design-spec.md` 提取视觉参数，生成统一的 CSS 变量定义块：
+- CSS Custom Properties（`:root` 变量）
+- 颜色系统（primary / secondary / accent / text / bg）
+- 字体栈（font-family for Chinese / English / Code）
+- 字号层级（h1 / h3 / body / small / number）
+- 间距体系（gap / padding / radius）
 
 ### Step 5: 输出 outline.md
 
