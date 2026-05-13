@@ -28,6 +28,8 @@ style:
   mood: {professional|warm|cool|vibrant|dark|neutral}  # 条件必填
   typography: {geometric|humanist|handwritten|editorial|technical}  # 条件必填
   density: {minimal|balanced|dense|ultra-dense}  # 条件必填，image 模式建议 dense 或 ultra-dense
+  quality: {flat|soft-shadow|glassmorphism|neumorphism|layered-depth}  # image 模式可选，默认 soft-shadow
+  spacing: {compact|standard|generous|editorial}  # image 模式可选，默认 standard
 
 # === 风格参考（rendering_mode=image 时生效）===
 style_reference:
@@ -79,6 +81,8 @@ updated_at: {YYYY-MM-DD HH:mm}                  # 必填，最后更新时间
 | `style.mood` | enum | 条件 | 色调维度，preset=custom 时必填 |
 | `style.typography` | enum | 条件 | 字体维度，preset=custom 时必填 |
 | `style.density` | enum | 条件 | 密度维度，preset=custom 时必填。image 模式建议 dense/ultra-dense |
+| `style.quality` | enum | 可选 | 质感维度，image 模式生效。默认 soft-shadow |
+| `style.spacing` | enum | 可选 | 间距维度，image 模式生效。默认 standard |
 | `style_reference.type` | enum | 条件 | 风格参考类型，rendering_mode=image 时生效 |
 | `style_reference.path` | string | 条件 | 参考图片路径，type=image 时必填 |
 | `style_reference.description` | string | 条件 | 风格描述文本，type=description 时必填 |
