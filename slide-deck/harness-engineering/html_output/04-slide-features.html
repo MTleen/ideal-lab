@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>Slide 4 - 核心功能对比</title>
+<style>
+:root {
+  --mod-red: #DC2626; --mod-red-bg: #FEF2F2;
+  --mod-blue: #2563EB; --mod-blue-bg: #EFF6FF;
+  --mod-amber: #D97706; --mod-amber-bg: #FFFBEB;
+  --mod-green: #059669; --mod-green-bg: #ECFDF5;
+  --mod-purple: #7C3AED; --mod-purple-bg: #F5F3FF;
+  --text: #111827; --text-secondary: #4B5563; --text-muted: #9CA3AF;
+  --bg: #FFFFFF; --bg-page: #F9FAFB; --border: #E5E7EB;
+  --font: "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-number: "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1280px; height: 720px; overflow: hidden; font-family: var(--font); font-size: 14px; line-height: 1.5; color: var(--text); background: var(--bg-page); padding: 28px 40px; }
+.page-title { font-size: 24px; font-weight: 700; margin-bottom: 14px; padding-bottom: 5px; border-bottom: 3px solid var(--mod-green); display: inline-block; }
+.top-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.compare-side { padding: 14px 16px; border-radius: 4px; }
+.side-a { border: 1px solid #FECACA; background: var(--mod-red-bg); }
+.side-b { border: 2px solid var(--mod-blue); background: var(--mod-blue-bg); }
+.side-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.side-a .side-title { color: var(--mod-red); }
+.side-b .side-title { color: var(--mod-blue); }
+.side-list { list-style: none; font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 4px; }
+.side-list li::before { content: "• "; }
+.table-section { margin-bottom: 12px; }
+.section-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { padding: 7px 10px; text-align: left; background: #F3F4F6; font-weight: 600; border: 1px solid var(--border); font-size: 12px; }
+.data-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-secondary); }
+.data-table td.highlight { font-weight: 700; color: var(--mod-red); }
+.data-table td.success { font-weight: 700; color: var(--mod-green); }
+.bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.info-card { padding: 10px 14px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); }
+.info-card.accent-blue { border-left: 3px solid var(--mod-blue); }
+.info-card.accent-green { border-left: 3px solid var(--mod-green); }
+.info-card.accent-purple { border-left: 3px solid var(--mod-purple); }
+.card-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.info-card.accent-blue .card-title { color: var(--mod-blue); }
+.info-card.accent-green .card-title { color: var(--mod-green); }
+.info-card.accent-purple .card-title { color: var(--mod-purple); }
+.card-body { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="page-title">核心能力对比：Harness vs 自建方案</div>
+<div class="top-section">
+  <div class="compare-side side-a">
+    <div class="side-title">自建 CI/CD 方案</div>
+    <ul class="side-list">
+      <li>Jenkins + Spinnaker + ArgoCD 拼装</li>
+      <li>开发周期：6-9 个月，团队需求 8-10 人</li>
+      <li>年运维成本：≈¥180 万（人力 + 服务器）</li>
+      <li>安全扫描：需单独集成 SAST/DAST/SCA 工具</li>
+      <li>成本优化：手动分析，无自动化建议</li>
+    </ul>
+  </div>
+  <div class="compare-side side-b">
+    <div class="side-title">✓ Harness 一体化平台</div>
+    <ul class="side-list">
+      <li>开箱即用，部署周期 2-4 周</li>
+      <li>学习成本低，可视化 YAML + Drag&Drop</li>
+      <li>综合成本降低 60%（含 CCM 优化）</li>
+      <li>STO 安全编排：30+ 工具一键集成</li>
+      <li>AI 智能推荐步骤、根因分析、资源优化</li>
+    </ul>
+  </div>
+</div>
+<div class="table-section">
+  <div class="section-title">关键指标对比</div>
+  <table class="data-table">
+    <thead><tr><th>对比维度</th><th>自建方案</th><th>Harness 平台</th><th>差异</th></tr></thead>
+    <tbody>
+      <tr><td>部署频率</td><td>日均 2-3 次</td><td>日均 10+ 次</td><td class="success">3-5x 提升</td></tr>
+      <tr><td>变更交付时间</td><td>2-5 天</td><td>2-4 小时</td><td class="success">90% 缩短</td></tr>
+      <tr><td>变更失败率</td><td>15-20%</td><td>&lt; 5%</td><td class="success">降低 75%</td></tr>
+      <tr><td>MTTR（恢复时间）</td><td>4-8 小时</td><td>&lt; 30 分钟</td><td class="success">90% 缩短</td></tr>
+      <tr><td>年度总成本</td><td>≈¥350 万</td><td>≈¥140 万</td><td class="highlight">节省 ¥210 万</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="bottom-row">
+  <div class="info-card accent-blue">
+    <div class="card-title">Pipeline 即代码</div>
+    <div class="card-body">YAML 定义 + 可视化编辑，200+ 内置 Step 模板，支持自定义插件。版本控制、复用、审计追踪一体化。</div>
+  </div>
+  <div class="info-card accent-green">
+    <div class="card-title">智能回滚</div>
+    <div class="card-body">基于指标（错误率/延迟/CPU）自动判断部署健康度，异常时自动回滚到上一个稳定版本，无需人工介入。</div>
+  </div>
+  <div class="info-card accent-purple">
+    <div class="card-title">多云统一管理</div>
+    <div class="card-body">一套 Pipeline 适配 AWS/GCP/Azure/阿里云/本地 K8s，环境配置标准化，切换零成本。</div>
+  </div>
+</div>
+</body>
+</html>

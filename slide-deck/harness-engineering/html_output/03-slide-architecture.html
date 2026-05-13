@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>Slide 3 - 平台架构</title>
+<style>
+:root {
+  --mod-red: #DC2626; --mod-red-bg: #FEF2F2;
+  --mod-blue: #2563EB; --mod-blue-bg: #EFF6FF;
+  --mod-amber: #D97706; --mod-amber-bg: #FFFBEB;
+  --mod-green: #059669; --mod-green-bg: #ECFDF5;
+  --mod-purple: #7C3AED; --mod-purple-bg: #F5F3FF;
+  --text: #111827; --text-secondary: #4B5563; --text-muted: #9CA3AF;
+  --bg: #FFFFFF; --bg-page: #F9FAFB; --border: #E5E7EB;
+  --font: "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-number: "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1280px; height: 720px; overflow: hidden; font-family: var(--font); font-size: 14px; line-height: 1.5; color: var(--text); background: var(--bg-page); padding: 28px 40px; }
+.page-title { font-size: 24px; font-weight: 700; margin-bottom: 14px; padding-bottom: 5px; border-bottom: 3px solid var(--mod-blue); display: inline-block; }
+.main-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
+.arch-layer { padding: 8px 14px; border-radius: 4px; display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
+.arch-layer.red { background: var(--mod-red-bg); border-left: 4px solid var(--mod-red); }
+.arch-layer.blue { background: var(--mod-blue-bg); border-left: 4px solid var(--mod-blue); }
+.arch-layer.amber { background: var(--mod-amber-bg); border-left: 4px solid var(--mod-amber); }
+.arch-layer.green { background: var(--mod-green-bg); border-left: 4px solid var(--mod-green); }
+.arch-layer.purple { background: var(--mod-purple-bg); border-left: 4px solid var(--mod-purple); }
+.layer-label { width: 80px; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.arch-layer.red .layer-label { color: var(--mod-red); }
+.arch-layer.blue .layer-label { color: var(--mod-blue); }
+.arch-layer.amber .layer-label { color: var(--mod-amber); }
+.arch-layer.green .layer-label { color: var(--mod-green); }
+.arch-layer.purple .layer-label { color: var(--mod-purple); }
+.layer-tags { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+.arch-tag { padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; color: white; }
+.arch-layer.red .arch-tag { background: var(--mod-red); }
+.arch-layer.blue .arch-tag { background: var(--mod-blue); }
+.arch-layer.amber .arch-tag { background: var(--mod-amber); }
+.arch-layer.green .arch-tag { background: var(--mod-green); }
+.arch-layer.purple .arch-tag { background: var(--mod-purple); }
+.arrow-row { display: flex; justify-content: center; gap: 80px; padding: 1px 0; color: var(--text-muted); font-size: 12px; }
+.right-panel { display: flex; flex-direction: column; gap: 10px; }
+.info-card { padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); }
+.info-card.accent-blue { border-left: 3px solid var(--mod-blue); }
+.info-card.accent-green { border-left: 3px solid var(--mod-green); }
+.info-card.accent-amber { border-left: 3px solid var(--mod-amber); }
+.card-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.info-card.accent-blue .card-title { color: var(--mod-blue); }
+.info-card.accent-green .card-title { color: var(--mod-green); }
+.info-card.accent-amber .card-title { color: var(--mod-amber); }
+.card-body { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+.kpi-row { display: flex; gap: 0; margin-top: 8px; }
+.kpi-item { flex: 1; text-align: center; padding: 8px 4px; background: var(--bg); border: 1px solid var(--border); border-right: none; }
+.kpi-item:last-child { border-right: 1px solid var(--border); }
+.kpi-value { font-family: var(--font-number); font-size: 22px; font-weight: 700; line-height: 1; }
+.kpi-label { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="page-title">平台架构：四层分离 + Delegate 代理</div>
+<div class="main-grid">
+  <div>
+    <div class="arch-layer amber">
+      <div class="layer-label">用户接入层</div>
+      <div class="layer-tags">
+        <div class="arch-tag">研发团队 50人</div>
+        <div class="arch-tag">测试团队 15人</div>
+        <div class="arch-tag">运维团队 8人</div>
+        <div class="arch-tag">API 调用方</div>
+      </div>
+    </div>
+    <div class="arrow-row"><span>↓</span><span>↓</span></div>
+    <div class="arch-layer red">
+      <div class="layer-label">接入网关层</div>
+      <div class="layer-tags">
+        <div class="arch-tag">API Gateway</div>
+        <div class="arch-tag">GraphQL API</div>
+        <div class="arch-tag">Webhook</div>
+        <div class="arch-tag">Git Trigger</div>
+        <div class="arch-tag">统一鉴权</div>
+      </div>
+    </div>
+    <div class="arrow-row"><span>↓</span><span>↓</span></div>
+    <div class="arch-layer blue">
+      <div class="layer-label">平台编排层</div>
+      <div class="layer-tags">
+        <div class="arch-tag">Pipeline Engine</div>
+        <div class="arch-tag">Strategy Engine</div>
+        <div class="arch-tag">RBAC</div>
+        <div class="arch-tag">Template Hub</div>
+        <div class="arch-tag">AIDA AI</div>
+      </div>
+    </div>
+    <div class="arrow-row"><span>↓</span><span>↓</span></div>
+    <div class="arch-layer purple">
+      <div class="layer-label">执行引擎层</div>
+      <div class="layer-tags">
+        <div class="arch-tag">CI Builder</div>
+        <div class="arch-tag">CD Deployer</div>
+        <div class="arch-tag">STO Scanner</div>
+        <div class="arch-tag">FF Manager</div>
+        <div class="arch-tag">CCM Agent</div>
+        <div class="arch-tag">Chaos</div>
+      </div>
+    </div>
+    <div class="arrow-row"><span>↓</span><span>↓</span></div>
+    <div class="arch-layer green">
+      <div class="layer-label">基础设施层</div>
+      <div class="layer-tags">
+        <div class="arch-tag">AWS EKS</div>
+        <div class="arch-tag">GCP GKE</div>
+        <div class="arch-tag">Azure AKS</div>
+        <div class="arch-tag">On-Prem</div>
+        <div class="arch-tag">Terraform</div>
+      </div>
+    </div>
+  </div>
+  <div class="right-panel">
+    <div class="info-card accent-blue">
+      <div class="card-title">Delegate 代理机制</div>
+      <div class="card-body">轻量级代理部署在用户 VPC 内，出站连接（无需暴露端口），执行构建/部署任务。支持 K8s/Docker/Shell 三种运行模式，自动升级、健康检查、连接池管理。</div>
+    </div>
+    <div class="info-card accent-green">
+      <div class="card-title">AIDA AI 智能引擎</div>
+      <div class="card-body">内置 AI 助手：自动推荐 Pipeline 步骤、分析部署异常根因、优化云资源配额、生成变更摘要。基于 GPT-4/Claude 多模型路由。</div>
+    </div>
+    <div class="info-card accent-amber">
+      <div class="card-title">数据存储架构</div>
+      <div class="card-body">TimescaleDB（时序指标 + Pipeline 历史）、MongoDB（配置 + 模板）、Redis（高速缓存 + 会话）、S3（制品 + 日志归档）</div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi-item">
+        <div class="kpi-value" style="color:var(--mod-blue)">99.99%</div>
+        <div class="kpi-label">服务可用性</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-value" style="color:var(--mod-green)">&lt;50ms</div>
+        <div class="kpi-label">P99 延迟</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-value" style="color:var(--mod-amber)">10K+</div>
+        <div class="kpi-label">峰值并发</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-value" style="color:var(--mod-purple)">50+</div>
+        <div class="kpi-label">Delegate 集群</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -64,12 +64,47 @@ description: Use when P3 strategy review is completed and content outline genera
 
 ### Step 4: 生成 STYLE_INSTRUCTIONS
 
-从 `design-spec.md` 提取视觉参数，生成统一的 CSS 变量定义块：
-- CSS Custom Properties（`:root` 变量）
-- 颜色系统（primary / secondary / accent / text / bg）
-- 字体栈（font-family for Chinese / English / Code）
-- 字号层级（h1 / h3 / body / small / number）
-- 间距体系（gap / padding / radius）
+从 `design-spec.md` 提取视觉参数，生成统一的 STYLE_INSTRUCTIONS 块。根据 rendering_mode 选择不同格式：
+
+- **rendering_mode=html**：CSS Custom Properties 格式
+  - Design Aesthetic
+  - Background
+  - Typography（字体栈、字号层级）
+  - Color Palette（含 HEX 值，作为 CSS 变量）
+  - Visual Elements
+  - Density Guidelines
+  - Style Rules（Do / Don't）
+  - Layout Constraints（CSS Grid 参数、间距规则）
+
+- **rendering_mode=image**：Style Brief 格式（视觉风格描述）
+  - Preset Style（预设风格名称，或维度组合）
+  - Color Palette（色彩搭配描述，含 HEX 值）
+  - Mood / Atmosphere（情绪基调）
+  - Visual Density（视觉密度等级）
+  - Quality / Depth（质感/深度）
+  - Spacing（间距/留白控制）
+  - Typography Style（字体风格描述，非技术参数）
+  - Visual Elements（装饰元素风格）
+  - Style Rules（Do / Don't）
+
+  **Density 等级**（image 模式重要参数，控制信息密度）：
+  - `minimal`：每页 1 个核心要点，40-50% 留白，大号字体
+  - `balanced`：每页 2-3 个要点，25-35% 留白，标准排版
+  - `dense`：每页 5-8 个要点，15-20% 留白，紧凑排版
+  - `ultra-dense`：每页 10+ 要点，5-10% 留白，咨询级信息密度
+
+  **Quality 质感**（image 模式视觉深度参数）：
+  - `flat`：纯扁平，无阴影
+  - `soft-shadow`：柔和阴影，微浮层感（默认推荐）
+  - `glassmorphism`：毛玻璃半透明效果
+  - `neumorphism`：新拟态凸起/凹陷
+  - `layered-depth`：强层叠深度与投影
+
+  **Spacing 间距**（image 模式留白控制）：
+  - `compact`：约 8% 画布留白，紧凑
+  - `standard`：约 12% 画布留白，平衡（默认推荐）
+  - `generous`：约 20% 画布留白，宽裕
+  - `editorial`：30%+ 画布留白，编辑级留白
 
 ### Step 5: 输出 outline.md
 
@@ -134,7 +169,7 @@ date: {日期}
 
 ## 文件命名规则
 
-- 格式：`NN-slide-{slug}.svg`
+- 格式：`NN-slide-{slug}.md`（提示词文件，由 P7 生成）
 - NN：两位序号（01, 02, ...）
 - slug：kebab-case，2-5 个词，唯一标识
 - 中文内容可用拼音或英文命名

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ideal-lab</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: #FFFFFF;
+    position: relative;
+  }
+  .accent-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 720px;
+    background: #2563EB;
+  }
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 480px;
+    text-align: center;
+  }
+  .hero-title {
+    font-size: 56px;
+    font-weight: 700;
+    color: #1E3A5F;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+  .hero-divider {
+    width: 80px;
+    height: 2px;
+    background: #2563EB;
+    margin-bottom: 28px;
+  }
+  .hero-subtitle {
+    font-size: 20px;
+    color: #2563EB;
+    font-weight: 400;
+    letter-spacing: 1px;
+  }
+  .metrics-row {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 0 80px;
+    margin-top: 0;
+  }
+  .metric-card {
+    background: #2563EB;
+    color: #FFFFFF;
+    padding: 16px 36px;
+    border-radius: 4px;
+    text-align: center;
+    min-width: 180px;
+  }
+  .metric-number {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .metric-label {
+    font-size: 14px;
+    font-weight: 400;
+    margin-top: 4px;
+  }
+  .footer {
+    position: absolute;
+    bottom: 24px;
+    left: 32px;
+    font-size: 12px;
+    color: #1E3A5F;
+  }
+</style>
+</head>
+<body>
+  <div class="accent-bar"></div>
+  <div class="hero">
+    <div class="hero-title">ideal-lab</div>
+    <div class="hero-divider"></div>
+    <div class="hero-subtitle">从日常工作中沉淀的 Claude Code 最佳实践插件库</div>
+  </div>
+  <div class="metrics-row">
+    <div class="metric-card">
+      <div class="metric-number">9</div>
+      <div class="metric-label">个插件</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-number">42</div>
+      <div class="metric-label">个 Skill</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-number">4</div>
+      <div class="metric-label">大工作流</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-number">Marketplace</div>
+      <div class="metric-label">分发</div>
+    </div>
+  </div>
+  <div class="footer">ideal-lab 事业部介绍</div>
+</body>
+</html>

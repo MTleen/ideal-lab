@@ -1,0 +1,1 @@
+/opt/homebrew/bin/soffice: line 2: 21893 Abort trap: 6           '/Applications/LibreOffice.app/Contents/MacOS/soffice' "$@"

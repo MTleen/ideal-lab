@@ -1,0 +1,110 @@
+{
+  "description": "将 ideal-ppt-workflow 的幻灯片输出从纯 SVG 改为 HTML，提升排版质量、信息密度和可编辑性",
+  "input": [
+    { "desc": "plugins/ideal-ppt-suite/skills/ideal-ppt-executor/SKILL.md（SVG 执行器）", "inferred": false },
+    { "desc": "plugins/ideal-ppt-suite/skills/ideal-ppt-prompt/SKILL.md（提示词工程）", "inferred": false },
+    { "desc": "plugins/ideal-ppt-suite/skills/ideal-ppt-export/SKILL.md（导出交付）", "inferred": false },
+    { "desc": "plugins/ideal-ppt-suite/skills/ideal-ppt-outline/SKILL.md（大纲生成）", "inferred": false },
+    { "desc": "plugins/ideal-ppt-suite/skills/ideal-ppt-workflow/SKILL.md（编排器）", "inferred": false },
+    { "desc": "harness 工程介绍相关素材（测试用）", "inferred": false }
+  ],
+  "output": [
+    { "path": "plugins/ideal-ppt-suite/skills/ideal-ppt-executor/SKILL.md", "type": "修改", "desc": "从 SVG 执行器改为 HTML 执行器" },
+    { "path": "plugins/ideal-ppt-suite/skills/ideal-ppt-executor/references/", "type": "修改", "desc": "新增 HTML 规范、CSS 模板、混合渲染指南" },
+    { "path": "plugins/ideal-ppt-suite/skills/ideal-ppt-prompt/SKILL.md", "type": "修改", "desc": "prompt 模板从 SVG 导向改为 HTML+CSS 导向" },
+    { "path": "plugins/ideal-ppt-suite/skills/ideal-ppt-prompt/references/base-prompt.md", "type": "修改", "desc": "基础提示词模板适配 HTML" },
+    { "path": "plugins/ideal-ppt-suite/skills/ideal-ppt-export/SKILL.md", "type": "修改", "desc": "HTML → PPTX/PDF 导出逻辑" },
+    { "path": "plugins/ideal-ppt-suite/skills/ideal-ppt-outline/SKILL.md", "type": "修改", "desc": "STYLE_INSTRUCTIONS 适配 HTML+CSS" },
+    { "path": "plugins/ideal-ppt-suite/skills/ideal-ppt-workflow/SKILL.md", "type": "修改", "desc": "编排器适配 HTML 输出路径" }
+  ],
+  "criteria": [
+    {
+      "id": 1,
+      "desc": "ideal-ppt-executor SKILL.md 重写为 HTML 执行器：生成独立 HTML 文件（每页一个），HTML 内可嵌入 SVG 图形和 AI 生成图片，浏览器可直接渲染",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": [
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-executor/SKILL.md"
+      ]
+    },
+    {
+      "id": 2,
+      "desc": "ideal-ppt-executor references 新增 HTML+CSS 规范文档：包含 HTML 模板结构、CSS 排版系统（字号/间距/颜色变量）、SVG 嵌入规范、图片嵌入规范",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": [
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-executor/references/"
+      ]
+    },
+    {
+      "id": 3,
+      "desc": "ideal-ppt-prompt SKILL.md 和 base-prompt.md 改为 HTML+CSS 导向：prompt 输出为 HTML 片段而非 SVG 描述，包含 CSS 类名和布局指令",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": [
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-prompt/SKILL.md",
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-prompt/references/base-prompt.md"
+      ]
+    },
+    {
+      "id": 4,
+      "desc": "ideal-ppt-export SKILL.md 支持 HTML → PPTX/PDF 导出：通过浏览器截图或 Puppeteer 渲染 HTML 为图片再嵌入 PPTX",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": [
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-export/SKILL.md"
+      ]
+    },
+    {
+      "id": 5,
+      "desc": "ideal-ppt-outline SKILL.md 的 STYLE_INSTRUCTIONS 改为 HTML+CSS 属性（CSS 变量、flexbox/grid 布局、字号层级用 rem/px）",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": [
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-outline/SKILL.md"
+      ]
+    },
+    {
+      "id": 6,
+      "desc": "ideal-ppt-workflow 编排器适配 HTML 输出路径：P11 产物从 SVG 改为 HTML，目录结构调整",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": [
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-workflow/SKILL.md",
+        "plugins/ideal-ppt-suite/skills/ideal-ppt-workflow/references/phase-mapping.md"
+      ]
+    },
+    {
+      "id": 7,
+      "desc": "端到端测试：以 harness 工程介绍为主题，生成 5 页 HTML 幻灯片，完整走一遍 P1-P13 流程",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": []
+    },
+    {
+      "id": 8,
+      "desc": "测试产出验证：5 个 HTML 文件浏览器渲染正常，中文排版正确（字号层级/对齐/无溢出），高信息密度（每页至少 3 个有效信息块），风格一致",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": []
+    },
+    {
+      "id": 9,
+      "desc": "测试产出具可导出为 PPTX 和 PDF，文件可正常打开",
+      "verify_type": "llm_judgment",
+      "command": null,
+      "affected_files": []
+    }
+  ],
+  "implementation": {
+    "method": "直接改代码（SKILL.md + references），端到端测试",
+    "step": "small"
+  },
+  "constraints": {
+    "max_iterations": 20
+  },
+  "meta": {
+    "phase": "loop",
+    "created_at": "2026-04-26 20:00"
+  }
+}

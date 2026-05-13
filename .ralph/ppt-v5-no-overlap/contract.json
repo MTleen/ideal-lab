@@ -1,0 +1,31 @@
+{
+  "task": "ppt-v5-no-overlap",
+  "phase": "completed",
+  "description": "修复文字重叠+文本提取不完整问题",
+  "criteria": [
+    {
+      "id": 1,
+      "desc": "背景图不含文字，只有视觉元素",
+      "verify_type": "codex_judgment",
+      "status": "passed"
+    },
+    {
+      "id": 2,
+      "desc": "TextBox无重影，位置与背景图色块对应",
+      "verify_type": "codex_judgment",
+      "status": "passed"
+    },
+    {
+      "id": 3,
+      "desc": "文本覆盖率100%，视觉效果与HTML一致",
+      "verify_type": "codex_judgment",
+      "status": "passed"
+    }
+  ],
+  "fixes": [
+    "CSS color:transparent 隐藏文字后截图作为背景",
+    "TEXT_EXTRACTION_JS 重写：去掉了 el.children.length===0 限制，加了skip-tag过滤，提取直接文本节点",
+    "Slide 1: 10→16 TextBox (补齐标题/副标题/meta)",
+    "Slide 5: 25→30 TextBox (补齐5条说明文本)"
+  ]
+}

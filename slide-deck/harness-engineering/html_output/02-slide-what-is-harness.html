@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>Slide 2 - 什么是 Harness</title>
+<style>
+:root {
+  --mod-red: #DC2626; --mod-red-bg: #FEF2F2;
+  --mod-blue: #2563EB; --mod-blue-bg: #EFF6FF;
+  --mod-amber: #D97706; --mod-amber-bg: #FFFBEB;
+  --mod-green: #059669; --mod-green-bg: #ECFDF5;
+  --mod-purple: #7C3AED; --mod-purple-bg: #F5F3FF;
+  --text: #111827; --text-secondary: #4B5563; --text-muted: #9CA3AF;
+  --bg: #FFFFFF; --bg-page: #F9FAFB; --border: #E5E7EB;
+  --font: "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-number: "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1280px; height: 720px; overflow: hidden; font-family: var(--font); font-size: 14px; line-height: 1.5; color: var(--text); background: var(--bg-page); padding: 32px 40px; }
+.page-title { font-size: 26px; font-weight: 700; margin-bottom: 16px; padding-bottom: 6px; border-bottom: 3px solid var(--mod-red); display: inline-block; }
+.content { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.info-card { padding: 14px 16px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); }
+.info-card.accent-red { border-left: 4px solid var(--mod-red); }
+.info-card.accent-blue { border-left: 4px solid var(--mod-blue); }
+.info-card.accent-green { border-left: 4px solid var(--mod-green); }
+.info-card.accent-purple { border-left: 4px solid var(--mod-purple); }
+.info-card.accent-amber { border-left: 4px solid var(--mod-amber); }
+.card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.info-card.accent-red .card-title { color: var(--mod-red); }
+.info-card.accent-blue .card-title { color: var(--mod-blue); }
+.info-card.accent-green .card-title { color: var(--mod-green); }
+.info-card.accent-purple .card-title { color: var(--mod-purple); }
+.info-card.accent-amber .card-title { color: var(--mod-amber); }
+.card-body { font-size: 13px; color: var(--text-secondary); }
+.card-body ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.card-body li::before { content: "• "; color: var(--text-muted); }
+.bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+.kpi-item { text-align: center; padding: 12px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; }
+.kpi-value { font-family: var(--font-number); font-size: 28px; font-weight: 700; line-height: 1.1; }
+.kpi-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+.tag-red { background: var(--mod-red-bg); color: var(--mod-red); }
+.tag-blue { background: var(--mod-blue-bg); color: var(--mod-blue); }
+.tag-green { background: var(--mod-green-bg); color: var(--mod-green); }
+.tag-purple { background: var(--mod-purple-bg); color: var(--mod-purple); }
+</style>
+</head>
+<body>
+<div class="page-title">什么是 Harness？——统一软件交付平台</div>
+<div class="content">
+  <div class="info-card accent-blue">
+    <div class="card-title">CI 智能构建</div>
+    <div class="card-body">
+      <ul>
+        <li>AI 推荐构建步骤，自动优化构建速度</li>
+        <li>支持 Docker/K8s/VM 多种执行器</li>
+        <li>缓存策略：BuildKit 镜像缓存 + 挂载缓存</li>
+        <li>并行测试分片，构建时间缩短 60%</li>
+      </ul>
+    </div>
+  </div>
+  <div class="info-card accent-green">
+    <div class="card-title">CD 持续部署</div>
+    <div class="card-body">
+      <ul>
+        <li>Canary / Blue-Green / Rolling 多策略</li>
+        <li>自动回滚：指标异常即时触发</li>
+        <li>GitOps 原生支持（ArgoCD 集成）</li>
+        <li>审批流 + RBAC 多环境管控</li>
+      </ul>
+    </div>
+  </div>
+  <div class="info-card accent-red">
+    <div class="card-title">STO 安全测试</div>
+    <div class="card-body">
+      <ul>
+        <li>SAST/DAST/SCA 三位一体扫描</li>
+        <li>集成 30+ 安全工具（SonarQube/Veracode/...）</li>
+        <li>漏洞分级 + 自动阻断高风险部署</li>
+        <li>合规报告一键生成（SOC2/ISO27001）</li>
+      </ul>
+    </div>
+  </div>
+  <div class="info-card accent-purple">
+    <div class="card-title">CCM 云成本管理</div>
+    <div class="card-body">
+      <ul>
+        <li>实时资源利用率监控 + 闲置资源识别</li>
+        <li>自动 Right-sizing 推荐</li>
+        <li>Spot 实例智能调度，节省 70%</li>
+        <li>成本归属：团队/服务/环境维度分账</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="bottom-row">
+  <div class="kpi-item">
+    <div class="kpi-value" style="color:var(--mod-blue)">5M+</div>
+    <div class="kpi-label">月活跃开发者</div>
+  </div>
+  <div class="kpi-item">
+    <div class="kpi-value" style="color:var(--mod-green)">99.9%</div>
+    <div class="kpi-label">平台可用性 SLA</div>
+  </div>
+  <div class="kpi-item">
+    <div class="kpi-value" style="color:var(--mod-red)">30+</div>
+    <div class="kpi-label">云供应商集成</div>
+  </div>
+  <div class="kpi-item">
+    <div class="kpi-value" style="color:var(--mod-purple)">60%</div>
+    <div class="kpi-label">平均成本优化</div>
+  </div>
+</div>
+</body>
+</html>

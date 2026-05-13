@@ -1,0 +1,221 @@
+{
+  "jobs": 4,
+  "tasks": [
+    {
+      "id": "slide-01",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/01-slide-cover.md"],
+      "image": "01-slide-cover.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-02",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/02-slide-pain-points.md"],
+      "image": "02-slide-pain-points.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-03",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/03-slide-iteration.md"],
+      "image": "03-slide-iteration.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-04",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/04-slide-current-state.md"],
+      "image": "04-slide-current-state.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-05",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/05-slide-three-layers.md"],
+      "image": "05-slide-three-layers.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-06",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/06-slide-plugin-anatomy.md"],
+      "image": "06-slide-plugin-anatomy.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-07",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/07-slide-marketplace.md"],
+      "image": "07-slide-marketplace.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-08",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/08-slide-versioning.md"],
+      "image": "08-slide-versioning.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-09",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/09-slide-what-is-workflow.md"],
+      "image": "09-slide-what-is-workflow.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-10",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/10-slide-architecture.md"],
+      "image": "10-slide-architecture.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-11",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/11-slide-p1-p3.md"],
+      "image": "11-slide-p1-p3.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-12",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/12-slide-p5-p7.md"],
+      "image": "12-slide-p5-p7.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-13",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/13-slide-p9-p11.md"],
+      "image": "13-slide-p9-p11.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-14",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/14-slide-how-to-use.md"],
+      "image": "14-slide-how-to-use.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-15",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/15-slide-four-workflows.md"],
+      "image": "15-slide-four-workflows.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-16",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/16-slide-three-tools.md"],
+      "image": "16-slide-three-tools.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-17",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/17-slide-two-utils.md"],
+      "image": "17-slide-two-utils.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-18",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/18-slide-role-recommend.md"],
+      "image": "18-slide-role-recommend.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-19",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/19-slide-prerequisites.md"],
+      "image": "19-slide-prerequisites.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-20",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/20-slide-first-task.md"],
+      "image": "20-slide-first-task.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-21",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/21-slide-advanced.md"],
+      "image": "21-slide-advanced.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-22",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/22-slide-start-paths.md"],
+      "image": "22-slide-start-paths.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-23",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/23-slide-contribute.md"],
+      "image": "23-slide-contribute.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    },
+    {
+      "id": "slide-24",
+      "promptFiles": ["prompts-img/style.md", "prompts-img/24-slide-back-cover.md"],
+      "image": "24-slide-back-cover.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "16:9",
+      "quality": "2k"
+    }
+  ]
+}

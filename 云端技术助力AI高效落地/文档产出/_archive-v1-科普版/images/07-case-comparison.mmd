@@ -1,0 +1,26 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#E8F4FD', 'primaryTextColor': '#1a1a2e', 'primaryBorderColor': '#2196F3', 'lineColor': '#2196F3', 'fontSize': '14px'}}}%%
+flowchart TD
+    subgraph cases["五大案例关键数据对比"]
+        direction TB
+
+        subgraph telecom["📡 电信行业（主案例）"]
+            direction TB
+            CT["中国电信<br/>━━━━━━━━━━━━━━<br/>250+ AI应用 · 110+ 行业大模型<br/>350+ 智能体 · 900+ 云网数字员工<br/>255亿元算力投资<br/>战略转型：流量经营→Token经营"]
+            CM["中国移动<br/>━━━━━━━━━━━━━━<br/>100万+ 服务器 · 43+ EFLOPS<br/>算网大脑3.0纳管80+ EFLOPS<br/>央企十大国之重器"]
+            CU["中国联通<br/>━━━━━━━━━━━━━━<br/>千亿参数秒级加载<br/>MaaS平台效率提升50%<br/>万象可信数据空间"]
+        end
+
+        subgraph other["🏢 其他行业（参照案例）"]
+            direction TB
+            CMB["招商银行（金融）<br/>━━━━━━━━━━━━━━<br/>近900个AI场景 · 日均Token 260亿<br/>迭代周期 32天→8天<br/>AI First战略 · 全面上云99.999%"]
+            GAC["广汽集团（制造）<br/>━━━━━━━━━━━━━━<br/>1+3+3+N 架构（WAIC优秀案例）<br/>模型训练时间缩短50%<br/>华为+阿里云双生态合作"]
+        end
+    end
+
+    telecom ---|"跨行业参照"| other
+
+    style CT fill:#E3F2FD,stroke:#1565C0,color:#1a1a2e
+    style CM fill:#E3F2FD,stroke:#1565C0,color:#1a1a2e
+    style CU fill:#E3F2FD,stroke:#1565C0,color:#1a1a2e
+    style CMB fill:#FFF3E0,stroke:#E65100,color:#1a1a2e
+    style GAC fill:#E8F5E9,stroke:#2E7D32,color:#1a1a2e

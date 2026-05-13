@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>Slide 1 - Harness 工程平台</title>
+<style>
+:root {
+  --mod-red: #DC2626; --mod-blue: #2563EB; --mod-amber: #D97706; --mod-green: #059669; --mod-purple: #7C3AED;
+  --text: #111827; --text-secondary: #4B5563; --text-muted: #9CA3AF;
+  --bg: #FFFFFF; --border: #E5E7EB;
+  --font: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-number: "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1280px; height: 720px; overflow: hidden;
+  font-family: var(--font); color: white;
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  display: flex; padding: 60px;
+}
+.left { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.right { width: 420px; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding-left: 40px; }
+.badge { display: inline-block; padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); margin-bottom: 20px; }
+.title { font-size: 44px; font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+.subtitle { font-size: 18px; line-height: 1.6; opacity: 0.75; margin-bottom: 32px; }
+.divider { width: 60px; height: 3px; background: var(--mod-amber); margin-bottom: 24px; border-radius: 2px; }
+.meta { display: flex; gap: 20px; font-size: 13px; opacity: 0.4; }
+.stat-card { padding: 16px; border-radius: 4px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+.stat-value { font-family: var(--font-number); font-size: 28px; font-weight: 700; color: var(--mod-amber); }
+.stat-label { font-size: 12px; opacity: 0.5; margin-top: 4px; }
+.highlights { display: flex; flex-direction: column; gap: 8px; font-size: 14px; opacity: 0.7; }
+.highlight-item { display: flex; align-items: center; gap: 8px; }
+.highlight-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="left">
+  <div class="badge">Software Delivery Platform · 2026</div>
+  <div class="title">Harness 工程平台<br>技术架构与最佳实践</div>
+  <div class="divider"></div>
+  <div class="subtitle">AI 驱动的 CI/CD、云成本管理、安全测试与混沌工程<br>一体化 DevOps 平台 — 从代码提交到生产部署的全链路自动化</div>
+  <div class="meta">
+    <span>2026 技术分享</span>
+    <span>DevOps / Platform Engineering</span>
+    <span>内部技术交流</span>
+  </div>
+</div>
+<div class="right">
+  <div class="stat-card">
+    <div class="stat-value">70%+</div>
+    <div class="stat-label">部署频率提升</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">60%</div>
+    <div class="stat-label">云成本优化幅度</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">3x</div>
+    <div class="stat-label">变更交付加速</div>
+  </div>
+  <div class="highlights">
+    <div class="highlight-item"><div class="highlight-dot" style="background:var(--mod-blue)"></div>CI/CD 智能流水线</div>
+    <div class="highlight-item"><div class="highlight-dot" style="background:var(--mod-green)"></div>云成本自动优化 (CCM)</div>
+    <div class="highlight-item"><div class="highlight-dot" style="background:var(--mod-purple)"></div>安全测试编排 (STO)</div>
+    <div class="highlight-item"><div class="highlight-dot" style="background:var(--mod-amber)"></div>特性开关管理 (FF)</div>
+  </div>
+</div>
+</body>
+</html>

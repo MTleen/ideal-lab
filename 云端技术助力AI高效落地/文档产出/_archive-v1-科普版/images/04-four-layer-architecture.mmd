@@ -1,0 +1,39 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#E8F4FD', 'primaryTextColor': '#1a1a2e', 'primaryBorderColor': '#2196F3', 'lineColor': '#2196F3', 'fontSize': '14px'}}}%%
+flowchart TD
+    subgraph arch["云智融合四层架构"]
+        direction TB
+        subgraph L4["应用层 🏠 实际入住使用"]
+            direction LR
+            APP1["智能客服"]
+            APP2["智能运维"]
+            APP3["智能风控"]
+            APP4["AI Agent智能体"]
+        end
+        subgraph L3["AI服务层 (AIaaS/MaaS) 🛋️ 精装修方案包"]
+            direction LR
+            SV1["语音识别API"]
+            SV2["图像分析API"]
+            SV3["大模型API"]
+            SV4["MaaS平台"]
+        end
+        subgraph L2["平台工具层 (MLOps) 🔧 施工工具与脚手架"]
+            direction LR
+            PL1["模型开发"]
+            PL2["训练管理"]
+            PL3["部署上线"]
+            PL4["监控运维"]
+        end
+        subgraph L1["基础设施层 (IaaS) 🏗️ 地基与管线"]
+            direction LR
+            IF1["GPU/NPU集群"]
+            IF2["对象存储"]
+            IF3["高速网络"]
+            IF4["安全组件"]
+        end
+        L1 --> L2 --> L3 --> L4
+    end
+
+    style L1 fill:#E3F2FD,stroke:#1565C0,color:#1a1a2e
+    style L2 fill:#E8F5E9,stroke:#2E7D32,color:#1a1a2e
+    style L3 fill:#FFF3E0,stroke:#E65100,color:#1a1a2e
+    style L4 fill:#F3E5F5,stroke:#6A1B9A,color:#1a1a2e

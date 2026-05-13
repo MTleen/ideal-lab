@@ -1,0 +1,33 @@
+{
+  "slide_count": 5,
+  "textboxes": [
+    17,
+    30,
+    54,
+    21,
+    31
+  ],
+  "pictures": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "tables": [
+    0,
+    0,
+    0,
+    1,
+    0
+  ],
+  "title_tag_leaks": [
+    "Slide 1 - Harness 工程平台",
+    "Slide 2 - 什么是 Harness",
+    "Slide 3 - 平台架构",
+    "Slide 4 - 核心功能对比",
+    "Slide 5 - 总结与行动"
+  ],
+  "out_of_bounds_textboxes": 4,
+  "duplicate_positions": 6
+}

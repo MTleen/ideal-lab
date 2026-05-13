@@ -1,0 +1,32 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#E8F4FD', 'primaryTextColor': '#1a1a2e', 'primaryBorderColor': '#2196F3', 'lineColor': '#2196F3', 'fontSize': '14px'}}}%%
+flowchart LR
+    subgraph 自建算力["自建算力中心"]
+        direction TB
+        A1["💰 初始投入：千万-亿元级<br/>GPU/NPU采购+机房建设"]
+        A2["📈 成本曲线：固定高成本<br/>无论用不用都要付费"]
+        A3["📊 资源利用率：15%-20%<br/>大量算力闲置浪费<br/>（Gartner/IDC行业报告）"]
+        A4["⏰ 弹性能力：几乎为零<br/>业务高峰算力不够<br/>低谷时算力闲置"]
+        A1 --- A2 --- A3 --- A4
+    end
+
+    subgraph 云端算力["云端弹性算力"]
+        direction TB
+        B1["💰 初始投入：接近零<br/>无需采购硬件"]
+        B2["📈 成本曲线：按需付费<br/>用多少付多少"]
+        B3["📊 资源利用率：60%-80%<br/>集约化运营效率高<br/>（Flexera 2025云计算状况报告）"]
+        B4["⏰ 弹性能力：秒级扩缩<br/>业务高峰自动扩容<br/>低谷自动回收"]
+        B1 --- B2 --- B3 --- B4
+    end
+
+    自建算力 ---|"云计算的<br/>核心优势"| 云端算力
+
+    style 自建算力 fill:#FFEBEE,stroke:#C62828,color:#1a1a2e
+    style 云端算力 fill:#E8F5E9,stroke:#2E7D32,color:#1a1a2e
+    style A1 fill:#FAFAFA,stroke:#EF9A9A,color:#424242
+    style A2 fill:#FAFAFA,stroke:#EF9A9A,color:#424242
+    style A3 fill:#FAFAFA,stroke:#EF9A9A,color:#424242
+    style A4 fill:#FAFAFA,stroke:#EF9A9A,color:#424242
+    style B1 fill:#FAFAFA,stroke:#A5D6A7,color:#424242
+    style B2 fill:#FAFAFA,stroke:#A5D6A7,color:#424242
+    style B3 fill:#FAFAFA,stroke:#A5D6A7,color:#424242
+    style B4 fill:#FAFAFA,stroke:#A5D6A7,color:#424242
