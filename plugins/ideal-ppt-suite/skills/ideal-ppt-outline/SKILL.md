@@ -64,14 +64,32 @@ description: Use when P3 strategy review is completed and content outline genera
 
 ### Step 4: 生成 STYLE_INSTRUCTIONS
 
-从 `design-spec.md` 提取视觉参数，生成统一的 STYLE_INSTRUCTIONS 块：
-- Design Aesthetic
-- Background
-- Typography
-- Color Palette（含 HEX 值）
-- Visual Elements
-- Density Guidelines
-- Style Rules（Do / Don't）
+从 `design-spec.md` 提取视觉参数，生成统一的 STYLE_INSTRUCTIONS 块。根据 rendering_mode 选择不同格式：
+
+- **rendering_mode=html**：CSS Custom Properties 格式
+  - Design Aesthetic
+  - Background
+  - Typography（字体栈、字号层级）
+  - Color Palette（含 HEX 值，作为 CSS 变量）
+  - Visual Elements
+  - Density Guidelines
+  - Style Rules（Do / Don't）
+  - Layout Constraints（CSS Grid 参数、间距规则）
+
+- **rendering_mode=image**：Style Brief 格式（视觉风格描述）
+  - Color Palette（色彩搭配描述，含 HEX 值）
+  - Mood / Atmosphere（情绪基调）
+  - Visual Density（视觉密度等级）
+  - Typography Style（字体风格描述，非技术参数）
+  - Visual Elements（装饰元素风格）
+  - Style Rules（Do / Don't）
+
+  **Density 等级**（image 模式重要参数，控制信息密度）：
+  - `minimal`：每页 1-2 个核心要点，大量留白
+  - `standard`：每页 3-4 个要点，平衡排版
+  - `dense`：每页 5-6 个要点，紧凑但可读
+  - `high-density`：每页 7-10 个要点，信息密集
+  - `ultra-dense`：每页 10+ 要点，最大化信息密度，适合数据密集型幻灯片
 
 ### Step 5: 输出 outline.md
 
@@ -136,7 +154,7 @@ date: {日期}
 
 ## 文件命名规则
 
-- 格式：`NN-slide-{slug}.svg`
+- 格式：`NN-slide-{slug}.md`（提示词文件，由 P7 生成）
 - NN：两位序号（01, 02, ...）
 - slug：kebab-case，2-5 个词，唯一标识
 - 中文内容可用拼音或英文命名
