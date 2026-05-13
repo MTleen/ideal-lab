@@ -1,28 +1,29 @@
 # 预设 → 维度映射
 
-将 16 种预设风格映射到其维度组合。
+将 18 种预设风格映射到其维度组合。每个风格的完整定义（含设计 token、色值、组件规范）见 `../styles/{预设}.md`，采用 DESIGN.md 格式。
 
 ## 映射表
 
-| 预设 | 纹理 | 色调 | 字体 | 密度 |
-|------|------|------|------|------|
-| blueprint | grid | cool | technical | balanced |
-| chalkboard | organic | warm | handwritten | balanced |
-| corporate | clean | professional | geometric | balanced |
-| minimal | clean | neutral | geometric | minimal |
-| sketch-notes | organic | warm | handwritten | balanced |
-| watercolor | organic | warm | humanist | minimal |
-| dark-atmospheric | clean | dark | editorial | balanced |
-| notion | clean | neutral | geometric | dense |
-| bold-editorial | clean | vibrant | editorial | balanced |
-| editorial-infographic | clean | cool | editorial | dense |
-| fantasy-animation | organic | vibrant | handwritten | minimal |
-| intuition-machine | clean | cool | technical | dense |
-| pixel-art | pixel | vibrant | technical | balanced |
-| scientific | clean | cool | technical | dense |
-| vector-illustration | clean | vibrant | humanist | balanced |
-| vintage | paper | warm | editorial | balanced |
-| high-density-infographic | clean | cool | technical | dense |
+| 预设 | 纹理 | 色调 | 字体 | 密度 | 质感 | 间距 |
+|------|------|------|------|------|------|------|
+| blueprint | grid | cool | technical | balanced | soft-shadow | standard |
+| chalkboard | organic | warm | handwritten | balanced | flat | generous |
+| corporate | clean | professional | geometric | balanced | soft-shadow | standard |
+| minimal | clean | neutral | geometric | minimal | flat | editorial |
+| sketch-notes | organic | warm | handwritten | balanced | flat | generous |
+| watercolor | organic | warm | humanist | minimal | flat | editorial |
+| dark-atmospheric | clean | dark | editorial | balanced | layered-depth | standard |
+| notion | clean | neutral | geometric | dense | soft-shadow | standard |
+| bold-editorial | clean | vibrant | editorial | balanced | layered-depth | editorial |
+| editorial-infographic | clean | cool | editorial | dense | soft-shadow | compact |
+| fantasy-animation | organic | vibrant | handwritten | minimal | flat | generous |
+| intuition-machine | clean | cool | technical | dense | soft-shadow | compact |
+| pixel-art | pixel | vibrant | technical | balanced | flat | standard |
+| scientific | clean | cool | technical | dense | flat | compact |
+| vector-illustration | clean | vibrant | humanist | balanced | flat | generous |
+| vintage | paper | warm | editorial | balanced | flat | generous |
+| high-density-infographic | clean | cool | technical | dense | flat | compact |
+| china-telecom | clean | professional | geometric | dense | soft-shadow | standard |
 
 ## 预设详情
 
@@ -111,6 +112,11 @@
 - **感受**: 最大信息密度、技术销售
 - **自动触发**: 技术销售、企业产品、高密度信息、sales、enterprise、product deck
 
+### china-telecom（中国电信风格）
+- **维度**: clean + professional + geometric + dense + soft-shadow + standard
+- **感受**: 央企稳重、科技精致、红蓝双色
+- **自动触发**: 中国电信、政企、算力、云、AIDC、央企、chinamobile
+
 ## 构建自定义组合
 
 当用户选择"自定义维度"时，可自由组合：
@@ -118,15 +124,20 @@
 - **纹理** (5): clean、grid、organic、pixel、paper
 - **色调** (6): professional、warm、cool、vibrant、dark、neutral
 - **字体** (5): geometric、humanist、handwritten、editorial、technical
-- **密度** (3): minimal、balanced、dense
+- **密度** (4): minimal、balanced、dense、ultra-dense
+- **质感** (5): flat、soft-shadow、glassmorphism、neumorphism、layered-depth
+- **间距** (4): compact、standard、generous、editorial
 
-总可能组合数: 5 × 6 × 5 × 3 = **450 种独特风格**
+总可能组合数: 5 × 6 × 5 × 4 × 5 × 4 = **12,000 种独特风格**
+
+18 种预设是精选的常用组合。完整风格定义见各预设的 DESIGN.md 文件。
 
 ## 推荐组合（超出预设）
 
-| 自定义名称 | 纹理 | 色调 | 字体 | 密度 | 使用场景 |
-|------------|------|------|------|------|----------|
-| tech-minimal | clean | neutral | technical | minimal | 开发者 keynote |
-| warm-editorial | paper | warm | editorial | balanced | 遗产品牌 |
-| dark-technical | grid | dark | technical | dense | 安全、DevOps |
-| playful-clean | clean | vibrant | humanist | balanced | 初创公司、应用 |
+| 自定义名称 | 纹理 | 色调 | 字体 | 密度 | 质感 | 间距 | 使用场景 |
+|------------|------|------|------|------|------|------|----------|
+| tech-minimal | clean | neutral | technical | minimal | flat | editorial | 开发者 keynote |
+| warm-editorial | paper | warm | editorial | balanced | soft-shadow | generous | 遗产品牌 |
+| dark-technical | grid | dark | technical | dense | layered-depth | compact | 安全、DevOps |
+| playful-clean | clean | vibrant | humanist | balanced | soft-shadow | generous | 初创公司、应用 |
+| glass-tech | clean | cool | technical | balanced | glassmorphism | standard | 前沿科技发布 |
