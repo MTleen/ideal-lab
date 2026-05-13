@@ -83,6 +83,8 @@ Minimum readable sizes:
 
 This section defines the visual language of the slide. The `{{STYLE_INSTRUCTIONS}}` placeholder will be replaced with a concrete style block.
 
+> 完整风格维度定义（密度、色调、纹理、字体、预设映射）见 `dimensions/` 目录下各文件。
+
 ### Color Coding System（色彩编码体系）
 
 The module color system ensures visual consistency and semantic meaning across slides:
@@ -149,6 +151,70 @@ density: ultra-dense
   - Use case: executive summaries, status dashboards, data-heavy pages
   - Still must be readable — use visual grouping and hierarchy
 ```
+
+### 质感 (Quality)
+
+```
+quality: flat
+  - 纯扁平设计，无阴影、无立体效果
+  - 干净利落，现代简约
+  - 适合数据密集型、技术类幻灯片
+
+quality: soft-shadow
+  - 柔和弥散阴影，微浮层感
+  - 轻量卡片式布局
+  - 通用商务场景首选
+
+quality: glassmorphism
+  - 半透明毛玻璃效果，背景模糊
+  - 高光边缘、微妙折射
+  - 适合科技前沿、创新主题
+
+quality: neumorphism
+  - 新拟态风格，柔和的凸起/凹陷
+  - 同色系明暗对比塑造体积
+  - 适合工具类、仪表盘界面
+
+quality: layered-depth
+  - 明显的层叠深度，强投影与视差
+  - 前景/背景分离强烈
+  - 适合叙事型、冲击力强的视觉
+```
+
+### 间距 (Spacing)
+
+```
+spacing: compact
+  - 紧凑间距（约 8% 画布留白）
+  - 元素间距最小化
+  - 适合 ultra-dense 数据仪表板
+
+spacing: standard
+  - 标准间距（约 12% 画布留白）
+  - 平衡的信息密度与可读性
+  - 大多数商务场景默认选择
+
+spacing: generous
+  - 宽裕间距（约 20% 画布留白）
+  - 充足的呼吸感
+  - 适合品牌展示、高端汇报
+
+spacing: editorial
+  - 编辑级间距（30%+ 画布留白）
+  - 大面积留白作为设计元素
+  - 适合杂志风、艺术策展、概念发布
+```
+
+### 参考体系 (Reference)
+
+风格维度定义详见以下文件：
+- `dimensions/density.md` — 密度维度（minimal / balanced / dense）
+- `dimensions/mood.md` — 色调维度（professional / warm / cool / vibrant / dark / neutral）
+- `dimensions/texture.md` — 纹理维度（clean / grid / organic / pixel / paper）
+- `dimensions/typography.md` — 字体维度（geometric / humanist / handwritten / editorial / technical）
+- `dimensions/presets.md` — 预设映射（16 种预设风格 → 维度组合对照表）
+
+自定义风格时，从各维度中各选一个值组合即可。共 450 种独特组合。
 
 ---
 
@@ -390,39 +456,42 @@ Produce the slide image now.
 
 ## STYLE_INSTRUCTIONS Filling Guide（风格参数填充指南）
 
-`{{STYLE_INSTRUCTIONS}}` 占位符应替换为以下格式的具体参数块：
+`{{STYLE_INSTRUCTIONS}}` 占位符应替换为以下格式的具体参数块。完整维度定义见 `dimensions/` 目录下各文件。
 
 ```
-Background: #FFFFFF
-Primary color: #005587
-Secondary color: #1E88E5
-Accent color: #FB8C00
+背景: #FFFFFF
+主色: #005587
+辅色: #1E88E5
+强调色: #FB8C00
 
-Text colors:
-  Title: #1A1A2E
-  Body: #1A1A2E
-  Secondary: #666666
-  Muted: #999999
+文字色:
+  标题: #1A1A2E
+  正文: #1A1A2E
+  次要: #666666
+  弱化: #999999
 
-Module colors (use for visual grouping and semantic coding):
-  mod-red: #E53935
-  mod-blue: #1E88E5
-  mod-green: #43A047
-  mod-orange: #FB8C00
-  mod-purple: #8E24AA
-  mod-teal: #00897B
+模块色（用于视觉分组与语义编码）:
+  警示红: #E53935
+  科技蓝: #1E88E5
+  增长绿: #43A047
+  强调橙: #FB8C00
+  创新紫: #8E24AA
+  运营青: #00897B
 
-Typography:
-  Title font: PingFang SC, Microsoft YaHei, sans-serif
-  Body font: PingFang SC, Microsoft YaHei, sans-serif
-  Title size: 32-36px, weight 600-700
-  Body size: 14-16px, weight 400
+字体:
+  标题字体: 苹方 / 微软雅黑 / Noto Sans SC, 无衬线
+  正文字体: 苹方 / 微软雅黑 / Noto Sans SC, 无衬线
+  标题字号: 32-36px, 字重 600-700
+  正文字号: 14-16px, 字重 400
 
-Visual style:
-  Card style: white fill, subtle border #E0E0E0, rounded corners
-  Table style: alternating row backgrounds #FFFFFF / #F5F7FA, header row with primary color
-  Icon style: simple flat icons in module colors
-  Chart style: clean, minimal gridlines, data-driven colors from module palette
+视觉风格:
+  预设风格: 商务风格 (corporate)
+  质感: 柔和阴影 (soft-shadow)
+  间距: 标准 (standard)
+  卡片: 纯白填充, 淡边框 #E0E0E0, 圆角
+  表格: 交替行背景 #FFFFFF / #F5F7FA, 表头主色
+  图标: 模块色简约扁平图标
+  图表: 干净极简网格线, 数据驱动模块色板
 ```
 
 ---
