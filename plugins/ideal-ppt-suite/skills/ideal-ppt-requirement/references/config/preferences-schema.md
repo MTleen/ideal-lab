@@ -10,7 +10,7 @@
 {project-root}/EXTEND.md
 ```
 
-当 ideal-ppt-research 启动时，检测项目根目录是否存在 `EXTEND.md`，如存在则读取用户偏好并合并到分析中。
+当 ideal-ppt-requirement 启动时，检测项目根目录是否存在 `EXTEND.md`，如存在则读取用户偏好并合并到分析中。
 
 ---
 

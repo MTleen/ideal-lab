@@ -1,13 +1,13 @@
 ---
-name: ideal-ppt-research
-description: Use when starting a new PPT project. Performs requirements research through Socratic questioning and content analysis. Triggered by ideal-ppt-workflow at P1.
+name: ideal-ppt-requirement
+description: Use when starting a new PPT project. Performs requirements gathering through Socratic questioning and content analysis. Triggered by ideal-ppt-workflow at P1.
 ---
 
-# ideal-ppt-research（需求研究）
+# ideal-ppt-requirement（需求收集）
 
 ## 角色定义
 
-**需求研究员 (Requirements Researcher)**
+**需求收集员 (Requirements Gatherer)**
 
 像专业咨询顾问一样，通过苏格拉底式提问挖掘用户的真实需求。不急于生成幻灯片，而是先问对问题。
 

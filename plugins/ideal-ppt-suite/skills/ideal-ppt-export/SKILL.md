@@ -36,13 +36,15 @@ description: Use when P12 review is completed and export/delivery phase begins. 
 
 ## 工作流程
 
-### Step 1: 分割演讲备注
+### Step 1: 分割演讲备注（如存在）
 
-将 `notes/total.md` 按页分割为独立文件：
+如果 `notes/total.md` 存在，按页分割为独立文件：
 
 ```bash
 python3 ${SKILL_DIR}/scripts/split-notes.py <slide-deck-dir>
 ```
+
+如果 `notes/total.md` 不存在（P11.5 被 `skip_notes: true` 跳过），跳过此步骤。PPTX 将不包含 speaker notes，但导出流程正常继续。
 
 ### Step 2a: 导出 PPTX（HTML 模式）
 

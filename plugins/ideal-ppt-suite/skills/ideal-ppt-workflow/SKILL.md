@@ -31,11 +31,11 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 
 ## 流水线概览
 
-### 13 个阶段（P1-P13）
+### 14 个阶段（P1-P13 含 P11.5）
 
 | 阶段 | 类型 | Phase Skill | 中文名称 | 核心产出 |
 |------|------|-------------|---------|---------|
-| **P1** | 产物 | `ideal-ppt-research` | 需求研究 | `analysis.md` |
+| **P1** | 产物 | `ideal-ppt-requirement` | 需求研究 | `analysis.md` |
 | **P2** | 评审 | *(用户审核)* | 需求确认 | 用户确认的风格/受众/规模 |
 | **P3** | 产物 | `ideal-ppt-strategist` | 策略规划 | `strategy.md` |
 | **P4** | 评审 | *(用户审核)* | 策略确认 | 用户批准的策略方向 **[BLOCKING]** |
@@ -46,6 +46,7 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 | **P9** | 产物 | `ideal-ppt-image` | 图像生成 | `images/*.png` |
 | **P10** | 评审 | *(用户审核)* | 图像审核 | 用户确认的配图 |
 | **P11** | 产物 | `ideal-ppt-executor` / `ideal-ppt-image-executor` | 幻灯片执行 | `html_output/*.html` 或 `images_output/*.png` |
+| **P11.5** | 产物 | `ideal-ppt-speaker-notes` | 演讲备注 | `notes/total.md`（模式无关，可跳过） |
 | **P12** | 评审 | *(用户审核)* | 幻灯片审核 | 用户确认的最终幻灯片 |
 | **P13** | 产物 | `ideal-ppt-export` | 导出交付 | `.pptx` + `.pdf` |
 
@@ -66,6 +67,7 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 | `review.skip_outline: true` | P6 | 自动通过大纲审核 |
 | `review.skip_prompts: true` | P8 | 自动通过提示词审核 |
 | `review.skip_images: true` | P10 | 自动通过图像审核 |
+| `review.skip_notes: true` | P11.5 | 跳过演讲备注生成 |
 
 ### BLOCKING 评审关卡
 
@@ -90,19 +92,19 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 ```
 1. 读取 流程状态.md → current_phase
 2. 判断阶段类型
-   ┌──────────────────────────────────────┐
-   │ 产物阶段（P1/P3/P5/P7/P9/P11/P13）   │
-   │   → 调用 Phase Skill                  │
-   │   → 等待 Skill 返回                   │
-   │   → 验证产出文件存在                  │
-   │   → 更新 current_phase                │
-   │   → ⏸ 停下来等待用户确认             │
-   ├──────────────────────────────────────┤
-   │ 评审阶段（P2/P4/P6/P8/P10/P12）      │
-   │   → 展示摘要                          │
-   │   → 询问是否通过 / 启用 YOLO          │
-   │   → 等待用户响应                      │
-   └──────────────────────────────────────┘
+   ┌──────────────────────────────────────────┐
+   │ 产物阶段（P1/P3/P5/P7/P9/P11/P11.5/P13） │
+   │   → 调用 Phase Skill                      │
+   │   → 等待 Skill 返回                       │
+   │   → 验证产出文件存在                      │
+   │   → 更新 current_phase                    │
+   │   → ⏸ 停下来等待用户确认                 │
+   ├──────────────────────────────────────────┤
+   │ 评审阶段（P2/P4/P6/P8/P10/P12）          │
+   │   → 展示摘要                              │
+   │   → 询问是否通过 / 启用 YOLO              │
+   │   → 等待用户响应                          │
+   └──────────────────────────────────────────┘
 ```
 
 ### YOLO 模式行为（yolo_mode: true）
@@ -123,9 +125,11 @@ YOLO 自动循环：
      - 如果 X = P6 且 review.skip_outline = true → 标记 P6 为 auto_approved → 回到循环起点
      - 如果 X = P8 且 review.skip_prompts = true → 标记 P8 为 auto_approved → 回到循环起点
      - 如果 X = P10 且 review.skip_images = true → 标记 P10 为 auto_approved → 回到循环起点
-  5. 如果 X 是产物阶段（P1/P3/P5/P7/P9/P11/P13）：
+     - 如果 X = P11.5 且 review.skip_notes = true → 标记 P11.5 为 skipped → 回到循环起点
+  5. 如果 X 是产物阶段（P1/P3/P5/P7/P9/P11/P11.5/P13）：
        → 调用 Phase Skill
 	         P11: rendering_mode=html → ideal-ppt-executor, rendering_mode=image → ideal-ppt-image-executor
+		         P11.5: ideal-ppt-speaker-notes（模式无关）
        → 等待完成
        → 验证产出文件存在且非空
        → 更新 flow state：X > current_phase 时推进 current_phase → X，状态设为 completed
@@ -247,6 +251,7 @@ review:
   skip_outline: false
   skip_prompts: false
   skip_images: false
+  skip_notes: false                           # 为 true 时跳过 P11.5 演讲备注
 created_at: {YYYY-MM-DD HH:mm}
 updated_at: {YYYY-MM-DD HH:mm}
 ---
@@ -260,12 +265,13 @@ updated_at: {YYYY-MM-DD HH:mm}
 
 | 阶段 | Phase Skill | 核心产出 | 前置条件 |
 |------|-------------|---------|---------|
-| P1 | `ideal-ppt-research` | `analysis.md` | source material 存在 |
+| P1 | `ideal-ppt-requirement` | `analysis.md` | source material 存在 |
 | P3 | `ideal-ppt-strategist` | `strategy.md` | P1 completed |
 | P5 | `ideal-ppt-outline` | `outline.md` | P4 approved |
 | P7 | `ideal-ppt-prompt` | `prompts/*.md` | P5 completed |
 | P9 | `ideal-ppt-image` | `images/*.png` | P7 completed, image_approach=ai-generated |
 | P11 | `ideal-ppt-executor` / `ideal-ppt-image-executor` | `html_output/*.html` 或 `images_output/*.png` | P7 completed, 由 rendering_mode 决定 |
+| P11.5 | `ideal-ppt-speaker-notes` | `notes/total.md` | P7 completed（模式无关，可跳过） |
 | P13 | `ideal-ppt-export` | `.pptx` + `.pdf` | P11 completed |
 
 ---
@@ -364,7 +370,7 @@ updated_at: {YYYY-MM-DD HH:mm}
   → P1 需求研究 → P2 确认 → P3 策略规划 → P4 策略确认 [BLOCKING]
   → P5 大纲生成 → P6 大纲审核 → P7 提示词工程 → P8 提示词审核
   → P9 图像生成（条件） → P10 图像审核（条件）
-  → P11 幻灯片执行（html/image） → P12 幻灯片审核 → P13 导出交付
+  → P11 幻灯片执行（html/image） → P11.5 演讲备注（可跳过） → P12 幻灯片审核 → P13 导出交付
 ```
 
 #### 从中断恢复
@@ -411,6 +417,8 @@ slide-deck/{topic-slug}/
 ├── images_output/           ← P11 产出（rendering_mode=image）
 │   ├── 01-slide-cover.png
 │   └── ...
+├── notes/                   ← P11.5 产出：演讲备注（模式无关）
+│   └── total.md
 ├── slides_png/              ← HTML 截图（html 模式导出用）
 │   └── ...
 ├── {topic-slug}.pptx        ← P13 产出：PowerPoint

@@ -11,12 +11,19 @@
 | default_branch | Git 配置.分支策略.默认分支 | main |
 | branch_prefix.feature | Git 配置.分支策略.功能分支前缀 | feature/ |
 | branch_prefix.fix | Git 配置.分支策略.修复分支前缀 | fix/ |
-| test_command | 执行配置.命令映射.测试 | npm test |
-| build_command | 执行配置.命令映射.构建 | npm run build |
+| test_command | 执行配置.命令映射.测试 | make test |
+| lint_command | 执行配置.命令映射.代码检查 | make lint |
+| build_command | 执行配置.命令映射.构建 | make build |
+| verify_command | 执行配置.命令映射.全量验证 | make verify |
 
 ### 1.2 配置缺失处理
 
-如果 `project-config.md` 不存在或配置项缺失，使用默认值。
+如果 `project-config.md` 不存在或配置项缺失，按以下规则回退：
+
+1. 项目根目录存在 `Makefile` → 使用 `make test` / `make lint` / `make verify`
+2. 项目根目录存在 `package.json` → 使用 `npm test` / `npx eslint src/` / `npm run build`
+3. 项目根目录存在 `requirements.txt` → 使用 `pytest` / `ruff check src/`
+4. 以上都没有 → 使用 `make test` 作为默认值，运行时如果失败则跳过运行时验证（仅做代码审查）
 
 ## 2. 依赖图解析
 
@@ -55,7 +62,7 @@
 
 每个 Task 完成后：
 1. 检查返回结果
-2. 验证测试通过
+2. 验证运行时测试通过（Phase 0 结果）
 3. 更新 TodoWrite
 4. 如有失败，暂停并报告
 
@@ -63,6 +70,7 @@
 
 | 错误类型 | 处理方式 |
 |----------|----------|
+| 运行时验证失败 | 触发 debug 子智能体，修复后重新验证 |
 | 单任务失败 | 暂停批次，报告错误，等待介入 |
 | 依赖失败 | 跳过依赖此任务的所有后续任务 |
 | 超时 | 标记超时，报告进度，等待介入 |
@@ -79,7 +87,7 @@
 
 ---
 
-## RED-GREEN-REFACTOR 循环
+## RED-GREEN-VERIFY-REFACTOR 循环
 
 ### RED 阶段（写测试）
 
@@ -94,11 +102,46 @@
 2. **运行测试**：确认测试通过
 3. **不过度实现**：不要添加测试未覆盖的功能
 
+### VERIFY 阶段（运行时验证）
+
+1. **执行全量测试**：`make test` 或 test_command
+2. **执行 lint**：`make lint` 或 lint_command
+3. **全部通过** → 进入 REFACTOR
+4. **有失败** → 进入 debug 修复循环
+
 ### REFACTOR 阶段（优化）
 
 1. **清理代码**：消除重复、改善命名
 2. **保持测试通过**：每次小改动后运行测试
 3. **提交代码**：重构完成后提交
+
+---
+
+## 运行时验证闭环
+
+### 批次级验证（每个批次完成后）
+
+```
+implement 完成
+  ↓
+check Phase 0: make test + make lint
+  ├── 全部通过 → check Phase 1（规范合规）
+  └── 有失败 → debug 修复 → 重新 make test → 最多 3 轮
+       ├── 3 轮内通过 → 继续 Phase 1
+       └── 3 轮未通过 → 暂停，报告失败详情，等待介入
+```
+
+### 全局验证（所有批次完成后）
+
+```
+Step 5 最终验证: make verify
+  ├── 全部通过 → 进入 Step 6 返回摘要
+  └── 有失败 → debug 修复 → 重新 make verify → 最多 3 轮
+       ├── 通过 → 返回摘要
+       └── 未通过 → 返回摘要并标注未解决问题
+```
+
+---
 
 ## Git 分支策略
 
@@ -201,6 +244,7 @@ Closes #123
 
 - [ ] 测试先写且先失败
 - [ ] 最小代码使测试通过
-- [ ] 所有测试通过
+- [ ] make test 全部通过（运行时验证）
+- [ ] make lint 无错误
 - [ ] 代码已提交
 - [ ] 提交信息符合规范
