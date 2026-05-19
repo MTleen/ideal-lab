@@ -2,7 +2,9 @@
   "name": "ideal-lab",
   "private": true,
   "version": "0.0.0",
-  "workspaces": ["plugins/*"],
+  "workspaces": [
+    "plugins/*"
+  ],
   "scripts": {
     "changeset": "changeset",
     "version": "changeset version",
@@ -10,5 +12,8 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0"
+  },
+  "dependencies": {
+    "playwright": "^1.60.0"
   }
 }

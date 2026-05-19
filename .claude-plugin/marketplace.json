@@ -4,8 +4,8 @@
     "name": "MTleen"
   },
   "metadata": {
-    "description": "Claude Code 最佳实践插件库 — 开发流程、PPT 生成、文档写作、知识库构建、深度调研",
-    "version": "1.0.0"
+    "description": "Claude Code 最佳实践插件库 — 开发流程、PPT 生成（含 image-to-svg 图片转可编辑矢量）、文档写作、知识库构建、深度调研",
+    "version": "1.1.0"
   },
   "plugins": [
     {
