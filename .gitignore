@@ -6,6 +6,7 @@ __pycache__/
 !.changeset/README.md
 !.changeset/config.json
 slide-deck/
+projects/
 云端技术助力AI高效落地/
 ideal-lab事业部介绍/
 .claude/worktrees/

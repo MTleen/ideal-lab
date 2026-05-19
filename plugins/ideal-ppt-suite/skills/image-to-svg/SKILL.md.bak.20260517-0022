@@ -1,0 +1,182 @@
+---
+name: image-to-svg
+description: >
+  Convert AI-generated images (PNG/JPG/WebP) into structured, ppt-master-compatible SVG files.
+  Uses Claude Vision to analyze image content (layout, text, shapes, colors) and generates
+  editable SVG where every element is a native vector object. Output feeds directly into
+  ppt-master's svg_to_pptx pipeline for native PPTX export.
+  Triggers: "图片转SVG", "image to SVG", "convert image to editable SVG",
+  "图片解析", "image analysis for PPT", when user has an AI-generated image
+  that needs to become an editable slide.
+---
+
+# Image to SVG
+
+Convert AI-generated images into structured SVG files compatible with ppt-master's `svg_to_pptx` pipeline.
+
+## Core Pipeline
+
+```
+Image (PNG/JPG/WebP)
+  -> Claude Vision: content analysis (layout, text, shapes, colors, hierarchy)
+  -> Optional: OCR cross-validation (PaddleOCR) for precise text
+  -> AI generates structured SVG following ppt-master constraints
+  -> SVG quality check (banned features, XML validity)
+  -> Output: svg_output/<page>.svg
+```
+
+## Input Requirements
+
+- Format: PNG (preferred, lossless), JPG, WebP
+- Resolution: minimum 1920x1080, Retina (2x/3x) preferred
+- One slide per image
+- No overlay artifacts (cursors, notifications, annotations)
+
+## Step 1: Claude Vision Analysis
+
+Read the image using Claude Vision. Extract structured content in JSON:
+
+```json
+{
+  "canvas": {"width": 1920, "height": 1080, "ratio": "16:9"},
+  "layout_type": "title_content | two_column | three_column | image_focus | comparison | data_dashboard",
+  "background": {"type": "solid|gradient|image", "color": "#hex", "colors": ["#hex1", "#hex2"]},
+  "elements": [
+    {
+      "type": "text|shape|image|chart|icon|line|group",
+      "content": "visible text content",
+      "position": {"x": 0.05, "y": 0.03, "w": 0.9, "h": 0.08},
+      "style": {
+        "font_size": "relative (large/medium/small or px estimate)",
+        "font_weight": "bold|normal|light",
+        "color": "#hex",
+        "background": "#hex",
+        "alignment": "left|center|right",
+        "border_radius": "none|small|large"
+      },
+      "shape_type": "rect|circle|triangle|arrow|custom",
+      "children": []
+    }
+  ],
+  "color_palette": ["#hex1", "#hex2", "#hex3"],
+  "hierarchy": {"title": "element_index", "subtitle": "element_index", "body": ["indices"], "emphasis": ["indices"]}
+}
+```
+
+Prompt template: see [references/vlm-prompts.md](references/vlm-prompts.md)
+
+## Step 2: SVG Generation
+
+Generate SVG from the structured analysis. Follow these rules:
+
+### Canvas Setup
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1920 1080"
+     width="1920" height="1080">
+```
+
+Use pixel-based viewBox matching the image dimensions. Do NOT use EMU.
+
+### Element Mapping
+
+| Image Element | SVG Element |
+|---------------|-------------|
+| Text block | `<text>` with explicit `x`, `y`, `font-size`, `fill` |
+| Rectangle | `<rect>` with `x`, `y`, `width`, `height`, optional `rx` |
+| Circle/Ellipse | `<circle>` or `<ellipse>` |
+| Line/Arrow | `<line>` or `<path>` with marker |
+| Group of elements | `<g id="descriptive-name">` |
+| Photo/Complex illustration | `<image href="...">` |
+| Chart | Rebuild with SVG shapes (bars = rects, pie = paths) |
+| Icon | Rebuild with simple shapes or `<use>` for icon references |
+
+### Critical Constraints (from ppt-master)
+
+Read [references/svg-constraints.md](references/svg-constraints.md) for the full list. Summary:
+
+**Banned** (DrawingML has no equivalent):
+- `mask` — use gradient overlays or clipPath instead
+- `<style>`, `class` — use inline attributes only
+- `@font-face`, `foreignObject` — no external font loading
+- `textPath`, `animate*`, `<script>`, `<iframe>`
+- HTML named entities (`&mdash;`) — use raw Unicode (`—`)
+- `symbol` + `use` (for non-icon purposes)
+
+**Conditional** (allowed with restrictions):
+- `marker-start`/`marker-end` — arrows only
+- `clip-path` — image cropping only, not on shapes
+- `<use>` — icon references only, must be expanded by `embed_icons.py`
+
+**Always**:
+- Use raw Unicode for special chars: `—` `→` `©` `&` must be `&amp;`
+- Use `<g id="...">` for logical content blocks (enables animation)
+- Use PPT-safe fonts: `Microsoft YaHei`, `SimHei`, `Arial`, `Segoe UI`
+- Position text with explicit `x`, `y` (y = baseline), `text-anchor`
+- Split long paragraphs into separate `<text>` elements per line
+
+## Step 3: SVG Quality Check
+
+Run ppt-master's quality checker:
+
+```bash
+PPT_MASTER="${SKILL_DIR}/scripts/ppt-master"
+python3 "$PPT_MASTER/svg_quality_checker.py" svg_output/
+```
+
+Fix any errors before proceeding. No auto-fix — re-author the page in context.
+
+## Step 4: Export to PPTX (Optional)
+
+If the user wants PPTX output:
+
+```bash
+PPT_MASTER="${SKILL_DIR}/scripts/ppt-master"
+python3 "$PPT_MASTER/finalize_svg.py" <project_path>
+python3 "$PPT_MASTER/svg_to_pptx.py" <project_path> --only native -t none -o output.pptx
+```
+
+## Fidelity Rules
+
+1. The source image is the layout contract. Match its visual structure, not just content.
+2. Every visible text must be editable SVG `<text>`, not a path or image.
+3. Shapes must be native SVG elements (`<rect>`, `<circle>`, `<path>`), not embedded images.
+4. Colors must be sampled from the source image precisely (use hex values).
+5. Layout proportions must match the source. Use the same coordinate system.
+6. Do not redesign, simplify, or create a new layout from the content alone.
+
+## Project Layout
+
+```
+projects/YYYYMMDD_slug/
+  source_images/       <- input images
+  analysis/            <- VLM analysis JSON
+  svg_output/          <- generated SVG files
+  diagnostics/         <- quality check results
+```
+
+## Multi-Page Workflow
+
+1. Analyze and convert ONE representative page first
+2. Run quality check + visual comparison against source
+3. Only after passing, apply the same style/coordinate conventions to remaining pages
+4. For each page: create a brief blueprint before SVG generation
+
+## Usage
+
+```
+/image-to-svg path/to/image.png
+/image-to-svg path/to/image.png --format 4:3
+/image-to-svg path/to/images/ --batch
+/image-to-svg path/to/image.png --ocr paddleocr
+/image-to-svg path/to/image.png --no-export
+```
+
+| Option | Description |
+|--------|-------------|
+| `--format <ratio>` | Canvas ratio: 16:9 (default), 4:3, 1:1, 9:16, 3:4 |
+| `--batch` | Process multiple images in a folder |
+| `--ocr <engine>` | Cross-validate text with OCR: paddleocr, tesseract, none (default: none) |
+| `--no-export` | Stop at SVG, skip PPTX export |
+| `--output <path>` | Custom output directory |
