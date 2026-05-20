@@ -2,6 +2,9 @@
 .playwright-mcp/
 node_modules/
 .DS_Store
+site/.next/
+site/out/
+site/package-lock.json
 __pycache__/
 *.pyc
 .changeset/*.md
