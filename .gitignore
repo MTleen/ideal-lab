@@ -10,6 +10,7 @@ __pycache__/
 .changeset/*.md
 !.changeset/README.md
 !.changeset/config.json
+*.mp4
 slide-deck/
 projects/
 云端技术助力AI高效落地/
