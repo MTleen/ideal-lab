@@ -2,11 +2,15 @@
 .playwright-mcp/
 node_modules/
 .DS_Store
+site/.next/
+site/out/
+site/package-lock.json
 __pycache__/
 *.pyc
 .changeset/*.md
 !.changeset/README.md
 !.changeset/config.json
+*.mp4
 slide-deck/
 projects/
 云端技术助力AI高效落地/
