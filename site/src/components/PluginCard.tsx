@@ -4,12 +4,11 @@ import { getCategory, detectCategory } from "@/lib/utils";
 
 export default function PluginCard({ plugin }: { plugin: PluginData }) {
   const cat = getCategory(detectCategory(plugin));
-  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   return (
     <Link
-      href={`${base}/plugins/${plugin.slug}`}
-      className="group block rounded-xl border transition-all duration-200 overflow-hidden no-underline"
+      href={`/plugins/${plugin.slug}`}
+      className="group flex flex-col h-full rounded-xl border transition-all duration-200 overflow-hidden no-underline"
       style={{
         background: "var(--bp-surface-1)",
         borderColor: "var(--bp-border-0)",
@@ -27,7 +26,7 @@ export default function PluginCard({ plugin }: { plugin: PluginData }) {
       {/* Category color strip */}
       <div className="h-1 w-full" style={{ background: cat.color }} />
 
-      <div className="p-5">
+      <div className="p-5 flex flex-col flex-1">
         {/* Category label */}
         <div
           className="text-[10px] font-medium tracking-widest uppercase mb-2"
@@ -80,7 +79,7 @@ export default function PluginCard({ plugin }: { plugin: PluginData }) {
         </div>
 
         {/* Meta bar */}
-        <div className="flex items-center gap-3 text-[11px]" style={{ color: "var(--bp-text-3)" }}>
+        <div className="flex items-center gap-3 text-[11px] mt-auto" style={{ color: "var(--bp-text-3)" }}>
           <span>v{plugin.meta.version}</span>
           <span>{plugin.skillCount} skills</span>
         </div>
