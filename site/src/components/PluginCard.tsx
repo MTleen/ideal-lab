@@ -4,11 +4,10 @@ import { getCategory, detectCategory } from "@/lib/utils";
 
 export default function PluginCard({ plugin }: { plugin: PluginData }) {
   const cat = getCategory(detectCategory(plugin));
-  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   return (
     <Link
-      href={`${base}/plugins/${plugin.slug}`}
+      href={`/plugins/${plugin.slug}`}
       className="group block rounded-xl border transition-all duration-200 overflow-hidden no-underline"
       style={{
         background: "var(--bp-surface-1)",
