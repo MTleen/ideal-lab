@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import type { PluginData, CategoryInfo } from "@/lib/types";
 import PluginCard from "@/components/PluginCard";
 import SearchBar from "@/components/SearchBar";
@@ -140,7 +141,7 @@ export default function HomeClient({
             }}
           >
             {timeline.map((p) => (
-              <a
+              <Link
                 key={p.slug}
                 href={`/plugins/${p.slug}`}
                 className="flex items-center gap-4 px-5 py-3 transition-colors no-underline hover:bg-[var(--bp-surface-1)]"
@@ -164,7 +165,7 @@ export default function HomeClient({
                 >
                   v{p.meta.version}
                 </span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

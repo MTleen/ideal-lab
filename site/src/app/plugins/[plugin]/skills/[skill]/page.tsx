@@ -32,6 +32,8 @@ export default async function SkillPage({
   const skill = plugin.skills.find((s: SkillMeta) => s.slug === skillSlug);
   if (!skill) notFound();
 
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
   // Render markdown
   const rendered = await unified().use(remarkParse).use(remarkHtml).process(skill.content);
   const html = rendered.toString();
@@ -44,7 +46,7 @@ export default async function SkillPage({
         <div className="container-site mb-8">
           <div className="flex items-center gap-2 text-sm" style={{ color: "var(--bp-text-2)" }}>
             <Link
-              href={`/`}
+              href={`${base}/`}
               className="transition-colors hover:text-[var(--bp-text-0)] no-underline"
               style={{ color: "inherit" }}
             >
@@ -52,7 +54,7 @@ export default async function SkillPage({
             </Link>
             <span style={{ color: "var(--bp-text-3)" }}>/</span>
             <Link
-              href={`/plugins/${pluginSlug}`}
+              href={`${base}/plugins/${pluginSlug}`}
               className="transition-colors hover:text-[var(--bp-text-0)] no-underline"
               style={{ color: "inherit" }}
             >

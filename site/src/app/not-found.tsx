@@ -2,6 +2,7 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 
 export default function NotFound() {
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   return (
     <>
       <Nav />
@@ -35,7 +36,7 @@ export default function NotFound() {
             The page you are looking for does not exist.
           </p>
           <Link
-            href={`/`}
+            href={`${base}/`}
             className="inline-flex items-center h-10 px-5 rounded-xl text-sm font-semibold transition-all no-underline"
             style={{
               background: "var(--bp-brand-500)",

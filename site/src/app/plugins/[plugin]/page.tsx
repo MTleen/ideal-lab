@@ -22,6 +22,7 @@ export default async function PluginPage({
   if (!plugin) notFound();
 
   const cat = getCategory(detectCategory(plugin));
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   const installCmd = [
     `claude plugin marketplace add https://github.com/MTleen/ideal-lab`,
     `claude plugin install ${plugin.meta.name}@ideal-lab`,
@@ -34,7 +35,7 @@ export default async function PluginPage({
         {/* Back link */}
         <div className="container-site mb-8">
           <Link
-            href={`/`}
+            href={`${base}/`}
             className="inline-flex items-center gap-2 text-sm font-medium transition-colors no-underline"
             style={{ color: "var(--bp-text-2)" }}
           >
@@ -115,7 +116,7 @@ export default async function PluginPage({
             {plugin.skills.map((s) => (
               <Link
                 key={s.slug}
-                href={`/plugins/${plugin.slug}/skills/${s.slug}`}
+                href={`${base}/plugins/${plugin.slug}/skills/${s.slug}`}
                 className="group block rounded-xl border p-5 transition-all no-underline hover:shadow-md"
                 style={{
                   background: "var(--bp-surface-1)",
