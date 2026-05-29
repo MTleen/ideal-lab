@@ -77,13 +77,6 @@
       "description": "Skill 全生命周期引擎：从零创建或持续优化——爬⛰优化 + 棘轮机制 + 独立 agent 判卷",
       "category": "development",
       "keywords": ["skill", "create", "optimize", "builder", "evaluate", "checklist", "ratchet"]
-    },
-    {
-      "name": "panel-review",
-      "source": "./plugins/panel-review",
-      "description": "多维会审：自动组建专家团队从多视角对抗性审查文档/代码/方案/PPT",
-      "category": "development",
-      "keywords": ["review", "panel", "adversarial", "audit", "team", "expert"]
     }
   ]
 }
