@@ -1,0 +1,8 @@
+{
+  "name": "skill-builder",
+  "version": "1.0.0",
+  "description": "Skill 全生命周期引擎：从零创建新 skill 或持续优化已有 SKILL.md。双重评估（7 维度结构评分 + checklist 实测），爬山优化 + 棘轮机制（退步自动回滚），独立 agent 判卷消除偏差",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["skill", "create", "optimize", "builder", "evaluate", "checklist", "ratchet"]
+}

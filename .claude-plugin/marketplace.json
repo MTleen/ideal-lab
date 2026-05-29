@@ -70,6 +70,13 @@
       "description": "苏格拉底式任务澄清 + 持久小步迭代验证循环",
       "category": "development",
       "keywords": ["ralph", "iteration", "verification", "socratic", "loop"]
+    },
+    {
+      "name": "skill-builder",
+      "source": "./plugins/skill-builder",
+      "description": "Skill 全生命周期引擎：从零创建或持续优化——爬⛰优化 + 棘轮机制 + 独立 agent 判卷",
+      "category": "development",
+      "keywords": ["skill", "create", "optimize", "builder", "evaluate", "checklist", "ratchet"]
     }
   ]
 }
