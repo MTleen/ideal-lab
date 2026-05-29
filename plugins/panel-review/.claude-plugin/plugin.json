@@ -1,0 +1,8 @@
+{
+  "name": "panel-review",
+  "version": "1.0.0",
+  "description": "多维会审：根据上文产出自动组建专家团队，从多个视角对文档/代码/方案进行对抗性审查，输出按严重度排序的攻击面报告",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["review", "panel", "adversarial", "audit", "team", "expert"]
+}
