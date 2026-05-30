@@ -1,17 +1,24 @@
 ---
 name: skill-builder
-description: "Skill 全生命周期引擎。从用户需求创建新 skill，或持续优化已有 SKILL.md。双重评估：结构评分（7 维度，75 分）+ checklist 实测（25 分）。爬山优化 + 对抗审稿 + same-judge 判卷 + 棘轮机制。Use when user mentions \"优化skill\", \"创建skill\", \"新建skill\", \"做一个skill\", \"改进skill\", \"skill quality\", \"skill review\", \"skill打分\", \"提升skill\", \"create skill\", \"skill优化\", \"build skill\"."
+description: "Skill 全生命周期引擎。从用户需求创建新 skill，持续优化已有 SKILL.md，或从外部 skill 吸收设计精华改进目标 skill。双重评估：结构评分（7 维度，75 分）+ checklist 实测（25 分）。爬山优化 + 对抗审稿 + same-judge 判卷 + 棘轮机制。Use when user mentions \"优化skill\", \"创建skill\", \"新建skill\", \"做一个skill\", \"改进skill\", \"skill quality\", \"skill review\", \"skill打分\", \"提升skill\", \"create skill\", \"skill优化\", \"build skill\", \"吸收skill\", \"对标skill\", \"学习skill\", \"absorb skill\"."
 
 ---
 
 # Skill-Builder
 
-Create, evaluate, optimize, and package Agent Skills. Two-part scoring: structural rubric (75pts) + checklist pass rate (25pts). Autonomous hill-climbing: diagnose → edit → adversarial review + re-score → keep or revert. Creation is optimization from scratch — same evaluation, same loop, same ratchet.
+Create, evaluate, optimize, and package Agent Skills. Two-part scoring: structural rubric (75pts) + checklist pass rate (25pts). Autonomous hill-climbing: diagnose → edit → adversarial review + re-score → keep or revert. Creation is optimization from scratch — same evaluation, same loop, same ratchet. Also supports **absorb mode**: learn design patterns from external skills and apply them to improve a target skill.
 
 ## Prerequisites
 
 - Git repo at project root
 - `results.tsv` in skill-builder directory (auto-created on first run if missing)
+
+## Progressive Disclosure
+
+Core absorb logic is in separate reference files, loaded only when absorb mode is active:
+
+- **[references/absorb-dimensions.md](references/absorb-dimensions.md)**: 8-dimension cross-skill comparison framework with definitions, measurement methods, and skill-builder 7-dim rubric mapping
+- **[references/design-patterns.md](references/design-patterns.md)**: Catalog of 15 named skill design patterns with identification signatures and absorption notes
 
 ## Evaluation Rubric (100 points)
 
@@ -70,7 +77,8 @@ First, determine the mode:
 | ------------------------------ | ------------------------------------------------- |
 | "创建/新建/做一个 skill for X" | **Create**                                        |
 | "优化/改进/评估 skill Y"       | **Optimize**                                      |
-| Ambiguous                      | Ask: "是要创建一个全新的 skill，还是优化已有的？" |
+| "从 X 吸收改进 Y"、"对比 X 优化 Y"、"学习 X 的 skill"、"对标 X" | **Absorb**（Optimize 子模式，走完整 absorb 流程） |
+| Ambiguous                      | Ask: "是要创建一个全新的 skill，还是优化已有的，还是从外部 skill 吸收改进？" |
 
 ---
 
@@ -137,6 +145,108 @@ Proceed to Phase 1.
 4. Read existing `results.tsv`.
 
 Proceed to Phase 1.
+
+#### Mode C: Absorb from External Skill
+
+从外部 skill（GitHub URL 或本地路径）吸收设计精华，改进目标 skill。详细维度定义见 [references/absorb-dimensions.md](references/absorb-dimensions.md)，设计模式目录见 [references/design-patterns.md](references/design-patterns.md)。
+
+##### Step C0: Pre-flight（前置检查）
+
+在进入 absorb 前逐一检查：
+
+1. 外部来源可解析？GitHub URL → 尝试 fetch；本地路径 → 检查存在
+2. 外部来源含 SKILL.md？→ 否则终止："该路径不是有效的 skill（缺少 SKILL.md）"
+3. 目标 skill 的 SKILL.md 存在？
+4. 目标 skill 的 test-checklist.json 存在？→ 否则触发快速生成（复用 Phase 1 简化流程：只提取声称 + 生成 3-4 个 checklist 问题 + 用户确认）
+5. 当前 git clean？→ 否则 abort，提示用户先提交或 stash
+6. 任一检查失败 → 明确告知用户缺什么及如何补齐
+
+##### Step C1: Parse & Analyze
+
+读取外部 skill，产出结构化分析报告。操作约束：
+
+- 只读 `.md/.json/.yaml` 文本文件，排除二进制、`node_modules/`、`.git/`
+- 单个文件 >500 行截断并标注（`truncated: true`）
+- 总读取文件 >10 个停止并询问用户
+- 记录源 commit hash 或 local file mtime 确保可复现
+
+输出 JSON：
+
+```json
+{
+  "source": {"url": "...", "version": "commit-hash", "ecosystem": "claude-code"},
+  "structure": {"skill_md_lines": 120, "reference_files": 3, "script_files": 2, "description_length": 180, "trigger_keywords": ["pdf", "extract"]},
+  "patterns": [{"name": "Gate-in-Workflow", "location": "SKILL.md:45-52", "confidence": "high"}],
+  "observations": [{"type": "structural", "note": "SKILL.md < 150 行，内容高度精简"}, {"type": "platform_specific", "note": "引用 pdfplumber——Claude Code 环境可用"}]
+}
+```
+
+- `patterns`：从 [references/design-patterns.md](references/design-patterns.md) 的 15 个模式目录中匹配，匹配不到的标记为 `novel-pattern`
+- `ecosystem`：`claude-code | codex | cursor | generic`——用于后续噪音过滤
+
+##### Step C2: Filter & Extract
+
+过滤环境/模型特定噪音，提取可迁移教训。
+
+**过滤规则**（操作化）：
+- 引用了具体模型名/版本号 → 标记 `model_specific`，排除
+- 引用了具体文件路径/平台特有工具 → 标记 `platform_specific`，排除
+- 可以在不修改的情况下迁移到目标 skill → 标记 `transferable`
+- 不确定 → 标记 `uncertain`，保留但降优先级
+
+**空提取处理**：如果过滤后无 transferable 或 uncertain 项 → 输出 "该外部 skill 的设计模式均为环境/模型特定，无可迁移通用教训。流程终止。"——**流程终止，不进入后续步骤。**
+
+##### Step C3: Generate Absorption Candidates
+
+**C3a: 8 维度差距分析**（只出评级，不出 diff）
+
+按 [references/absorb-dimensions.md](references/absorb-dimensions.md) 的 8 个维度，逐项对比外部 skill 和目标 skill。每个维度输出 gap_severity（none / minor / moderate / significant）+ 一句话差距描述。
+
+**C3b: 逐维度生成吸收 diff**
+
+- 每维度最多 3 个候选，总上限 15 个
+- 每个候选标注：`dimension`, `gap_severity`, `expected_improvement`, `risk` (low/medium/high), `apply_order`
+- 候选冲突检测：同一文件同一段落的候选标记为互斥组，不单独 apply
+- 按 `expected_improvement / risk` 比值降序输出
+- 风险标注需附一句理由（如 "risk: medium — 涉及 gate 设计变更，可能影响用户体验"）
+- 如果所有 8 维度的 gap 均为 significant 且预期收益 > 迁移成本，额外追加一个 "建议整体替换" meta-candidate
+
+##### Step C4: User Approval
+
+**按维度审批**（不是逐候选——降低审批疲劳）：
+
+```
+[维度 2: Description 触发密度] gap: significant
+  候选 1: 增加 5 个中文触发词 → 预期 +3 分, risk: low
+  候选 2: 扩展 description 从 100→200 字符 → 预期 +2 分, risk: low
+  → 批准 / 拒绝 / 修改
+```
+
+对于 risk: high 的候选单独提请确认（不与其他候选一起批量审批）。
+
+审批状态机：
+- **Accept** → 该维度所有候选进入 apply 队列
+- **Reject** → 进入 rejected 列表（含理由）
+- **Modify** → 用户提供修改文本 → 重新计算该候选的 gap/improvement/risk → 回到审批队列
+- **全拒** → 输出 summary（分析了 N 个维度，M 个候选，0 个采纳）
+- **空提取时** → 无需进入审批，Step C2 已终止
+
+##### Step C5: Apply & Verify (Ratchet)
+
+逐个候选应用 + 独立 eval，复用现有 skill-builder 的 7 维度评分和棘轮机制：
+
+```
+for each approved candidate (按 apply_order):
+    1. 应用改动 → git commit
+    2. 跑 skill-builder Phase 3 Baseline（7 维度结构分 + checklist pass rate）
+       - 复用 same-judge scoring：同一 judge agent 对 apply 前/后的 skill 评分
+    3. new_score > old_score → keep, 更新 baseline
+    4. new_score <= old_score → git revert, 标记该候选为 REVERT
+       - 依赖此改动的后续候选自动 skip
+    5. 写入 results.tsv:
+       dimension = "absorb:{source}:{dim}:{candidate_id}"
+       例: "absorb:anthropics-skills-pdf:description-density:c2"
+    6. 写入 changelog.md（含来源 skill/版本/维度/决定 + WHY）
 
 ---
 
@@ -534,6 +644,12 @@ timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode	pass_
 
 For create mode baseline rows, include bare-Claude reference score in the note field: `note=bare_claude:52.3`.
 
+For absorb mode rows, use extended `dimension` format:
+```
+absorb:{source_skill}:{absorb_dimension}:{candidate_id}
+```
+Example: `absorb:anthropics-skills-pdf:description-density:c2`
+
 ### test-checklist.json
 
 Location: `{skill-dir}/test-checklist.json`. Format defined in Phase 1 Step 5.
@@ -558,6 +674,11 @@ Always notify user before applying a fallback. Never silently skip.
 | SKILL.md not found                            | Terminate that skill. Write `status=error`. Continue to next. |
 | No sub-agent for judge                        | Fall back to dry-run. Main agent evaluates directly. Note `eval_mode=dry_run`. |
 | Creation mode: user declines Intent Expansion | Proceed without it, but warn: "没有扩展边界，checklist 可能测不出草稿的隐性缺陷。" |
+| Absorb: external URL unreachable              | Prompt user to verify URL; suggest `git clone` to local path first. |
+| Absorb: external dir has no SKILL.md          | Terminate: "该路径不是有效的 skill（缺少 SKILL.md）。" |
+| Absorb: empty extraction (Step C2)            | Terminate gracefully: "该外部 skill 的设计模式均为环境/模型特定，无可迁移通用教训。" |
+| Absorb: individual candidate causes revert    | Skip that candidate. Subsequent candidates in dependency chain auto-skip. |
+| Absorb: skill not parseable (private repo)    | Prompt user to manually clone to local path. |
 
 ## Anti-Patterns
 
@@ -570,3 +691,6 @@ Always notify user before applying a fallback. Never silently skip.
 - Writing checklist questions with subjective language ("Is the output good?"). Every question must be mechanically yes/no.
 - Creating more than 6 checklist questions. More leads to checklist gaming, not genuine improvement.
 - **Skipping Intent Expansion in create mode.** Without it, the agent grades its own homework and the draft scores artificially high — Phase 4 has nothing to fix and the skill ships with hidden gaps.
+- **Cross-domain comparison in absorb mode.** Don't let a workflow skill benchmark against a tool-wrapper skill. Compare within the same design pattern family.
+- **Copy-pasting external skill content in absorb mode.** Absorption means extracting transferable lessons, not importing raw text. Every candidate must be justified by a specific dimension gap.
+- **Skipping Pre-flight in absorb mode.** Missing test-checklist.json or unclean git state must block absorb entry — not be discovered mid-flow at Step C5.
