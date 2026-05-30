@@ -226,28 +226,29 @@ Proceed to Phase 1.
 - **expected_improvement 计算公式**：`expected_improvement = (mapped_dimension_weight / 75) × gap_multiplier`。其中 `gap_multiplier`: significant=7, moderate=4, minor=1.5。`mapped_dimension_weight` 参见 [absorb-dimensions.md 映射表](references/absorb-dimensions.md)
 - 候选冲突检测：同一文件同一段落的候选标记为互斥组，不单独 apply
 - 按 `expected_improvement / risk_score` 比值降序输出（risk: low=1, medium=2, high=3）
+- **同名映射维度的 ceiling effect**：两个 absorb 维度共享同一 skill-builder 评分维度时（如"SKILL.md 效率"和"Reference 结构"都映射到 Architecture wt 15），二者的候选在 `apply_order` 中交替排列（而非按 improvement 连续排列同一维度的候选），减少单维度 scoring ceiling 导致的错误 revert
 - 风险标注需附一句理由（如 "risk: medium — 涉及 gate 设计变更，可能影响用户体验"）
 - 如果所有 8 维度的 gap 均为 significant 且预期收益 > 迁移成本，额外追加一个 "建议整体替换" meta-candidate
 
 ##### Step C4: User Approval
 
-**按维度审批**（不是逐候选——降低审批疲劳）：
+**按维度呈现，候选可选**。每个维度展示差距摘要和候选列表，用户可逐候选选择——默认该维度全部选中，可单独取消勾选：
 
 ```
 [维度 2: Description 触发密度] gap: significant
-  候选 1: 增加 5 个中文触发词 → 预期 +3 分, risk: low
-  候选 2: 扩展 description 从 100→200 字符 → 预期 +2 分, risk: low
-  → 批准 / 拒绝 / 修改
+  ☑ 候选 1: 增加 5 个中文触发词 → 预期 +2.4 分, risk: low
+  ☑ 候选 2: 扩展 description 从 100→200 字符 → 预期 +1.7 分, risk: low
+  → 批准选中 / 全部拒绝 / 修改某个候选
 ```
 
 对于 risk: high 的候选单独提请确认（不与其他候选一起批量审批）。
 
-审批状态机：
-- **Accept** → 该维度所有候选进入 apply 队列
-- **Reject** → 进入 rejected 列表（含理由）
-- **Modify** → 用户提供修改文本 → 重新计算该候选的 gap/improvement/risk → 回到审批队列
-- **全拒** → 输出 summary（分析了 N 个维度，M 个候选，0 个采纳）
-- **空提取时** → 无需进入审批，Step C2 已终止
+对于 C3b 标记为互斥组的候选，在展示时用 `⚠️ 互斥：以下候选不能同时应用` 标出，要求用户只能选择其中 1 个。
+
+审批动作：
+- **批准选中** → 所有 ☑ 的候选进入 apply 队列
+- **全部拒绝** → 该维度所有候选进入 rejected 列表（含理由）
+- **修改** → 用户指定候选 + 提供修改文本 → 重新计算 → 回到审批
 
 ##### Step C5: Apply & Verify (Ratchet)
 
@@ -257,14 +258,14 @@ Proceed to Phase 1.
 for each approved candidate (按 apply_order):
     1. 应用改动 → git commit
     2. 跑 skill-builder Phase 3 Baseline（7 维度结构分 + checklist pass rate）
-       - 复用 same-judge scoring：同一 judge agent 对 apply 前/后的 skill 评分
+       - 每次 spawn 独立 judge agent 对当前版本评分（不做 same-judge 双版本评分）
+       - 与前一版本的分数比较（首候选 vs 吸收前基线）
+       - note: 独立 judge spawn 存在实例方差——约 ±1-2 分的判分波动是正常的，棘轮阈值应容忍此波动
     3. new_score > old_score → keep, 更新 baseline
     4. new_score <= old_score → git revert, 标记该候选为 REVERT
        - 依赖此改动的后续候选自动 skip
-    5. 写入 results.tsv:
-       dimension = "absorb:{source}:{dim}:{candidate_id}"
-       例: "absorb:anthropics-skills-pdf:description-density:c2"
-    6. 写入 changelog.md（含来源 skill/版本/维度/决定 + WHY）。absorb changelog 条目格式：
+    5. 写入 results.tsv（dimension = "absorb:{source}:{dim}:{candidate_id}"）
+    6. 写入 changelog.md（见下方模板）。absorb changelog 条目格式：
 
 ```markdown
 ## absorb (YYYY-MM-DD HH:MM)
