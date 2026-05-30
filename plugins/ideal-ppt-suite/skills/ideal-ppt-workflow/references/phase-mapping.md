@@ -147,7 +147,7 @@ slide-deck/{topic-slug}/
 
 **说明**：为每页幻灯片生成提示词。根据 `rendering_mode` 走不同分支：
 - **html 模式**：生成精确布局指令（CSS Grid、字号、位置），产出基于 `references/base-prompt.md` 的 HTML 生成提示词。
-- **image 模式**：生成内容简报 + 风格描述的提示词，包含该页要传达的完整素材（不做裁剪），布局由画图模型自主决定。基于 `references/base-prompt-image.md` 模板。密度由 `style.density` 控制。
+- **image 模式**：生成内容简报 + 风格描述 + 版式自由度 + 区块级版式原型的提示词。必须明确每页 required 内容、layout freedom、layout archetype、信息块数量、视觉形态、anti-grid plan 和参考图约束；图像模型只做最终视觉细化。用户要求自由排版或反馈太规整时，layout freedom 应切到 `freeform editorial`，避免等宽列、同尺寸卡片矩阵、固定侧栏模板、左侧 KPI 竖排、横向流程节点和“顶部流程 + 中部卡片 + 底部行动条”模板。若一轮后仍明显网格化，应使用 `freeform layout sketch` 作为 composition reference，而不是继续堆文字禁令。基于 `references/base-prompt-image.md` 模板。密度由 `style.density` 控制。
 
 两种模式均遵循 prompt 内容深度规则——提示词必须自包含，禁止抽象标签。
 
@@ -213,7 +213,7 @@ slide-deck/{topic-slug}/
 
 **说明**：根据 `rendering_mode` 走不同执行路径：
 - **html 模式**（`ideal-ppt-executor`）：逐页生成独立 HTML 幻灯片（内联 CSS + 内嵌 SVG），浏览器直接渲染。
-- **image 模式**（`ideal-ppt-image-executor`）：逐页调用图片生成服务，将内容简报 + 风格参考传给画图模型，模型自主决定布局。支持 `style_reference`（参考图片或风格描述）保证跨页一致性。
+- **image 模式**（`ideal-ppt-image-executor`）：逐页调用 gpt-image-2 兼容图片生成服务，原样发送 P7 完整 prompt，并追加执行质量合同。支持 `style_reference`（参考图片或风格描述）；参考图片可作为背景/母版/版式锚点，但不能复制旧文字、logo、水印、页码。
 
 ---
 

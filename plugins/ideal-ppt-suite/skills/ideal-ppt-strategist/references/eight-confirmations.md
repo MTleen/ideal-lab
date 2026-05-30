@@ -145,65 +145,38 @@
 
 ### 呈现信息
 
-提供两种选择模式：
+只提供两种预设风格：
 
-**模式 A：预设风格**
+| 预设 | 中文名 | 典型场景 |
+|------|--------|----------|
+| scientific | 学术风格 | 论文汇报、课题答辩、研究综述、实验结果、算法/方法报告 |
+| china-telecom | 电信高信息密度风格 | 中国电信、央企政企、云网算力、AI、安全、AIDC、DICT、行业解决方案 |
 
-完整列出 17 种预设（参见 `dimensions/presets.md`），每项附：
-- 风格名称（中英文）
-- 一句话描述
-- 典型使用场景
-- 视觉示例关键词
-
-**模式 B：自定义四维组合**
-
-| 维度 | 可选项 | 说明 |
-|------|--------|------|
-| Texture 质感 | clean / grid / organic / pixel / paper | 参见 `dimensions/texture.md` |
-| Mood 氛围 | professional / warm / cool / vibrant / dark / neutral | 参见 `dimensions/mood.md` |
-| Typography 字体 | geometric / humanist / handwritten / editorial / technical | 参见 `dimensions/typography.md` |
-| Density 密度 | minimal / balanced / dense | 参见 `dimensions/density.md` |
-
-### 风格选择决策树（基于 ppt-master）
+### 风格选择决策树
 
 ```
-第一步：判断演示的核心诉求
+内容是否明显是学术/研究/论文/实验？
+├─ 是 → scientific
+└─ 否 → china-telecom
 
-Q1: 演示是否以图像/视觉展示为主？
-├─ 是 → General Versatile 通用多能风格
-│   推荐：商务风格 / 极简风格 / 插画风格
-└─ 否 ↓
-
-Q2: 演示是否以数据/分析/进度为主？
-├─ 是 → General Consulting 通用咨询风格
-│   推荐：图表风格 / 块状风格 / 高密度信息图
-└─ 否 ↓
-
-Q3: 演示是否以战略决策/说服影响为主？
-├─ 是 → Top Consulting 顶级咨询风格
-│   推荐：商务风格 / 论文风格 / 极简风格
-└─ 否 ↓
-
-Q4: 其他场景
-├─ 教育/培训 → 黑板风格 / 手绘风格 / 插画风格
-├─ 技术/架构 → 蓝图风格 / 架构图风格
-├─ 创意/故事 → 水彩风格 / 动画风格 / 复古报纸风
-└─ 品牌传播 → 杂志风格 / 极简风格
+是否提供电信 PPT 背景图/母版/参考图？
+├─ 是 → style_reference.type=image，作为背景/母版/版式锚点
+└─ 否 → style_reference.type=none 或 description
 ```
 
 ### 推荐逻辑
 
 1. 从 research.md 提取内容类型和使用场景
-2. 按决策树定位风格大类
-3. 结合受众画像细化推荐（如高管受众偏向极简/商务）
-4. 推荐 1-2 个预设，附推荐理由
-5. 同时展示对应的四维参数，供高级用户参考
+2. 按决策树选择 scientific 或 china-telecom
+3. 结合受众画像调整密度（dense / ultra-dense）
+4. 推荐 1 个主预设，说明为什么不是另一个预设
+5. 若有参考图，记录参考图用途和禁止复制项
 
 ### 默认值
 
-**商务风格 (Business Style)**
+**电信高信息密度风格 (china-telecom)**
 
-四维参数：`clean + professional + geometric + balanced`
+四维参数：`clean + professional + geometric + ultra-dense`
 
 ---
 
@@ -275,12 +248,8 @@ Divider:   #E0E0E0
 
 ```
 风格预设是什么？
-├─ 手绘风格 → AI-Generated 或 Emoji
-├─ 极简风格 → None 或 Built-in Library (outline only)
-├─ 商务/咨询 → Built-in Library ★推荐
-├─ 像素风格 → AI-Generated
-├─ 教育/培训 → Emoji 或 Built-in Library
-└─ 其他 → Built-in Library
+├─ scientific → None 或 Built-in Library（图标只作小标签）
+└─ china-telecom → Built-in Library（线性图标，小尺寸，严禁图标替代内容）
 ```
 
 ### 推荐逻辑
@@ -401,8 +370,8 @@ Caption: 10-12px (0.56x-0.67x)
 | a | 画幅格式 | PPT 16:9 | PPT 16:9 | ✅ 采纳推荐 |
 | b | 页数范围 | 10-12 页 | 8-12 页 | ⚡ 用户调整 |
 | c | 受众与目的 | 高管/战略决策 | 从业者/数据分析 | ⚡ 用户调整 |
-| d | 风格目标 | 商务风格 | 商务风格 | ✅ 采纳推荐 |
-| e | 配色方案 | 自定义蓝色系 | 咨询蓝系 | ⚡ 用户调整 |
+| d | 风格目标 | china-telecom | china-telecom | ✅ 采纳推荐 |
+| e | 配色方案 | 电信红蓝体系 | 电信红 #C41E24 + 科技蓝 #005BAC | ⚡ 用户调整 |
 | f | 图标使用 | Built-in Library | Built-in Library | ✅ 采纳推荐 |
 | g | 字体方案 | MiSans + Liter | MiSans + Liter | ✅ 采纳推荐 |
 | h | 图片使用 | AI-generated | Placeholders | ⚡ 用户调整 |

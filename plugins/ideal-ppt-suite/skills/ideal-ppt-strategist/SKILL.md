@@ -74,54 +74,28 @@ description: Use when P1 research review is completed and strategy/design specif
 
 #### d. 风格目标 (Style Objective)
 
-提供两种选择模式：
+只提供两种长期预设风格（参见 `ideal-ppt-prompt/references/dimensions/presets.md`）：
 
-**模式 A：17 种预设风格**（参见 `references/dimensions/presets.md`）
+| 预设 | 中文名 | 典型场景 |
+|------|--------|----------|
+| scientific | 学术风格 | 论文汇报、课题答辩、研究综述、实验结果、算法/方法报告 |
+| china-telecom | 电信高信息密度风格 | 中国电信、央企政企汇报、云网算力、AI、安全、DICT、行业解决方案 |
 
-| 编号 | 预设名称 | 典型场景 |
-|------|----------|----------|
-| 1 | 蓝图风格 | 技术架构、系统设计 |
-| 2 | 黑板风格 | 教育、概念讲解 |
-| 3 | 商务风格 | 企业汇报、商务提案 |
-| 4 | 极简风格 | 高端展示、品牌介绍 |
-| 5 | 手绘风格 | 创意提案、故事叙述 |
-| 6 | 水彩风格 | 艺术、情感表达 |
-| 7 | 暗色风格 | 科技、前沿主题 |
-| 8 | 块状风格 | 信息密集、数据展示 |
-| 9 | 杂志风格 | 品牌、生活方式 |
-| 10 | 图表风格 | 数据分析、报告 |
-| 11 | 动画风格 | 故事、流程展示 |
-| 12 | 架构图风格 | 技术方案、系统设计 |
-| 13 | 像素风格 | 游戏、创意 |
-| 14 | 论文风格 | 学术、研究 |
-| 15 | 插画风格 | 教育、创意 |
-| 16 | 复古报纸风 | 怀旧、主题展示 |
-| 17 | 高密度信息图 | 综合报告、总结 |
+不再提供任意风格库或自定义维度组合。若用户有电信 PPT 背景图、母版截图或其他参考图片，应写入 `style_reference`，作为背景/母版/版式锚点，而不是新建风格预设。
 
-**模式 B：自定义四维组合**（参见 `references/dimensions/` 目录）
-
-| 维度 | 可选项 |
-|------|--------|
-| Texture (质感) | clean / grid / organic / pixel / paper |
-| Mood (氛围) | professional / warm / cool / vibrant / dark / neutral |
-| Typography (字体) | geometric / humanist / handwritten / editorial / technical |
-| Density (密度) | minimal / balanced / dense |
-
-**风格选择决策树**（基于 ppt-master）：
+**风格选择决策树**：
 
 ```
-演示目的是什么？
-├─ 重图像展示/推广宣传 → General Versatile（通用多能）
-├─ 数据分析/进度汇报 → General Consulting（通用咨询）
-└─ 战略决策/说服影响 → Top Consulting（顶级咨询）
-    ↓
-根据决策树结果映射到对应预设：
-├─ General Versatile → 商务风格 / 极简风格
-├─ General Consulting → 图表风格 / 块状风格
-└─ Top Consulting → 商务风格 / 论文风格
+内容是否明显是学术/研究/论文/实验？
+├─ 是 → scientific
+└─ 否 → china-telecom
+
+是否提供电信 PPT 背景图/母版/参考页？
+├─ 是 → style_reference.type=image，并说明保留背景质感、红蓝比例、标题栏和空间节奏
+└─ 否 → style_reference.type=none 或 description
 ```
 
-**推荐逻辑**：结合使用场景 + 受众 + 目的，推荐 1-2 个预设并说明理由。
+**推荐逻辑**：只推荐一个主预设，并说明为什么不是另一个预设。
 
 #### e. 配色方案 (Color Scheme)
 
@@ -216,7 +190,7 @@ XII.  设计检查清单 (Design Checklist)
 | `color-knowledge-base.md` | 配色参考知识库 |
 | `design-guidelines.md` | 设计原则与指南 |
 | `content-rules.md` | 内容与风格规则 |
-| `dimensions/presets.md` | 17 种预设风格映射 |
+| `dimensions/presets.md` | scientific / china-telecom 两种预设映射 |
 | `dimensions/texture.md` | 质感维度选项 |
 | `dimensions/mood.md` | 氛围维度选项 |
 | `dimensions/typography.md` | 字体维度选项 |
@@ -232,7 +206,7 @@ XII.  设计检查清单 (Design Checklist)
 | research.md 内容不完整 | 基于已有信息生成推荐，标注缺失项 |
 | 用户拒绝全部推荐 | 进入自由讨论模式，逐项确认 |
 | 用户中途修改确认 | 允许修改，重新生成受影响的部分 |
-| 无法确定推荐值 | 提供所有选项供用户选择，不设默认值 |
+| 无法确定推荐值 | 默认使用 `china-telecom`，并说明可切换为 `scientific` |
 
 ---
 
@@ -246,8 +220,8 @@ XII.  设计检查清单 (Design Checklist)
   a. 画幅：推荐 PPT 16:9（内部会议投影）
   b. 页数：8-12页（4个分析维度 + 开结尾）
   c. 受众：管理层 / 数据分析目的
-  d. 风格：推荐"图表风格"（数据密集型）
-  e. 配色：咨询蓝系（#005587 / #2196F3 / #FF9800）
+  d. 风格：推荐 `china-telecom`（企业高信息密度汇报）
+  e. 配色：电信红 #C41E24 + 科技蓝 #005BAC + 深灰蓝 #25364D
   f. 图标：Built-in Library
   g. 字体：MiSans + Liter
   h. 图片：None（数据为主）

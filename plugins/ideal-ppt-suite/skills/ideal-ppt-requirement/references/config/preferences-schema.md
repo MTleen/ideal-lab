@@ -31,17 +31,17 @@ preferences:
 
   # 默认风格偏好
   style:
-    preset: "business"         # 可选: 17 种预设名称或 custom
-    texture: "clean"           # 可选: clean, grid, organic, pixel, paper
-    mood: "professional"       # 可选: professional, warm, cool, vibrant, dark, neutral
-    typography: "geometric"    # 可选: geometric, humanist, handwritten, editorial, technical
-    density: "balanced"        # 可选: minimal, balanced, dense
+    preset: "china-telecom"    # 可选: china-telecom, scientific
+    texture: "clean"
+    mood: "professional"       # china-telecom=professional, scientific=cool
+    typography: "geometric"    # china-telecom=geometric, scientific=technical
+    density: "ultra-dense"     # 可选: dense, ultra-dense
 
   # 品牌色（如有）
   brand_colors:
-    primary: "#005587"         # HEX 格式
-    secondary: "#2196F3"
-    accent: "#FF9800"
+    primary: "#C41E24"         # HEX 格式
+    secondary: "#005BAC"
+    accent: "#25364D"
 
   # 图片策略
   image_approach: "none"       # 可选: none, user-provided, ai-generated, placeholders
@@ -90,11 +90,11 @@ canvas_format: "1280x720"
 language: "zh"
 audience: "practitioner"
 style:
-  preset: "business"
+  preset: "china-telecom"
   texture: "clean"
   mood: "professional"
   typography: "geometric"
-  density: "balanced"
+  density: "ultra-dense"
 brand_colors: null
 image_approach: "none"
 review:

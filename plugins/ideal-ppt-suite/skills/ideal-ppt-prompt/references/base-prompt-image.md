@@ -2,7 +2,7 @@
 
 本文件是图片模式（rendering_mode=image）的幻灯片生成基础提示词模板。P7 提示词工程阶段将使用此模板，填充 `{{STYLE_INSTRUCTIONS}}` 和 `{{SLIDE_CONTENT}}` 两个插入点，生成完整的设计简报（design brief），交给图像生成模型产出幻灯片图片。
 
-**核心设计哲学**：与 HTML/SVG 模式（base-prompt.md）精确指定 CSS 布局不同，图片模式将**全部内容素材**完整提供给图像模型，由模型根据密度级别（density level）自行决定展示哪些内容、如何排版。图像模型同时扮演**设计师**和**编辑**的角色。
+**核心设计哲学**：图片模式要把每页当作一张完整 PPT 信息图生成。提示词必须明确“呈现什么内容”和“采用什么区块级版式”，但不要求像 HTML/SVG 一样写死每个像素坐标。图像模型负责最终视觉细化；提示词工程师负责内容完整性、风格约束、版式原型和信息层级。
 
 ---
 
@@ -16,8 +16,8 @@ Your capabilities:
   - Design and render complete slide images with text, data, diagrams, tables,
     architecture layers, and infographics in a single 1280x720 image
   - Understand Chinese typography (CJK character width, line height, justification)
-  - Make editorial decisions: given a pool of content, you select the most impactful
-    elements based on the specified density level
+  - Make bounded editorial decisions: given a pool of content, preserve required
+    content and only compress redundant wording based on the density level
   - Maintain visual consistency across slides through shared color palettes and
     typography rules
   - Render clean, readable layouts that communicate complex information at a glance
@@ -29,6 +29,8 @@ Your principles:
   - Visual hierarchy is paramount: title dominates, key data pops, supporting details recede.
   - White space is a design tool, not wasted space. Use it deliberately based on density level.
   - Color has meaning: follow the module color coding system strictly.
+  - A slide must look like a finished professional PPT page, not a rough poster.
+  - Dense enterprise slides need many compact information units, not a few oversized cards.
 
 You receive a "design brief" containing style rules and a full content pool.
 You act as both designer AND editor:
@@ -75,6 +77,327 @@ Minimum readable sizes:
 4. Use ONLY colors specified in STYLE_INSTRUCTIONS. No invented colors.
 5. Text must have sufficient contrast against its background.
 6. Chinese text must respect full-width character alignment.
+7. NO slide numbers, fake logos, watermarks, random UI chrome, or irrelevant icons.
+8. NO simplistic three-card layouts unless the slide content truly contains only three items.
+9. Metadata fields such as slide_number, slide_type, and target_filename are for
+   file routing only. Never render them as visible page numbers or labels.
+```
+
+### Prompt Specificity Rule（提示词详细度规则）
+
+图片模式 prompt 必须达到“构图级/区块级详细”，而不是“像素级僵硬”或“只能网格化”：
+
+```
+MUST specify:
+  - The exact headline, conclusion, key data, dimensions, steps, labels, and annotations.
+  - The layout freedom level: structured / semi-structured / freeform editorial.
+  - The composition archetype: dashboard, consulting one-pager, process map,
+    comparison matrix, architecture map, evidence matrix, research summary,
+    asymmetric editorial, hero-anchor, radial hub, diagonal flow, layered depth,
+    freeform editorial map, organic information field, etc.
+  - The major regions, clusters, focal anchors, or visual path, and what each contains.
+  - The visual form of each content group: KPI card, table, matrix, chart,
+    flow node, architecture layer, callout, timeline, evidence block.
+  - The semantic color mapping: what is red/blue/green/orange/gray and why.
+  - The density target and approximate number of visible information units.
+
+SHOULD NOT specify:
+  - Exact x/y coordinates for every element.
+  - Pixel-perfect widths/heights for every card.
+  - A forced uniform grid when the slide calls for editorial, freeform, or narrative composition.
+  - Low-level drawing instructions that prevent the image model from improving composition.
+
+Exception:
+  - If the user asks to replicate a fixed template or provided reference image,
+    specify position and proportions more tightly, while still regenerating text and content.
+```
+
+### Freeform Reliability Rule（自由排版可靠性规则）
+
+Text-only prompts are often not enough to force gpt-image-2 out of enterprise
+dashboard habits. When the user explicitly asks for freeform composition, or
+when one generated image is rejected as "too grid-like", the next attempt should
+use a composition reference image or layout sketch in addition to text.
+
+```
+Freeform escalation:
+  1. First attempt: use Layout freedom: freeform editorial + anti-grid plan.
+  2. If grid residue remains: create or request a composition reference image.
+  3. Send the final prompt with the reference image role set to "composition reference".
+
+Composition reference requirements:
+  - It should contain only abstract layout masses, offset rectangular bands,
+    stepped zones, data strips, and reading-path hints; no old slide text, logo,
+    watermark, or page number.
+  - It should show irregular cluster placement, varied scale, and mixed information
+    forms while keeping a mostly rectilinear enterprise PPT language.
+  - Do not default to blob outlines, lasso borders, organic contour maps, or
+    curved boundary shapes. Use those only when the user explicitly asks for an
+    ecosystem map, organic map, or contour capability map.
+  - It should avoid detailed final content so the final image model regenerates
+    all text, charts, and labels from the prompt.
+```
+
+### Enterprise Slide Art Direction Contract（企业 PPT 信息图质量契约）
+
+Every generated image-mode slide must satisfy this contract:
+
+```
+Canvas:
+  - 16:9 landscape, 1280x720 or higher equivalent.
+  - Finished PPT slide, not a poster, social media card, or illustration-only image.
+
+Structure:
+  - Compact title area: usually 10-15% of slide height.
+  - Main content area:
+    - dense pages: 8-10 meaningful information units
+    - ultra-dense enterprise pages: 10-14 meaningful information units
+  - Use a clear composition system, not necessarily a grid: grid, asymmetry, focal anchor,
+    radial hub, diagonal path, layered architecture, editorial split, or freeform map.
+  - Every unit must carry real content: number, claim, evidence, step, dimension, or action.
+
+Information design:
+  - Prefer tables, matrices, KPI cards, process flows, architecture layers, and annotated charts
+    only for structured and semi-structured pages.
+  - For freeform editorial pages, transform those same content types into embedded
+    evidence fragments: offset panels, stepped bands, pill chains, bracket bands,
+    inline data strips, tiny charts, and clustered labels.
+  - Ultra-dense enterprise slides should include at least one compact table,
+    metric matrix, mini chart, or structured list with 4+ rows.
+    For freeform editorial pages, this density anchor should be embedded into the
+    composition instead of becoming a large standalone rectangular table.
+  - Use charts only when concrete data is provided; otherwise use structured comparison or flow.
+  - Use visual grouping, dividers, badges, mini headers, callouts, and data labels.
+  - Avoid a wireframe look: borders and connector lines are supporting elements, not the main design.
+  - At least 40% of the content area should use designed flat surfaces: soft tinted panels,
+    color bands, section ribbons, data bars, heat strips, mini charts, or filled capability blocks.
+  - Avoid decorative icons as the main visual content.
+
+Typography:
+  - Title readable at a glance; body readable at 100% zoom.
+  - Chinese text must use compact line breaks and avoid overly long single lines.
+  - No pseudo text, fake labels, gibberish, or unreadable micro text.
+
+Polish:
+  - Intentional margins, visual balance, controlled hierarchy, controlled color accents.
+  - Alignment can be grid-based, editorial/asymmetric, or freeform, but must never feel accidental.
+  - Looks like a high-quality consulting/enterprise deck page produced by a senior designer.
+```
+
+### Layout Freedom Levels（版式自由度）
+
+Choose the freedom level before choosing the archetype. The freedom level controls
+how much the image model may depart from rows, columns, and card grids.
+
+### Enterprise Freeform Correction（企业自由排版纠偏）
+
+In enterprise, telecom, and academic reporting decks, "freeform" usually does
+not mean abandoning grid discipline. Strong reference decks often use a fixed
+title band, logo/brand corner, footer strip, and an invisible modular grid, while
+the body varies module size, emphasis, and reading path.
+
+```
+Correct interpretation:
+  - Keep template discipline: title band, margin system, footer/summary band,
+    consistent color bars, and aligned module boundaries.
+  - Avoid mechanical repetition: equal 3-card rows, identical KPI stacks, large
+    right sidebar, and unchanged top/middle/bottom templates across every slide.
+  - Use controlled editorial variation: one dominant evidence block, smaller
+    proof modules, embedded mini charts, compact tables, bracket groups, and
+    step strips placed with varied scale inside an underlying grid.
+  - Freedom comes from hierarchy and module proportion, not from irregular
+    borders, organic shapes, random scattering, or decorative motion paths.
+
+When unsure, prefer a controlled editorial grid over a borderless freeform map.
+The page should still feel like a rigorous PPT report page.
+```
+
+### Anti-Monotony Rule（反机械单调规则）
+
+For controlled editorial grid and rectilinear editorial map pages, the grid is
+not the problem. Repeated equal modules are the problem. The prompt must include
+a module hierarchy plan and a visual-form mix.
+
+```
+Module hierarchy:
+  - 1 dominant evidence block: main matrix, architecture diagram, process map,
+    comparison table, or annotated chart. It carries the main argument.
+  - 2-4 secondary proof modules: smaller blocks with different forms and
+    different widths/heights.
+  - 6-10 micro-evidence fragments: metric chips, mini charts, formulas, icons,
+    status tags, risk notes, evidence labels, or short captions.
+  - 1 bottom conclusion or takeaway band when the page is a report-style one-pager.
+
+Visual-form mix:
+  - Use at least 5 different information forms on ultra-dense pages, chosen from:
+    matrix/table, process strip, architecture/layer diagram, relationship graph,
+    mini bar/line chart, formula/equation callout, KPI/data strip, icon+label row,
+    risk/countermeasure block, comparison strip, evidence tag group.
+  - Do not let more than 40% of visible modules share the exact same container
+    style, size, and visual role.
+  - Repetition is allowed inside a table, matrix, or timeline, but not across the
+    whole slide as equal card tiles.
+  - A page should have one obvious visual anchor and several smaller proof
+    fragments, not many same-weight boxes.
+
+Header treatment mix:
+  - Use full-width blue header bars only for 1-3 major modules.
+  - Secondary and micro modules should use varied labels: small tabs, left-side
+    flags, inline captions, bracket labels, badge heads, or icon-led labels.
+  - Do not give every rectangle the same blue title strip; that creates a
+    mechanical engineering-template look even when the content forms differ.
+  - Keep header variation restrained and consistent with enterprise reporting.
+```
+
+```
+structured:
+  - Use when the slide is dominated by numbers, tables, dashboards, status,
+    financial metrics, or operational tracking.
+  - Rows, columns, matrices, and aligned panels are appropriate.
+
+semi-structured:
+  - Default for most enterprise content.
+  - Use an underlying alignment rhythm, but vary scale, position, panel sizes,
+    callout placement, and visual paths.
+  - Good for one-pagers, architecture, solution pages, and process narratives.
+
+freeform editorial:
+  - Use when the user asks for "自由排版", "不规整", "更有设计感", "不要网格",
+    or when the content is conceptual, strategic, narrative, ecosystem-like, or
+    relationship-heavy rather than table-heavy.
+  - Do NOT use equal-width columns, repeated same-size cards, or obvious 2x2/3x3 grids
+    as the primary structure.
+  - Do NOT convert the page into a top process row + middle panels + bottom action strip
+    unless the user explicitly asks for that structure.
+  - Use a designed information field: clusters, editorial blocks, callout trails,
+    focal anchor, offset panels, stepped reading path, and varied block sizes.
+  - Freeform does not mean organic curves. The default shape language should still
+    be mostly rectilinear: straight edges, modest-radius rectangles, bands, strips,
+    brackets, small charts, and aligned text groups arranged with asymmetry.
+  - Keep an underlying alignment grid. Do not try to remove all grid structure;
+    remove only the obvious mechanical look of equal cards, repeated sidebars,
+    and identical row templates.
+  - Avoid using irregular blob borders, hand-drawn lasso shapes, large curved
+    enclosures, or contour-map boundaries unless the user explicitly asks for an
+    organic/ecosystem/contour visual metaphor.
+  - Limit rectangular container repetition: no more than half of the information units
+    should appear as same-style cards or boxed panels.
+  - Density anchors may be embedded into the information field as small strips,
+    inline matrices, mini bars, spark charts, tags, or callout chips instead of
+    standalone table boxes.
+  - Keep it flat and restrained: no dramatic perspective, 3D, neon, glossy effects,
+    extreme diagonal cuts, or poster-like hero art.
+  - Maintain enterprise rigor: every cluster still has labels, data, evidence, and
+    readable hierarchy; freeform means composed, not random.
+
+Anti-grid requirements for freeform editorial:
+  - No vertical stack of 3+ same-style KPI cards.
+  - No horizontal row of 4+ same-style process nodes.
+  - No full-width bottom action strip.
+  - No large right sidebar panel.
+  - No more than two major clusters may share the same left edge, top edge, width,
+    or height.
+  - At least three clusters should use non-card forms: offset section band, stepped
+    comparison strip, bracket group, pill chain, small radial tags, annotated mini
+    chart, or floating data ribbon.
+  - A freeform page fails if the viewer can immediately see a dashboard grid.
+  - A freeform page also fails if the main visual impression becomes "irregular
+    curved borders" rather than high-density enterprise slide composition.
+```
+
+### Composition Archetypes（构图原型）
+
+Use one archetype per slide. Choose based on content, not habit.
+
+```
+Grid / structured archetypes:
+  - executive dashboard: KPI cards + chart + action/risk sidebar
+  - consulting one-pager: problem / solution / value / roadmap
+  - comparison matrix: rows and columns with dimensions and evidence
+  - architecture map: layered system diagram with arrows and controls
+  - evidence matrix: 2x2 or 3x2 proof blocks
+
+Non-grid / editorial archetypes:
+  - flat dense asymmetry: flat central map or conclusion anchor, compact side rail,
+    micro table, small flow, and bottom roadmap; high density without dramatic effects
+  - controlled editorial grid: rigorous report-page layout with fixed title band,
+    hidden modular grid, one dominant evidence block, 2-4 secondary proof modules,
+    6-10 micro-evidence fragments, and a bottom conclusion band; avoids equal
+    same-style cards by mixing tables, diagrams, charts, formulas, icons, and tags
+  - hero-anchor: one dominant number, diagram, or conclusion anchors the page;
+    supporting details orbit around it as callouts
+  - asymmetric editorial: large visual/text mass on one side, dense supporting
+    blocks on the other; balanced by scale, not equal columns
+  - diagonal flow: content follows a top-left to bottom-right diagonal path,
+    useful for transformation, migration, or escalation narratives
+  - radial hub: central platform/capability with surrounding modules or outcomes
+  - layered depth: overlapping panels with clear hierarchy and foreground/background
+  - spotlight + satellites: one highlighted case/insight, with smaller evidence chips
+  - journey curve: curved or stepped path for roadmap, maturity model, or adoption story
+  - rectilinear editorial map: an intentionally non-grid enterprise layout built
+    from straight-edged offset blocks, narrow data strips, bracketed evidence groups,
+    small matrices, and staggered callouts; varied scale and placement create freedom
+    without organic blob borders or decorative curves
+  - freeform editorial map: an intentionally irregular information map with a focal
+    conclusion, uneven but balanced clusters, short connector trails, compact evidence
+    chips, and small embedded tables/charts; no visible uniform grid, no top/middle/bottom
+    template, no repeated same-size card row
+  - organic information field: dense flat composition where related facts form
+    proximity-based clusters across the canvas, using varied panel sizes, ribbons,
+    data bars, mini charts, and callouts; controlled reading path, not random scatter
+  - contour capability map: one or more soft-edged flat capability territories
+    contain embedded labels, metrics, and evidence fragments; surrounding content
+    uses ribbons, pills, and short annotations rather than card rows or sidebars
+```
+
+### Freeform Prompt Conversion Rules（自由编排提示词改写规则）
+
+When `Layout freedom: freeform editorial`, prompt writers must convert common
+enterprise structures before sending them to the image model:
+
+```
+KPI cards      -> attached outcome markers, data ribbons, small badges around a focal field
+Process flow   -> stepped route, staggered numbered waypoints, or short route labels
+Table/matrix   -> embedded micro-matrix, paired labels, small comparison strips
+Action list    -> scattered action chips near the relevant cluster, not a bottom bar
+Sidebar list   -> distributed evidence tags, bracket groups, or satellite annotations
+Architecture   -> offset layer map, rectilinear capability field, or hub-and-tags field
+```
+
+Avoid using the words "card row", "sidebar", "bottom strip", "process row",
+"table box", "dashboard", "contour", "lasso", "organic field", or "curved
+border" in freeform editorial prompts unless the user asks for those structures.
+
+### Enterprise Restraint Rule（企业克制度）
+
+Non-grid composition does not mean flashy composition. For enterprise telecom
+and academic slides, prefer flat, restrained composition with subtle variation:
+
+```
+DO:
+  - Use flat 2D designed surfaces, soft tinted panels, data bars, section ribbons,
+    modest callouts, and clean typographic hierarchy.
+  - Use asymmetry through scale, spacing, and focal placement, not through dramatic perspective.
+  - Use mostly straight-edged geometry for enterprise freeform layouts; let freedom
+    come from offset placement, varied scale, overlap, indentation, and reading
+    hierarchy rather than irregular outlines.
+  - Increase density with micro tables, narrow side rails, compact lists, and small flows.
+  - For freeform editorial pages, vary cluster size and placement while keeping a visible
+    reading path and 10-14 real information units.
+  - Break up dense evidence into mixed forms: tags, short bands, small inline matrix,
+    mini chart, tiny list, and annotated callout. Avoid turning every item into a card.
+  - Keep depth shallow: light shadow, slight overlap, pale background lines, restrained accents.
+  - Let the slide feel like a real enterprise PPT page, not a keynote poster or product ad.
+
+AVOID:
+  - Wireframe-heavy pages where most elements are empty outlines connected by lines.
+  - Dramatic 3D perspective, floating platforms, isometric towers, glossy surfaces.
+  - Strong diagonal tilt, heavy layered depth, neon glow, lens flare, cyberpunk effects.
+  - Overlapping panels that look like a UI collage or marketing visual.
+  - Blob-like curved containers, lasso outlines, and organic contour borders used
+    as the default signal for "freeform".
+  - Oversized decorative arrows, huge icons, and high-saturation gradients.
+  - Reducing a high-density page to a few large panels in the name of restraint.
 ```
 
 ---
@@ -243,6 +566,18 @@ Slide number: NN
 Slide type: [cover | section | content | data | comparison | process | quote | ending]
 Density level: [minimal | balanced | dense | ultra-dense]
 Language: [zh-CN | en | ja | ...]
+Composition archetype: [executive dashboard | consulting one-pager | process map |
+  comparison matrix | architecture map | research summary | evidence matrix |
+  hero-anchor | asymmetric editorial | diagonal flow | radial hub |
+  layered depth | spotlight + satellites | journey curve |
+  rectilinear editorial map | freeform editorial map |
+  organic information field only when explicitly requested]
+Layout freedom: [structured | semi-structured | freeform editorial]
+Required visible information units: [dense: 8-10, ultra-dense: 10-14]
+
+Metadata visibility rule:
+- Slide number, slide type, target filename, and rendering mode are not visible
+  slide content. Do not draw them as page numbers, corner tabs, labels, or footers.
 
 ## Headline
 [主标题文字 — 必须出现，不可省略]
@@ -272,10 +607,24 @@ Language: [zh-CN | en | ja | ...]
 [流程步骤或架构层级，每步/每层有具体组件名和数据]
 
 ## Visual Suggestions (optional, non-binding)
-[视觉元素建议 — 图像模型可自由选择是否采纳]
-  - 图表类型建议
-  - 布局方向建议
-  - 重点高亮建议
+[构图级/区块级布局建议 — 图像模型可优化细节，但不得降级成简陋布局]
+  - Focal anchor: [第一视觉焦点，可以是大数字、架构图、结论条、案例图或中心平台]
+  - Information units: [dense 8-10 个 / ultra-dense 10-14 个信息单元，每个承载什么内容和视觉形态]
+  - Module hierarchy plan: [1 个主证据块 + 2-4 个辅助证明块 + 6-10 个微证据碎片 + 可选底部结论条]
+  - Visual-form mix: [至少 5 种信息形态，例如矩阵/流程/架构/关系图/迷你图表/公式/KPI 条/图标行/风险块/证据标签]
+  - Header treatment mix: [至少 3 种标题/标签处理，例如主模块蓝色标题条、小 tab、左侧旗标、inline caption、badge label、bracket label]
+  - Visual path: [阅读动线：Z 型、对角线、中心辐射、阶梯路径、左右非对称等]
+  - Region / cluster notes: [区域、簇、层叠关系或 callout 关系]
+  - Freedom / anti-monotony notes: [说明如何避免等宽列、同尺寸卡片、同形重复和所有模块同权]
+  - Color mapping: [颜色与语义的对应关系]
+
+## Reference Image Instructions (if applicable)
+[仅当 style_reference.type=image 或用户提供背景/母版参考图时填写]
+  - Reference role: [background style | brand template | composition reference | freeform layout sketch]
+  - Preserve: [背景质感、红蓝比例、标题栏、装饰线、空间节奏等]
+  - Do not copy: [旧文字、logo、水印、页码、无关图表]
+  - If freeform layout sketch: preserve only cluster rhythm, scale variation,
+    offset geometry, reading path, and non-grid composition; regenerate all content.
 
 ## Footer / Annotations
 [页脚、注释、数据来源说明]
@@ -355,7 +704,8 @@ REJECT:
 
 LAYOUT:
   - Title top (10-15% of canvas)
-  - Dense content area using tables, card grids, or multi-zone layouts
+  - Dense content area using multi-zone layouts, varied clusters, compact tables,
+    mini charts, or card grids only when the content demands a grid
   - Footer with annotations (5%)
   - 15-20% whitespace
   - Visual grouping (borders, background tints) to organize density
@@ -381,8 +731,9 @@ REJECT:
   - Nothing. Show everything. The brief provided exactly what belongs on this slide.
 
 LAYOUT:
-  - Consulting one-pager / dashboard style
-  - Multiple zones: top summary strip, main data area, side panels
+  - Consulting one-pager, dashboard, or freeform editorial information map
+  - Multiple zones or clusters: top summary strip, focal anchor, main data field,
+    evidence clusters, side/bottom callouts
   - Tables with full data, multi-row comparisons
   - 10+ distinct information elements
   - 5-10% whitespace — just enough for readability
@@ -407,9 +758,10 @@ EXAMPLE: An executive dashboard slide shows:
 You are an expert presentation designer and information architect who creates
 information-dense, visually polished slide images for professional presentations.
 
-You receive a "design brief" with style rules and a full content pool. You act
-as both designer AND editor: choose layout and visual elements, and select which
-content to show based on the density level specified below.
+You receive a "design brief" with style rules, a composition archetype, and a full
+content pool. You act as a senior PPT information designer: preserve required
+content, compress only redundant wording, and design a polished full-slide
+enterprise infographic.
 
 ## OUTPUT SPECIFICATION
 
@@ -427,7 +779,31 @@ content to show based on the density level specified below.
 - Use ONLY colors from the style instructions below.
 - Text must have sufficient contrast against background.
 - Chinese text must respect full-width character alignment.
-- NO watermarks, no logos, no copyright marks.
+- NO watermarks, no fake logos, no slide numbers, no copyright marks.
+- NO simplistic three-card layout unless the brief explicitly asks for only three items.
+
+## SLIDE ART DIRECTION CONTRACT
+
+- Finished 16:9 PPT page, not a poster or loose illustration.
+- Compact title area, usually 10-15% of canvas height.
+- Dense slides must show 8-10 meaningful information units.
+- Ultra-dense enterprise slides must show 10-14 meaningful information units.
+- Include at least one compact table, metric matrix, mini chart, or 4+ row structured list.
+- Use a clear composition archetype, which may be grid-based or non-grid:
+  dashboard, one-pager, process map, comparison matrix, architecture map,
+  evidence matrix, research summary, hero-anchor, asymmetric editorial,
+  diagonal flow, radial hub, layered depth, spotlight + satellites, journey curve,
+  flat dense asymmetry, rectilinear editorial map, freeform editorial map,
+  organic information field only when explicitly requested.
+- Respect the requested layout freedom level:
+  structured uses visible alignment; semi-structured varies scale and regions;
+  freeform editorial avoids obvious card grids and equal columns while preserving
+  a clear reading path, focal anchor, density, and enterprise restraint.
+- Keep the style flat and restrained unless the brief explicitly asks for dramatic depth.
+- Each information unit must contain real labels, numbers, claims, steps, evidence, or actions.
+- Prefer KPI cards, tables, matrices, annotated charts, process flows, and architecture layers.
+- Use decorative icons only as small labels; never as the main content.
+- Keep typography readable at 100% zoom with crisp Chinese text.
 
 ## STYLE INSTRUCTIONS
 
@@ -439,15 +815,18 @@ content to show based on the density level specified below.
 
 ## YOUR TASK
 
-Read the SLIDE CONTENT above. It contains a FULL content pool for this slide.
-Based on the density level specified, SELECT the most impactful elements and
-DESIGN a professional slide image. You decide:
-  - Which content to show (guided by density level)
-  - How to arrange it (layout, grouping, visual hierarchy)
-  - What visual form each element takes (number card, table cell, chart,
-    icon badge, text block, diagram node, etc.)
+Read the SLIDE CONTENT above. It contains the required content pool and may
+include a composition archetype. Preserve the required content and DESIGN a
+professional slide image. You decide the final composition, but must follow:
+  - The specified composition archetype and major regions/clusters/focal anchor
+  - The specified layout freedom level
+  - The density target and approximate information-unit count
+  - The semantic color mapping from STYLE INSTRUCTIONS
+  - The visual form requested for each group: KPI card, table cell, chart,
+    badge, text block, diagram node, architecture layer, callout, etc.
 
-The headline is mandatory. Everything else follows density guidance.
+The headline and all explicitly marked required content are mandatory. If space
+is tight, compress wording but keep the data, labels, and logic intact.
 
 Produce the slide image now.
 ```
@@ -459,62 +838,62 @@ Produce the slide image now.
 `{{STYLE_INSTRUCTIONS}}` 占位符应替换为以下格式的具体参数块。完整维度定义见 `dimensions/` 目录下各文件。
 
 ```
-背景: #FFFFFF
-主色: #005587
-辅色: #1E88E5
-强调色: #FB8C00
+背景: #F8FAFC
+主色: #C41E24
+辅色: #005BAC
+强调色: #25364D
 
 文字色:
-  标题: #1A1A2E
-  正文: #1A1A2E
-  次要: #666666
-  弱化: #999999
+  标题: #1F2937
+  正文: #1F2937
+  次要: #6B7280
+  弱化: #9CA3AF
 
 模块色（用于视觉分组与语义编码）:
-  警示红: #E53935
-  科技蓝: #1E88E5
-  增长绿: #43A047
-  强调橙: #FB8C00
-  创新紫: #8E24AA
-  运营青: #00897B
+  电信红: #C41E24
+  科技蓝: #005BAC
+  深灰蓝: #25364D
+  成功绿: #059669
+  警告橙: #D97706
+  风险红: #DC2626
 
 字体:
   标题字体: 苹方 / 微软雅黑 / Noto Sans SC, 无衬线
   正文字体: 苹方 / 微软雅黑 / Noto Sans SC, 无衬线
-  标题字号: 32-36px, 字重 600-700
-  正文字号: 14-16px, 字重 400
+  标题字号: 28-32px, 字重 700-750
+  正文字号: 12-14px, 字重 400
 
 视觉风格:
-  预设风格: 商务风格 (corporate)
+  预设风格: 电信高信息密度风格 (china-telecom)
   质感: 柔和阴影 (soft-shadow)
-  间距: 标准 (standard)
-  卡片: 纯白填充, 淡边框 #E0E0E0, 圆角
-  表格: 交替行背景 #FFFFFF / #F5F7FA, 表头主色
-  图标: 模块色简约扁平图标
-  图表: 干净极简网格线, 数据驱动模块色板
+  间距: 紧凑 (compact)
+  卡片: 浅灰白填充, 淡边框 #E5E7EB, 小圆角, 轻投影
+  表格: 电信红表头, 科技蓝关键数据, #FFFFFF / #F8FAFC 交替行
+  图标: 仅作小标签, 不作为主要内容
+  图表: 干净网格线, 数据标签明确, 红蓝灰语义编码
+  参考图: 如有, 只继承背景质感/母版节奏/红蓝比例, 不复制旧文字和 logo
 ```
 
 ---
 
 ## SLIDE_CONTENT Filling Guide（内容素材填充指南）
 
-`{{SLIDE_CONTENT}}` 占位符应替换为**最大化的内容素材**。关键原则：**提供全部素材，让模型编辑筛选**。
+`{{SLIDE_CONTENT}}` 占位符应替换为**最大化的内容素材 + 区块级版式约束**。关键原则：**内容必须具体，布局必须明确到区域和组件类型**。
 
-不要过滤、不要精简、不要替模型做内容选择决策。把所有相关数据、洞察、背景都写进去。
+不要只写抽象标签。把所有相关数据、洞察、背景、流程步骤、对比维度写进去，并标明哪些内容 required、哪些 optional。图像模型可以压缩冗余措辞，但不得删除 required 内容或把复杂页降级成简陋布局。
 
 ---
 
 ## Filled Example（完整填充示例）
 
-以下展示一个实际填充后的图片模式提示词。注意 SLIDE_CONTENT 部分**提供了远超单页展示能力的全部素材**，体现"给全部，让模型编辑"的设计哲学。
+以下展示一个实际填充后的图片模式提示词。注意 SLIDE_CONTENT 部分既提供完整素材，也指定 composition archetype 和 required visible information units。
 
 ```
 You are an expert presentation designer and information architect who creates
 information-dense, visually polished slide images for professional presentations.
 
-You receive a "design brief" with style rules and a full content pool. You act
-as both designer AND editor: choose layout and visual elements, and select which
-content to show based on the density level specified below.
+You receive a "design brief" with style rules, a composition archetype, and a full
+content pool. You act as a senior PPT information designer.
 
 ## OUTPUT SPECIFICATION
 

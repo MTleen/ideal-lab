@@ -46,14 +46,15 @@ description: Use when P8 prompt review is completed AND design-spec image_approa
 ### Step 3: 生成图像
 
 使用可用的 AI 图像生成工具：
-- Gemini API（推荐）
-- OpenAI DALL-E
+- OpenAI `gpt-image-2`（默认推荐）
+- Gemini API（仅在参考图或环境约束需要时备选）
 - 其他可用工具
 
 生成时注意：
 - 匹配 design-spec 中的色彩方案
 - 匹配纵横比要求
 - 保持风格统一
+- 如果提供参考图，仅继承背景/风格/模板节奏，不复制旧文字、logo、水印、页码
 
 ### Step 4: 保存到 images/
 

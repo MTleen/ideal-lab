@@ -23,11 +23,11 @@ yolo_mode: false                                # 必填，boolean
 
 # === 风格配置 ===
 style:
-  preset: {预设名称或 custom}                    # 必填，如 蓝图风格 / 商务风格 / custom
-  texture: {clean|grid|organic|pixel|paper}     # 条件必填，preset=custom 时必填
-  mood: {professional|warm|cool|vibrant|dark|neutral}  # 条件必填
-  typography: {geometric|humanist|handwritten|editorial|technical}  # 条件必填
-  density: {minimal|balanced|dense|ultra-dense}  # 条件必填，image 模式建议 dense 或 ultra-dense
+  preset: {scientific|china-telecom}             # 必填，仅保留两种企业风格
+  texture: clean
+  mood: {cool|professional}
+  typography: {technical|geometric}
+  density: {dense|ultra-dense}                   # image 模式建议 dense 或 ultra-dense
   quality: {flat|soft-shadow|glassmorphism|neumorphism|layered-depth}  # image 模式可选，默认 soft-shadow
   spacing: {compact|standard|generous|editorial}  # image 模式可选，默认 standard
 
@@ -35,7 +35,7 @@ style:
 style_reference:
   type: {none|image|description}                 # none=无参考，image=参考图片，description=文字描述
   path: null                                     # type=image 时填入参考图片路径
-  description: null                              # type=description 时填入风格描述文本
+  description: null                              # type=description 时填入风格描述文本；type=image 时说明参考图用途
 
 # === 受众与语言 ===
 audience: {初学者|一般读者|专家|管理层}            # 必填
@@ -77,11 +77,11 @@ updated_at: {YYYY-MM-DD HH:mm}                  # 必填，最后更新时间
 | `current_phase` | enum | 是 | 当前所处阶段：P1-P13（含 P11.5） |
 | `status` | enum | 是 | 流程整体状态，见下方枚举 |
 | `yolo_mode` | boolean | 是 | 是否启用 YOLO 自动推进模式 |
-| `style.preset` | string | 是 | 视觉风格预设名称，自定义时填 `"custom"` |
-| `style.texture` | enum | 条件 | 纹理维度，preset=custom 时必填 |
-| `style.mood` | enum | 条件 | 色调维度，preset=custom 时必填 |
-| `style.typography` | enum | 条件 | 字体维度，preset=custom 时必填 |
-| `style.density` | enum | 条件 | 密度维度，preset=custom 时必填。image 模式建议 dense/ultra-dense |
+| `style.preset` | enum | 是 | 视觉风格预设：`scientific` 或 `china-telecom` |
+| `style.texture` | enum | 是 | 当前固定为 `clean` |
+| `style.mood` | enum | 是 | `scientific` 通常为 `cool`，`china-telecom` 通常为 `professional` |
+| `style.typography` | enum | 是 | `scientific` 通常为 `technical`，`china-telecom` 通常为 `geometric` |
+| `style.density` | enum | 是 | 密度维度。image 模式建议 dense/ultra-dense |
 | `style.quality` | enum | 可选 | 质感维度，image 模式生效。默认 soft-shadow |
 | `style.spacing` | enum | 可选 | 间距维度，image 模式生效。默认 standard |
 | `style_reference.type` | enum | 条件 | 风格参考类型，rendering_mode=image 时生效 |
@@ -189,11 +189,11 @@ current_phase: P1
 status: in_progress
 yolo_mode: false
 style:
-  preset: 蓝图风格
-  texture: null
-  mood: null
-  typography: null
-  density: null
+  preset: china-telecom
+  texture: clean
+  mood: professional
+  typography: geometric
+  density: dense
 audience: null
 language: zh
 slide_count:
@@ -222,11 +222,11 @@ current_phase: P2
 status: in_progress
 yolo_mode: false
 style:
-  preset: 手绘风格
-  texture: null
-  mood: null
-  typography: null
-  density: null
+  preset: scientific
+  texture: clean
+  mood: cool
+  typography: technical
+  density: dense
 audience: 初学者
 language: zh
 slide_count:
@@ -255,15 +255,15 @@ current_phase: P5
 status: in_progress
 yolo_mode: false
 style:
-  preset: 手绘风格
-  texture: organic
-  mood: warm
-  typography: handwritten
+  preset: china-telecom
+  texture: clean
+  mood: professional
+  typography: geometric
   density: ultra-dense
 style_reference:
   type: description
   path: null
-  description: "专业技术汇报风格，蓝色主调，卡片式布局，高信息密度"
+  description: "电信高信息密度汇报风格，红蓝品牌节奏，咨询级 one-pager，卡片/表格/架构图混排"
 audience: 初学者
 language: zh
 slide_count:

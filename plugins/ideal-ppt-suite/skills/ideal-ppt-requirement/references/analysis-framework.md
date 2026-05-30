@@ -69,29 +69,15 @@ content_type = 得分最高的信号类别
 
 ### 自动风格选择表
 
-基于内容类型和受众类型，从 17 种预设中选择推荐风格：
+本插件只保留两种企业风格，避免风格库过大导致提示词发散。
 
-| 内容类型 | 受众: 初学者 | 受众: 从业者 | 受众: 专家 | 受众: 高管 | 受众: 混合 |
-|---------|------------|------------|-----------|-----------|-----------|
-| 数据分析型 | 图表风格 | 图表风格 | 高密度信息图 | 图表风格 | 块状风格 |
-| 技术方案型 | 插画风格 | 蓝图风格 | 架构图风格 | 商务风格 | 蓝图风格 |
-| 战略规划型 | 商务风格 | 商务风格 | 论文风格 | 极简风格 | 商务风格 |
-| 产品发布型 | 动画风格 | 商务风格 | 极简风格 | 极简风格 | 商务风格 |
-| 教育培训型 | 黑板风格 | 手绘风格 | 架构图风格 | 商务风格 | 插画风格 |
-| 故事叙述型 | 插画风格 | 动画风格 | 论文风格 | 极简风格 | 动画风格 |
+| 内容信号 | 首选风格 | 说明 |
+|---------|----------|------|
+| 学术、论文、研究、实验、方法、模型、综述、答辩、数据集、指标、消融 | scientific（学术风格） | 强调研究问题、方法、实验、数据和结论链 |
+| 电信、央企、政企、云网、算力、AI、安全、AIDC、DICT、解决方案、企业汇报、标书 | china-telecom（电信高信息密度风格） | 强调红蓝品牌节奏、政企方案、咨询级 one-pager |
+| 无法判断或通用企业内容 | china-telecom（电信高信息密度风格） | 默认企业汇报风格 |
 
-### 备选风格
-
-每种内容类型提供 2 个备选风格，按优先级排序：
-
-| 内容类型 | 首选 | 备选 1 | 备选 2 |
-|---------|------|--------|--------|
-| 数据分析型 | 图表风格 | 块状风格 | 高密度信息图 |
-| 技术方案型 | 蓝图风格 | 架构图风格 | 商务风格 |
-| 战略规划型 | 商务风格 | 极简风格 | 论文风格 |
-| 产品发布型 | 商务风格 | 极简风格 | 动画风格 |
-| 教育培训型 | 黑板风格 | 手绘风格 | 插画风格 |
-| 故事叙述型 | 动画风格 | 水彩风格 | 手绘风格 |
+当用户提供参考图片时，风格选择仍只在上述两类中进行；参考图片作为背景、母版或局部风格覆盖，不新增长期预设。
 
 ---
 
@@ -183,12 +169,12 @@ content_signals:
     category: {信号类别}
     count: {命中次数}
 recommended_style:
-  primary: {预设名称}
-  secondary: {预设名称}
-  texture: {clean|grid|organic|pixel|paper}
-  mood: {professional|warm|cool|vibrant|dark|neutral}
-  typography: {geometric|humanist|handwritten|editorial|technical}
-  density: {minimal|balanced|dense}
+  primary: scientific | china-telecom
+  secondary: null
+  texture: clean
+  mood: cool | professional
+  typography: technical | geometric
+  density: dense | ultra-dense
 slide_count_range: [min, max]
 topic_slug: {slug}
 ```

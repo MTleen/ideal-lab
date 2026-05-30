@@ -232,15 +232,15 @@ current_phase: P1
 status: in_progress
 yolo_mode: false
 style:
-  preset: {预设名称或 custom}
-  texture: {clean|grid|organic|pixel|paper}
-  mood: {professional|warm|cool|vibrant|dark|neutral}
-  typography: {geometric|humanist|handwritten|editorial|technical}
-  density: {minimal|balanced|dense|ultra-dense}
+  preset: {scientific|china-telecom}
+  texture: clean
+  mood: {cool|professional}
+  typography: {technical|geometric}
+  density: {dense|ultra-dense}
 style_reference:
   type: {none|image|description}
   path: null
-  description: null
+  description: null                    # image 模式下可描述参考图用途：背景/母版/版式/品牌节奏
 audience: {初学者|一般读者|专家|管理层}
 language: {en|zh|ja|...}
 slide_count:
