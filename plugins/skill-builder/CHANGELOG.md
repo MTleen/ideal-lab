@@ -1,5 +1,11 @@
 # skill-builder
 
+## 1.2.1
+
+### Patch Changes
+
+- Fix 4 fatal absorb mode issues: C0 Calibration-lite threshold, C2.5 key naming, git branch isolation, C5 baseline measurement. Fix severe issues: C4 per-candidate approval, independent judge spawn, ceiling effect mitigation.
+
 ## 1.2.0
 
 ### Minor Changes
