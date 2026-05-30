@@ -26,7 +26,8 @@ Phase Skill — **执行协调者**。
 |------|------|
 | P3-技术方案.md | 模块划分、架构设计、实施计划 |
 | P1-需求文档.md | 功能需求、验收标准 |
-| project-config.md | 开发命令、测试命令 |
+| project-config.md | 技术栈、开发命令、测试命令（用于确定 story executor 标签） |
+| project-config.md | 技术栈、开发命令、测试命令（用于确定 story executor 标签和 toolchain） |
 
 ---
 
@@ -99,6 +100,10 @@ graph LR
 ## 执行流程
 
 ```
+Step 0: 验证前置产物
+  ├─ 检查 P3-技术方案.md 存在且非空 → 否则终止
+  └─ 检查 P1-需求文档.md 存在且非空 → 否则终止
+
 Step 1: 加载上下文
   ├─ 读取 P3-技术方案.md（提取模块、依赖、实施计划）
   └─ 读取 P1-需求文档.md（提取验收标准）
@@ -114,8 +119,9 @@ Step 4: 生成编码计划文档
 
 Step 5: 生成故事文件（上下文隔离）
   └─ Task(architect) → 为每个模块生成 stories/0XX-*.md
-      - 每个故事包含：上下文片段、任务清单、验收标准
+      - 每个故事包含：上下文片段、任务清单、验收标准、executor 标签
       - 上下文只引用相关片段，不引用完整文档
+      - executor 标签指定执行该故事的 agent 类型（default / go-agent / react-agent / python-agent）
 
 Step 6: 生成故事索引
   └─ 写入 stories/index.md
@@ -136,7 +142,6 @@ Step 7: 返回摘要
 - [ ] 每个任务有清晰的验收标准
 - [ ] 任务粒度为 2-5 分钟
 - [ ] 依赖关系正确（无循环依赖）
-- [ ] 每个任务包含 TDD 步骤（RED-GREEN-REFACTOR）
 - [ ] P5-编码计划.md 路径正确
 - [ ] stories/ 目录结构正确
 - [ ] 验证清单完整（覆盖所有任务）

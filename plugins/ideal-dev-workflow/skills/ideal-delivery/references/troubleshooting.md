@@ -8,7 +8,7 @@
 | PR 是否已创建 | `gh pr list --head {branch}` | 有输出 = 已创建 |
 | PR 是否已合并 | `gh pr view {PR号}` | state: MERGED = 已合并 |
 | 分支是否已删除 | `git branch -a \| grep {branch}` | 无输出 = 已删除 |
-| 目录是否已重命名 | `ls docs/迭代/` | 无 [进行中] = 已归档 |
+| 目录是否已标记完成 | 检查 `流程状态.md` status 字段 | status: completed = 已标记 |
 
 ---
 
@@ -57,4 +57,4 @@ git push origin {feature-branch} --force-with-lease
 | PR 未创建 | Step 5 |
 | PR 未合并 | 等待用户合并后 Step 6 |
 | 分支未删除 | Step 6 |
-| 目录未重命名 | Step 7 |
+| 状态未更新 | Step 7 |

@@ -79,6 +79,10 @@ Phase 2 — 代码质量审查
 ## 执行流程
 
 ```
+Step 0: 验证前置产物
+  ├─ 检查 stories/index.md 存在 → 否则终止
+  └─ 检查 P5-编码计划.md 存在 → 否则终止
+
 Step 1: 加载上下文
   ├─ 读取 stories/index.md
   ├─ 确定执行顺序（拓扑排序）
@@ -97,18 +101,23 @@ Step 4: 按拓扑层级执行任务
   ├─ 第 1 层（无依赖）→ 并行执行
   ├─ 第 2 层 → 第 1 层完成后并行执行
   └─ 每批次：
-      ├─ Task(implement) → TDD: RED → GREEN → REFACTOR
+      ├─ 读取 story 的 executor 标签，选择对应 agent
+      │   ├─ default → 默认 implement agent
+      │   ├─ go-agent → Go 技术栈 agent
+      │   ├─ react-agent → React/前端 agent
+      │   └─ python-agent → Python agent
+      ├─ Task(implement:{executor}) → TDD: RED → GREEN → REFACTOR
       ├─ Task(check)
-      │   ├─ Phase 0: make test + make lint（运行时验证）
+      │   ├─ Phase 0: 执行 story 对应 toolchain 的 test + lint
       │   ├─ Phase 1: 规范合规审查
       │   └─ Phase 2: 代码质量审查
       ├─ check 不通过 → Task(debug) → 修复后重新 Task(check)
       └─ 最多重试 3 次，超过则暂停并报告
 
 Step 5: 最终验证
-  ├─ 执行 make verify（或 test_command + build_command）
+  ├─ 对每个 toolchain 执行对应 verify 命令
   ├─ 全部通过 → 继续
-  └─ 有失败 → Task(debug) 修复 → 重新 make verify → 最多 3 轮
+  └─ 有失败 → Task(debug) 修复 → 重新验证 → 最多 3 轮
 
 Step 6: 返回摘要
 ```
@@ -119,13 +128,13 @@ Step 6: 返回摘要
 
 每批次完成后：
 - [ ] implement 返回了实现报告
-- [ ] check Phase 0 运行时验证通过（测试套件 + lint 全绿）
+- [ ] check Phase 0 运行时验证通过（对应 toolchain 的 test + lint 全绿）
 - [ ] check Phase 1-2 两阶段审查通过
 - [ ] 测试套件全部通过
 
 全部完成后：
 - [ ] 所有任务已完成
-- [ ] make verify 全部通过
+- [ ] 所有 toolchain 的 verify 全部通过
 - [ ] 代码已提交
 
 ---

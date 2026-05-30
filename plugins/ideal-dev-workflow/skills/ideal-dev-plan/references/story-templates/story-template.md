@@ -2,6 +2,7 @@
 story_id: {ID}
 title: {故事标题}
 status: pending
+executor: {default | go-agent | react-agent | python-agent}
 created_at: {日期}
 updated_at: {日期}
 depends_on: [{依赖故事ID}]

@@ -6,7 +6,7 @@ agents: [pm, analyst]
 
 # Ideal Requirement
 
-通过交互式对话引导用户完善需求，生成符合正式学术风格的标准化需求文档。对于大型需求，自动识别并拆分为多个子迭代项。
+通过交互式对话引导用户完善需求，生成符合正式学术风格的标准化需求文档。复杂需求通过 P5 编码计划阶段的 story 机制拆分。
 
 ## Agents
 
@@ -34,9 +34,8 @@ Task(
 - [ ] Step 2:   模板处理
 - [ ] Step 3:   需求收集（苏格拉底式对话）
 - [ ] Step 4:   确认摘要           ⚠️ REQUIRED
-- [ ] Step 5:   子迭代拆分判断
-- [ ] Step 6:   生成文档
-- [ ] Step 7:   完成
+- [ ] Step 5:   生成文档
+- [ ] Step 6:   完成
 ```
 
 ---
@@ -45,59 +44,15 @@ Task(
 
 **整个迭代必须在 Git Worktree 中执行**，P1 开始前就要完成 worktree 创建。
 
-### 检查流程
-
+检查并切换到 worktree：
 ```
-1. 判断当前迭代是否为子迭代
-   ├─ 检查父迭代的 流程状态.md 中 is_parent: true
-   ├─ 检查当前需求名称是否匹配 sub_iterations 列表中的某一项
-   └─ 如是子迭代 → 进入"子迭代 Worktree 继承"流程（见下方）
-
-2. 检查当前是否在 worktree 中
-   pwd | grep worktrees  # 或 git worktree list
-
-3. 如不在 worktree 中：
-   ├─ 读取 project-config.md 获取分支命名规范
-   ├─ 生成分支名：feature/{short-name}
-   ├─ 使用 git worktree add 创建 worktree
-   └─ ★ 创建完成后立即切换到新 worktree 目录
+1. 读取 流程状态.md → worktree.path
+2. 检查 worktree 路径是否存在：ls {worktree.path}
+3. 存在 → cd {worktree.path}
+4. 不存在 → 终止，报告"worktree 未创建，请先通过 flow-control 初始化迭代"
 ```
 
-### 子迭代 Worktree 继承
-
-**子迭代不创建独立 worktree，直接使用父迭代的 worktree。**
-
-```
-1. 读取父迭代的 流程状态.md
-2. 获取父 worktree 信息：branch, path
-3. 检查父 worktree 是否存在：ls {path}
-4. 切换到父 worktree：cd {path}
-5. 验证：pwd, git branch --show-current
-```
-
-> **⚠️ 禁止为子迭代创建独立 worktree**。所有子迭代共享父迭代的 worktree 和 branch。
-
-### 自动切换（关键）
-
-**创建 worktree 后（或继承父 worktree 后）必须立即切换**，否则后续所有操作都在原分支执行：
-
-```
-切换成功后，立即执行：
-  cd /path/to/repo/worktrees/feature-{short-name}
-
-验证切换成功：
-  pwd  # 确认路径包含 worktrees
-  git branch --show-current  # 确认是 feature/xxx 分支
-```
-
-### 分支命名
-
-| 类型 | 格式 | 示例 |
-|------|------|------|
-| 功能分支 | `feature/<short-name>` | `feature/mat5-multi-layer-memory` |
-| 修复分支 | `fix/<short-name>` | `fix/chat-api-timeout` |
-
-> **short-name 规则**：需求 ID（如 MAT-5）+ 简短描述，不超过 50 字符
+Worktree 的创建和管理由 `ideal-flow-control` 统一负责，详见其「Git Worktree 协议」章节。
 
 ---
 
@@ -207,61 +162,21 @@ NO REQUIREMENT QUESTIONS WITHOUT READING PROJECT CONTEXT FIRST
 展示：类型、标题、背景摘要、核心功能、验收标准
 
 用户响应：
-- "是"/"确认" → 进入拆分判断
+- "是"/"确认" → 进入生成
 - "修改 XX" → 返回收集阶段
 - "继续" → 补充更多信息
 
 ---
 
-## 5. 子迭代拆分判断
-
-**建议拆分**（满足任一）：
-- 涉及多个独立模块
-- 工作量超过 2 人日
-- 子任务之间有明确依赖关系
-- 涉及多个技术栈层次
-
-**不建议拆分**：单个组件（< 0.5 人日）、Bug 修复、简单样式调整
-
----
-
-## 6. 生成文档
+## 5. 生成文档
 
 ### 目录命名
 
-#### 父迭代（单一需求）
-
 ```
-docs/迭代/YYYY-MM-DD-[状态]-{需求名称}/
+docs/迭代/YYYY-MM-DD-{需求名称}/
 ├── P1-需求文档.md
 └── 流程状态.md
 ```
-
-#### 拆分需求（父迭代 + 子迭代）
-
-> **重要**：每个子迭代都是完整的 CCWorkflow 迭代（独立执行 P1-P15），因此命名规范与父迭代完全一致。
-
-```
-docs/迭代/YYYY-MM-DD-[状态]-{父需求名称}/
-├── P1-需求文档.md              # 父迭代总览文档
-├── 流程状态.md                 # 父迭代流程状态
-├── YYYY-MM-DD-[状态]-子迭代A-{子迭代名称}/
-│   ├── P1-需求文档.md
-│   └── 流程状态.md
-├── YYYY-MM-DD-[状态]-子迭代B-{子迭代名称}/
-│   ├── P1-需求文档.md
-│   └── 流程状态.md
-└── YYYY-MM-DD-[状态]-子迭代C-{子迭代名称}/
-    ├── P1-需求文档.md
-    └── 流程状态.md
-```
-
-**命名规则**：
-- 父迭代：`YYYY-MM-DD-[状态]-{需求名称}`
-- 子迭代：`YYYY-MM-DD-[状态]-子迭代{A|B|C|...}-{简短名称}`
-- 状态：`[待启动]` / `[进行中]` / `[已完成]` / `[已交付]`
-- 每个子迭代独立执行完整 15 阶段流程（P1-P15）
-- 子迭代文件夹内**不需要**包含父迭代的 `流程状态.md`
 
 ### 输出文件
 
@@ -272,19 +187,12 @@ docs/迭代/YYYY-MM-DD-[状态]-{父需求名称}/
 
 **流程状态.md 必须包含 worktree 信息**：
 
-父迭代：
 ```yaml
 ---
 requirement_name: {需求名称}
 current_phase: P1
 status: in_progress
 yolo_mode: false
-is_parent: true
-sub_iterations:
-  - id: A
-    name: {子迭代名称}
-    status: 待启动
-    current_phase: P1
 worktree:
   branch: feature/{short-name}
   path: {repoRoot}/worktrees/feature-{short-name}
@@ -293,27 +201,6 @@ created_at: {创建时间}
 updated_at: {更新时间}
 ---
 ```
-
-子迭代（**必须**包含 parent 字段）：
-```yaml
----
-requirement_name: 子迭代{X}-{名称}
-current_phase: P1
-status: in_progress
-yolo_mode: false
-parent:
-  name: {父需求名称}
-  path: docs/迭代/{YYYY-MM-DD-[状态]-{父需求名称}}
-worktree:
-  branch: feature/{short-name}
-  path: {repoRoot}/worktrees/feature-{short-name}
-  created_at: {YYYY-MM-DD}
-created_at: {创建时间}
-updated_at: {更新时间}
----
-```
-
-> **⚠️ `parent` 字段是区分父子迭代的唯一标识**。没有 `parent` 字段 = 父迭代/独立迭代；有 `parent` 字段 = 子迭代。所有依赖父子迭代判断的 skill 都通过此字段识别。
 
 ### 生成流程
 
@@ -324,7 +211,7 @@ updated_at: {更新时间}
 
 ---
 
-## 7. 完成
+## 6. 完成
 
 输出文件位置和下一步提示（进入 P2 需求评审）。
 

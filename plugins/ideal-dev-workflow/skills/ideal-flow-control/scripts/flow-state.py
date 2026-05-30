@@ -11,6 +11,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, List
 
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+
 
 class FlowState:
     """流程状态管理类"""
@@ -47,7 +53,6 @@ class FlowState:
         "P15": "成果提交"
     }
 
-    # 前置条件映射
     PREREQUISITES = {
         "P3": "P2",
         "P5": "P4",
@@ -60,7 +65,7 @@ class FlowState:
 
     def __init__(self, file_path: str):
         self.file_path = Path(file_path)
-        self.frontmatter: Dict[str, str] = {}
+        self.frontmatter: Dict = {}
         self.content: str = ""
         self.phases: Dict[str, Dict[str, str]] = {}
         self._parse()
@@ -70,22 +75,24 @@ class FlowState:
         if not self.file_path.exists():
             raise FileNotFoundError(f"流程状态文件不存在: {self.file_path}")
 
-        content = self.file_path.read_text(encoding="utf-8")
+        raw = self.file_path.read_text(encoding="utf-8")
 
         # 解析 YAML frontmatter
-        if content.startswith("---"):
-            parts = content.split("---", 2)
+        if raw.startswith("---"):
+            parts = raw.split("---", 2)
             if len(parts) >= 3:
-                yaml_content = parts[1].strip()
+                yaml_str = parts[1].strip()
                 self.content = parts[2].strip()
 
-                for line in yaml_content.split("\n"):
-                    if ":" in line:
-                        key, value = line.split(":", 1)
-                        self.frontmatter[key.strip()] = value.strip()
+                if HAS_YAML:
+                    parsed = yaml.safe_load(yaml_str)
+                    if isinstance(parsed, dict):
+                        self.frontmatter = self._normalize_frontmatter(parsed)
+                else:
+                    self.frontmatter = self._parse_flat_yaml(yaml_str)
 
         # 解析阶段状态
-        phase_pattern = r"\| (P\d+) ([\u4e00-\u9fa5]+) \| (.+) \| (.+) \|"
+        phase_pattern = r"\| (P\d+) ([一-龥]+) \| (.+) \| (.+) \|"
         for match in re.finditer(phase_pattern, self.content):
             phase = match.group(1)
             status_text = match.group(3).strip()
@@ -93,6 +100,28 @@ class FlowState:
                 "status": self._parse_status(status_text),
                 "updated_at": match.group(4).strip()
             }
+
+    def _normalize_frontmatter(self, parsed: dict) -> dict:
+        """确保所有值都是字符串，兼容旧的 flat key: value 接口"""
+        result = {}
+        for k, v in parsed.items():
+            if v is None:
+                result[k] = ""
+            elif isinstance(v, (dict, list)):
+                result[k] = v  # 保留嵌套结构
+            else:
+                result[k] = str(v)
+        return result
+
+    def _parse_flat_yaml(self, yaml_str: str) -> Dict[str, str]:
+        """降级扁平解析（无 PyYAML 时）"""
+        result = {}
+        for line in yaml_str.split("\n"):
+            line = line.strip()
+            if ":" in line and not line.startswith("#"):
+                key, value = line.split(":", 1)
+                result[key.strip()] = value.strip()
+        return result
 
     def _parse_status(self, status_text: str) -> str:
         """解析状态文本"""
@@ -109,11 +138,13 @@ class FlowState:
 
     def get_current_phase(self) -> str:
         """获取当前阶段"""
-        return self.frontmatter.get("current_phase", "P1")
+        val = self.frontmatter.get("current_phase", "P1")
+        return str(val) if not isinstance(val, (dict, list)) else "P1"
 
     def get_status(self) -> str:
         """获取当前状态"""
-        return self.frontmatter.get("status", self.STATUS_PENDING)
+        val = self.frontmatter.get("status", self.STATUS_PENDING)
+        return str(val) if not isinstance(val, (dict, list)) else self.STATUS_PENDING
 
     def get_phase_status(self, phase: str) -> Optional[str]:
         """获取指定阶段的状态"""
@@ -136,21 +167,17 @@ class FlowState:
             print(f"错误: 无效的阶段 {phase}")
             return False
 
-        # 更新 frontmatter
         today = datetime.now().strftime("%Y-%m-%d")
         self.frontmatter["current_phase"] = phase
         self.frontmatter["status"] = status
         self.frontmatter["updated_at"] = today
 
-        # 更新阶段状态
         self.phases[phase] = {
             "status": status,
             "updated_at": today
         }
 
-        # 重新生成文件内容
         self._generate_content()
-
         return True
 
     def _generate_content(self):
@@ -166,8 +193,17 @@ class FlowState:
             self.STATUS_REVISION: "需要修改"
         }.get(current_status, "待执行")
 
-        # 生成 YAML frontmatter
-        yaml_content = "\n".join([f"{k}: {v}" for k, v in self.frontmatter.items()])
+        # 生成 YAML frontmatter — 保留嵌套结构
+        if HAS_YAML:
+            flat = {}
+            for k, v in self.frontmatter.items():
+                if isinstance(v, (dict, list)):
+                    flat[k] = v
+                else:
+                    flat[k] = str(v)
+            yaml_content = yaml.dump(flat, default_flow_style=False, allow_unicode=True, sort_keys=False).strip()
+        else:
+            yaml_content = "\n".join([f"{k}: {v}" for k, v in self.frontmatter.items()])
 
         # 生成阶段状态表
         def generate_section(start: int, end: int) -> str:
