@@ -154,11 +154,11 @@ Proceed to Phase 1.
 
 在进入 absorb 前逐一检查：
 
-1. 外部来源可解析？GitHub URL → 尝试 fetch；本地路径 → 检查存在
+1. **外部来源可解析？** GitHub URL → `git clone --depth 1 <url> /tmp/skill-builder-absorb-{timestamp}` 到临时目录；本地路径 → 检查存在。clone 成功后将临时路径作为后续 C1 的工作目录。clone 失败 → 提示用户检查 URL 或手动 `git clone` 到本地后使用本地路径。
 2. 外部来源含 SKILL.md？→ 否则终止："该路径不是有效的 skill（缺少 SKILL.md）"
 3. 目标 skill 的 SKILL.md 存在？
-4. 目标 skill 的 test-checklist.json 存在？→ 否则触发快速生成（复用 Phase 1 简化流程：只提取声称 + 生成 3-4 个 checklist 问题 + 用户确认）
-5. 当前 git clean？→ 否则 abort，提示用户先提交或 stash
+4. 目标 skill 的 test-checklist.json 存在？→ 否则触发快速生成（复用 Phase 1 简化流程：提取声称 + 生成 3-4 个 checklist 问题 + 8-10 个测试输入 + 用户确认）。生成后执行 **Calibration-lite**：用户对 4 对题目 × 输入做 YES/NO 标注，agent 自行判断 TPR/TNR。不 spawn judge——仅依靠用户标注和 agent 自查。如果自查发现明显歧义（agent 无法确定自己的答案与用户是否一致），收紧问题措辞后重新确认。
+5. 当前 `git status --porcelain` 为空？（允许 untracked 文件，但不允许已暂存或已修改的 tracked 文件）→ 否则 abort，提示用户先提交或 stash
 6. 任一检查失败 → 明确告知用户缺什么及如何补齐
 
 ##### Step C1: Parse & Analyze
@@ -196,18 +196,36 @@ Proceed to Phase 1.
 
 **空提取处理**：如果过滤后无 transferable 或 uncertain 项 → 输出 "该外部 skill 的设计模式均为环境/模型特定，无可迁移通用教训。流程终止。"——**流程终止，不进入后续步骤。**
 
+##### Step C2.5: 目标 skill 结构分析
+
+对目标 skill 执行与 C1 同格式的结构化分析（复用 C1 的 JSON schema）。确保后续 C3a 有对比基准：
+
+```json
+{
+  "target_structure": {"skill_md_lines": 350, "reference_files": 5, "script_files": 1, "description_length": 120, "trigger_keywords": ["写作", "文档"]},
+  "target_patterns": [{"name": "Gate-in-Workflow", "location": "SKILL.md:120-125", "confidence": "high"}]
+}
+```
+
+此步骤与 C1 的输出+ C2 的过滤结果，共同构成 C3a 的完整输入。
+
 ##### Step C3: Generate Absorption Candidates
 
 **C3a: 8 维度差距分析**（只出评级，不出 diff）
 
-按 [references/absorb-dimensions.md](references/absorb-dimensions.md) 的 8 个维度，逐项对比外部 skill 和目标 skill。每个维度输出 gap_severity（none / minor / moderate / significant）+ 一句话差距描述。
+按 [references/absorb-dimensions.md](references/absorb-dimensions.md) 的 8 个维度，用 C1 的外部 skill 分析结果 + C2.5 的目标 skill 分析结果逐项对比。每个维度输出 gap_severity（none / minor / moderate / significant）+ 一句话差距描述。输出为 JSON 数组：
+
+```json
+[{"dimension": "SKILL.md 效率", "gap_severity": "moderate", "note": "外部 120 行 vs 目标 350 行，目标密度偏低"}]
+```
 
 **C3b: 逐维度生成吸收 diff**
 
-- 每维度最多 3 个候选，总上限 15 个
+- 每维度最多 3 个候选，总上限 15 个。超限时按 `gap_severity` 降序保留（significant > moderate > minor），同级内按维度顺序取
 - 每个候选标注：`dimension`, `gap_severity`, `expected_improvement`, `risk` (low/medium/high), `apply_order`
+- **expected_improvement 计算公式**：`expected_improvement = (mapped_dimension_weight / 75) × gap_multiplier`。其中 `gap_multiplier`: significant=7, moderate=4, minor=1.5。`mapped_dimension_weight` 参见 [absorb-dimensions.md 映射表](references/absorb-dimensions.md)
 - 候选冲突检测：同一文件同一段落的候选标记为互斥组，不单独 apply
-- 按 `expected_improvement / risk` 比值降序输出
+- 按 `expected_improvement / risk_score` 比值降序输出（risk: low=1, medium=2, high=3）
 - 风险标注需附一句理由（如 "risk: medium — 涉及 gate 设计变更，可能影响用户体验"）
 - 如果所有 8 维度的 gap 均为 significant 且预期收益 > 迁移成本，额外追加一个 "建议整体替换" meta-candidate
 
@@ -246,7 +264,19 @@ for each approved candidate (按 apply_order):
     5. 写入 results.tsv:
        dimension = "absorb:{source}:{dim}:{candidate_id}"
        例: "absorb:anthropics-skills-pdf:description-density:c2"
-    6. 写入 changelog.md（含来源 skill/版本/维度/决定 + WHY）
+    6. 写入 changelog.md（含来源 skill/版本/维度/决定 + WHY）。absorb changelog 条目格式：
+
+```markdown
+## absorb (YYYY-MM-DD HH:MM)
+- **来源**: {source_skill} (commit {version})
+- **维度**: {absorb_dimension}
+- **候选**: {candidate_summary}
+- **改动**: {what was changed}
+- **结果**: {old_score} → {new_score} ({delta}) → {KEEP|REVERT}
+- **原因**: {WHY effective or WHY failed}
+```
+
+所有候选处理完毕后，输出吸收汇总（吸收数/拒绝数/revert 数/总分数变化）。可选进入 Phase 4 自主爬山（最多 2 轮）消化吸收改动——提示用户："吸收完成。是否对目标 skill 执行 1-2 轮全局爬山优化以消化吸收改动？"
 
 ---
 
