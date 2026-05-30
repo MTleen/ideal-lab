@@ -157,9 +157,10 @@ Proceed to Phase 1.
 1. **外部来源可解析？** GitHub URL → `git clone --depth 1 <url> /tmp/skill-builder-absorb-{timestamp}` 到临时目录；本地路径 → 检查存在。clone 成功后将临时路径作为后续 C1 的工作目录。clone 失败 → 提示用户检查 URL 或手动 `git clone` 到本地后使用本地路径。
 2. 外部来源含 SKILL.md？→ 否则终止："该路径不是有效的 skill（缺少 SKILL.md）"
 3. 目标 skill 的 SKILL.md 存在？
-4. 目标 skill 的 test-checklist.json 存在？→ 否则触发快速生成（复用 Phase 1 简化流程：提取声称 + 生成 3-4 个 checklist 问题 + 8-10 个测试输入 + 用户确认）。生成后执行 **Calibration-lite**：用户对 4 对题目 × 输入做 YES/NO 标注，agent 自行判断 TPR/TNR。不 spawn judge——仅依靠用户标注和 agent 自查。如果自查发现明显歧义（agent 无法确定自己的答案与用户是否一致），收紧问题措辞后重新确认。
+4. 目标 skill 的 test-checklist.json 存在？→ 否则触发快速生成（复用 Phase 1 简化流程：提取声称 + 生成 3-4 个 checklist 问题 + 8-10 个测试输入 + 用户确认）。生成后执行 **Calibration-lite**：用户对 4 对题目 × 输入做 YES/NO 标注，agent 自行判断 TPR/TNR。判定标准：TPR ≥ 80% 且 TNR ≥ 80% → 通过。任一 < 80% → 收紧问题措辞后重试。2 次重试后仍不达标 → 标记 `criteria_partial: true`，流程继续但 C5 棘轮评分标注低置信度。
 5. 当前 `git status --porcelain` 为空？（允许 untracked 文件，但不允许已暂存或已修改的 tracked 文件）→ 否则 abort，提示用户先提交或 stash
 6. 任一检查失败 → 明确告知用户缺什么及如何补齐
+7. 创建 git branch `auto-optimize/YYYYMMDD-HHMM`。所有 absorb 改动在此分支上进行。Mode C 结束后（全拒或完成所有候选），切回原分支并提示用户是否保留或删除 absorb 分支。
 
 ##### Step C1: Parse & Analyze
 
@@ -198,7 +199,7 @@ Proceed to Phase 1.
 
 ##### Step C2.5: 目标 skill 结构分析
 
-对目标 skill 执行与 C1 同格式的结构化分析（复用 C1 的 JSON schema）。确保后续 C3a 有对比基准：
+对目标 skill 执行结构化分析。使用与 C1 结构对齐但带 `target_` 前缀的 key 名，确保 C3a 能区分外部 skill（`structure`/`patterns`）和目标 skill（`target_structure`/`target_patterns`）：
 
 ```json
 {
@@ -253,6 +254,8 @@ Proceed to Phase 1.
 ##### Step C5: Apply & Verify (Ratchet)
 
 逐个候选应用 + 独立 eval，复用现有 skill-builder 的 7 维度评分和棘轮机制：
+
+**C5 前置步骤**：在应用任何候选之前，先对目标 skill 执行一次 Phase 3 Baseline，记为 `baseline_score`。首候选的 `old_score` 使用此值。
 
 ```
 for each approved candidate (按 apply_order):
