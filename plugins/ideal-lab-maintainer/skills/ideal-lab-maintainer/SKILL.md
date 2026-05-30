@@ -1,6 +1,6 @@
 ---
 name: ideal-lab-maintainer
-description: "ideal-lab monorepo 维护工具。用于：提交改动并自动生成 changeset（/maintainer commit）、新增 skill（/maintainer add-skill）、新增 plugin（/maintainer add-plugin）、发布版本（/maintainer release）、全量校验（/maintainer validate）。"
+description: "ideal-lab monorepo 维护工具。用于：提交改动并自动生成 changeset（/maintainer commit）、新增 skill（/maintainer add-skill）、新增 plugin（/maintainer add-plugin）、发布版本（/maintainer release）、全量校验（/maintainer validate）、更新 README（/maintainer update-readme）。"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
@@ -264,4 +264,31 @@ plugins/ideal-lab-maintainer/scripts/release.sh
 
 ```bash
 plugins/ideal-lab-maintainer/scripts/validate.sh
+```
+
+## /maintainer update-readme
+
+在每次 commit 或 release 后，自动更新根 README.md 的统计数据。
+
+工作流程：
+
+1. 读取 `.claude-plugin/marketplace.json`，计算当前 plugin 数量（`plugins` 数组长度）。
+2. 统计 skill 数量：
+   ```bash
+   find plugins -name "SKILL.md" -path "*/skills/*" | wc -l
+   ```
+3. 读取每个 plugin 的 `package.json`，提取当前 version。
+4. 更新 README.md 中的以下字段：
+   - Badge：`plugins-N-blue` → `plugins-{count}-blue`
+   - Badge：`skills-N-green` → `skills-{count}-green`
+   - 正文："目前包含 **N 个插件**、**M 个 Skill**"
+   - 插件清单表格中每个 plugin 的版本号（与 `package.json` 保持一致）
+   - 插件清单表格中每个 plugin 的 Skill 数（统计该 plugin 的 `skills/` 下 `SKILL.md` 数量）
+5. 检查 marketplace.json 中是否有未出现在 README 表格中的 plugin，如有则询问用户插入位置和分类。
+6. 生成 diff，供用户确认后提交。
+
+脚本用法：
+
+```bash
+plugins/ideal-lab-maintainer/scripts/update-readme.sh
 ```
