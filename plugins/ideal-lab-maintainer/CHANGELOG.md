@@ -1,5 +1,11 @@
 # ideal-lab-maintainer
 
+## 1.1.1
+
+### Patch Changes
+
+- Fix commit flow: selective git add, auto update-readme, git push. Add npm install to add-plugin to prevent CI lockfile errors.
+
 ## 1.1.0
 
 ### Minor Changes

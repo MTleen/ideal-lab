@@ -59,12 +59,14 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
     - `plugins/ideal-lab-maintainer/scripts/validate.sh`
     - 如果只影响单个 plugin，也可以先运行 `claude plugin validate plugins/<plugin-name>`。
 11. 运行 `git diff --stat` 和必要的 `git diff` 检查最终改动。
-12. 执行 `git add` 并提交：
-
-    ```bash
-    git add .
-    git commit -m "<message>"
-    ```
+12. 使用目标明确的 `git add`，**禁止 `git add .`**（避免误提交 node_modules、.agents、临时文件等）：
+    - 有 plugin 改动：`git add plugins/<plugin-name>/`
+    - 有 marketplace 改动：`git add .claude-plugin/marketplace.json`
+    - 有 changeset：`git add .changeset/`
+    - 有根配置文件改动：逐个指定文件
+13. 执行 git commit。
+14. 如果涉及新增 plugin 或 plugin 数/版本号变化，自动执行 `/maintainer update-readme`（更新 badge 计数、版本号、插件表格），将 README 更新合并到同一 commit 中。
+15. **执行 git push**，确保远端与本地同步。如果 push 失败（无 upstream 或权限不足），提示用户手动处理。
 
 脚本用法：
 
@@ -179,12 +181,10 @@ plugins/ideal-lab-maintainer/scripts/add-skill.sh <plugin-name> <skill-name> "<d
    ```
 
 8. 根 `package.json` 已使用 `workspaces: ["plugins/*"]`，无需修改。
-9. 运行：
-
-   ```bash
-   claude plugin validate plugins/<plugin-name>
-   claude plugin validate .
-   ```
+9. 运行 `npm install` 更新 `package-lock.json`。新增 plugin 后 workspace 成员增加，必须更新 lockfile，否则 CI 的 `npm ci` 会失败。
+10. 运行校验：
+    - `claude plugin validate plugins/<plugin-name>`
+    - `claude plugin validate .`
 
 脚本用法：
 
