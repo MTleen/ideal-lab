@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Claude Code 最佳实践插件库 — 开发流程、PPT 生成（含 image-to-svg 图片转可编辑矢量）、文档写作、知识库构建、深度调研",
-    "version": "1.1.0"
+    "version": "1.1.1"
   },
   "plugins": [
     {
@@ -18,7 +18,7 @@
     {
       "name": "ideal-ppt-suite",
       "source": "./plugins/ideal-ppt-suite",
-      "description": "PPT 全链路生成：调研→策略→大纲→提示词→生成→配图→导出",
+      "description": "PPT 全链路生成：调研→策略→大纲→提示词→生成→配图→导出 + image-to-svg 图片转可编辑矢量",
       "category": "content",
       "keywords": ["ppt", "presentation", "design", "slides"]
     },
@@ -74,14 +74,14 @@
     {
       "name": "skill-builder",
       "source": "./plugins/skill-builder",
-      "description": "Skill 全生命周期引擎：从零创建或持续优化——爬⛰优化 + 棘轮机制 + 独立 agent 判卷",
+      "description": "Skill 全生命周期引擎：从零创建新 skill 或持续优化已有 SKILL.md。双重评估（7 维度结构评分 + checklist 实测），爬山优化 + 棘轮机制（退步自动回滚），独立 agent 判卷消除偏差",
       "category": "development",
       "keywords": ["skill", "create", "optimize", "builder", "evaluate", "checklist", "ratchet"]
     },
     {
       "name": "panel-review",
       "source": "./plugins/panel-review",
-      "description": "多维会审：自动组建专家团队从多视角对抗性审查文档/代码/方案/PPT",
+      "description": "多维会审：根据上文产出自动组建专家团队，从多个视角对文档/代码/方案进行对抗性审查，输出按严重度排序的攻击面报告",
       "category": "development",
       "keywords": ["review", "panel", "adversarial", "audit", "team", "expert"]
     }
