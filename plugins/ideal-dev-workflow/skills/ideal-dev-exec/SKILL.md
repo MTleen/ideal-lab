@@ -2,6 +2,13 @@
 name: ideal-dev-exec
 description: Use when P8 test case review is completed and development execution is needed. Executes coding tasks following TDD principles with Git branch management.
 agents: [implement, check, debug]
+io:
+  inputs:
+    - name: dev_plan
+      source: ideal-dev-plan.dev_plan
+  outputs:
+    - name: source_code
+      type: code
 ---
 
 # ideal-dev-exec（P9 开发执行）

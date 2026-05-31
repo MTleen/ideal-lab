@@ -4,6 +4,14 @@ description: |
   结构化文档 P3 大纲生成阶段。当需要生成文档大纲（1-3级标题+篇幅估算）时使用。
   触发场景：(1) workflow 调用本 skill (2) 用户要求"生成大纲"、"文档大纲"
   产出：P2-大纲.md
+io:
+  inputs:
+    - name: requirement_doc
+      source: requirement-analysis.requirement_doc
+  outputs:
+    - name: outline
+      path: "P2-大纲.md"
+      type: markdown
 ---
 
 # Outline Generation (P3)

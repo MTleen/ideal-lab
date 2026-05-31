@@ -2,6 +2,15 @@
 name: ideal-wiki
 description: Use when P12 test review is completed and wiki documentation generation is needed. Creates high-quality wiki documentation based on project context.
 agents: [tech-writer, dev, qa]
+io:
+  inputs:
+    - name: source_code
+      source: ideal-dev-exec.source_code
+    - name: requirement_doc
+      source: ideal-requirement.requirement_doc
+  outputs:
+    - name: wiki_docs
+      type: markdown
 ---
 
 # ideal-wiki（P13 维基更新）

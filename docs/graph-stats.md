@@ -1,6 +1,6 @@
 # Skills Graph Statistics
 
-Generated: 2026-05-31T12:26:42.692119
+Generated: 2026-05-31T12:48:14.733392
 
 ## Overview
 
@@ -8,16 +8,16 @@ Generated: 2026-05-31T12:26:42.692119
 |--------|-------|
 | Total Skills | 46 |
 | Total Edges | 183 |
-| Plugins Covered | 11 |
+| Plugins Covered | 12 |
 
 ## Arity Distribution
 
 | Arity | Count |
 |-------|-------|
-| standalone | 20 |
+| standalone | 19 |
 | phase | 16 |
 | utility | 6 |
-| orchestrator | 4 |
+| orchestrator | 5 |
 
 ## Edge Type Distribution
 
@@ -33,13 +33,14 @@ Generated: 2026-05-31T12:26:42.692119
 
 | Plugin | Skills |
 |--------|--------|
-| ideal-dev-workflow | 14 |
+| ideal-dev-workflow | 13 |
 | ideal-ppt-suite | 11 |
 | ideal-document-workflow | 8 |
 | ideal-knowledge-base | 6 |
 | baoyu-image-gen | 1 |
 | ideal-deep-research | 1 |
 | ideal-dify-generator | 1 |
+| ideal-graph-orchestrator | 1 |
 | ideal-lab-maintainer | 1 |
 | ideal-ralph | 1 |
 | panel-review | 1 |

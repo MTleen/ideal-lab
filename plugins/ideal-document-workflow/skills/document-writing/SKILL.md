@@ -4,6 +4,16 @@ description: |
   结构化文档 P7 并行写作阶段。当需要根据大纲和任务拆分执行并行写作时使用。
   触发场景：(1) workflow 调用本 skill (2) 用户要求"写章节"、"开始写作"
   核心功能：基于写作任务卡执行内容写作，使用 What-Why-How 模式确保内容完整。
+io:
+  inputs:
+    - name: task_split
+      source: task-split.task_split
+    - name: requirement_doc
+      source: requirement-analysis.requirement_doc
+  outputs:
+    - name: sections
+      path: "sections/"
+      type: markdown
 ---
 
 # Document Writing (P7)

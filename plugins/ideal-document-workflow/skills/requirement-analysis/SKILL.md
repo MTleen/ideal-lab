@@ -4,6 +4,12 @@ description: |
   结构化文档 P1 需求分析阶段。当需要解析功能需求、非功能需求、技术约束时使用。
   触发场景：(1) workflow 调用本 skill (2) 用户要求"需求分析"、"解析需求"
   产出：P1-需求分析.md
+io:
+  inputs: []
+  outputs:
+    - name: requirement_doc
+      path: "P1-需求分析.md"
+      type: markdown
 ---
 
 # Requirement Analysis (P1)

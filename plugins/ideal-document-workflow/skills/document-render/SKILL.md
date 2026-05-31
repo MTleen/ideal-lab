@@ -4,6 +4,13 @@ description: |
   文档渲染输出阶段。将 Markdown 中间件渲染为指定格式的最终交付物。
   触发场景：(1) workflow 调用本 skill (2) 用户要求"生成 Word"、"生成 PPT"、"导出文档"
   产出：最终交付物（markdown/docx/pptx）
+io:
+  inputs:
+    - name: sections
+      source: document-writing.sections
+  outputs:
+    - name: final_doc
+      type: docx_or_pptx
 ---
 
 # Document Render (P6)

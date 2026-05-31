@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "generated_at": "2026-05-31T12:26:42.692119",
+    "generated_at": "2026-05-31T12:48:14.733392",
     "total_skills": 46,
     "total_edges": 183,
     "arity_distribution": {
-      "standalone": 20,
-      "orchestrator": 4,
+      "standalone": 19,
+      "orchestrator": 5,
       "utility": 6,
       "phase": 16
     },
@@ -140,14 +140,6 @@
       "description": "Use when P12 test review is completed and wiki documentation generation is needed. Creates high-quality wiki documentation based on project context."
     },
     {
-      "id": "ideal-dev-workflow/ideal-yolo",
-      "name": "ideal-yolo",
-      "plugin": "ideal-dev-workflow",
-      "category": "development",
-      "arity": "standalone",
-      "description": "Use when user enables YOLO mode after P2 review approval. Automatically executes multi-perspective review team with iterative refinement until approved or circuit breaker triggers."
-    },
-    {
       "id": "ideal-dify-generator/ideal-dify-generator",
       "name": "ideal-dify-generator",
       "plugin": "ideal-dify-generator",
@@ -161,7 +153,7 @@
       "plugin": "ideal-document-workflow",
       "category": "content",
       "arity": "phase",
-      "description": "文档渲染输出阶段。将 Markdown 中间件渲染为指定格式的最终交付物。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"生成 Word\"、\"生成 PPT\"、\"导出文档\"\n产出：最终交付物（markdown/docx/pptx）"
+      "description": "文档渲染输出阶段。将 Markdown 中间件渲染为指定格式的最终交付物。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"生成 Word\"、\"生成 PPT\"、\"导出文档\"\n产出：最终交付物（markdown/docx/pptx）\n"
     },
     {
       "id": "ideal-document-workflow/document-writing",
@@ -169,7 +161,7 @@
       "plugin": "ideal-document-workflow",
       "category": "content",
       "arity": "phase",
-      "description": "结构化文档 P7 并行写作阶段。当需要根据大纲和任务拆分执行并行写作时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"写章节\"、\"开始写作\"\n核心功能：基于写作任务卡执行内容写作，使用 What-Why-How 模式确保内容完整。"
+      "description": "结构化文档 P7 并行写作阶段。当需要根据大纲和任务拆分执行并行写作时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"写章节\"、\"开始写作\"\n核心功能：基于写作任务卡执行内容写作，使用 What-Why-How 模式确保内容完整。\n"
     },
     {
       "id": "ideal-document-workflow/ideal-document-workflow",
@@ -193,7 +185,7 @@
       "plugin": "ideal-document-workflow",
       "category": "content",
       "arity": "phase",
-      "description": "结构化文档 P3 大纲生成阶段。当需要生成文档大纲（1-3级标题+篇幅估算）时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"生成大纲\"、\"文档大纲\"\n产出：P2-大纲.md"
+      "description": "结构化文档 P3 大纲生成阶段。当需要生成文档大纲（1-3级标题+篇幅估算）时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"生成大纲\"、\"文档大纲\"\n产出：P2-大纲.md\n"
     },
     {
       "id": "ideal-document-workflow/requirement-analysis",
@@ -201,7 +193,7 @@
       "plugin": "ideal-document-workflow",
       "category": "content",
       "arity": "phase",
-      "description": "结构化文档 P1 需求分析阶段。当需要解析功能需求、非功能需求、技术约束时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"需求分析\"、\"解析需求\"\n产出：P1-需求分析.md"
+      "description": "结构化文档 P1 需求分析阶段。当需要解析功能需求、非功能需求、技术约束时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"需求分析\"、\"解析需求\"\n产出：P1-需求分析.md\n"
     },
     {
       "id": "ideal-document-workflow/task-split",
@@ -209,7 +201,7 @@
       "plugin": "ideal-document-workflow",
       "category": "content",
       "arity": "phase",
-      "description": "结构化文档 P3 任务拆分阶段。当需要将大纲拆分为可并行执行的写作任务时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"拆分任务\"、\"任务分配\"\n产出：P3-任务拆分.md"
+      "description": "结构化文档 P3 任务拆分阶段。当需要将大纲拆分为可并行执行的写作任务时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"拆分任务\"、\"任务分配\"\n产出：P3-任务拆分.md\n"
     },
     {
       "id": "ideal-document-workflow/writing-skills",
@@ -218,6 +210,14 @@
       "category": "content",
       "arity": "standalone",
       "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment"
+    },
+    {
+      "id": "ideal-graph-orchestrator/ideal-graph-orchestrator",
+      "name": "ideal-graph-orchestrator",
+      "plugin": "ideal-graph-orchestrator",
+      "category": "development",
+      "arity": "orchestrator",
+      "description": "通用 Skill Graph 编排器。双模式：(1) Generate — 自然语言描述需求，自动匹配 skills-graph.json 中的已有 skill、检测缺口、编译 workflow.yml；(2) Execute — 读取 workflow.yml，沿图路径顺序执行，处理已有 skill 复用和新建 skill scaffold。Use when user wants to comp"
     },
     {
       "id": "ideal-knowledge-base/build-knowledge-base-workflow",
@@ -713,13 +713,6 @@
     },
     {
       "source": "panel-review/panel-review",
-      "target": "ideal-dev-workflow/ideal-yolo",
-      "relation": "enhancement",
-      "confidence": "extracted",
-      "evidence": "panel-review reviews documents/code/solutions/PPTs"
-    },
-    {
-      "source": "panel-review/panel-review",
       "target": "ideal-document-workflow/document-render",
       "relation": "enhancement",
       "confidence": "extracted",
@@ -1000,6 +993,13 @@
     },
     {
       "source": "ideal-deep-research/deep-research",
+      "target": "ideal-graph-orchestrator/ideal-graph-orchestrator",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
       "target": "ideal-knowledge-base/build-knowledge-base-workflow",
       "relation": "enhancement",
       "confidence": "extracted",
@@ -1267,6 +1267,13 @@
     {
       "source": "ideal-dev-workflow/deep-research",
       "target": "ideal-document-workflow/writing-skills",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-graph-orchestrator/ideal-graph-orchestrator",
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "deep-research provides research for analysis skills"
@@ -1505,13 +1512,6 @@
     {
       "source": "skill-builder/skill-builder",
       "target": "ideal-dev-workflow/ideal-wiki",
-      "relation": "enhancement",
-      "confidence": "extracted",
-      "evidence": "skill-builder optimizes any SKILL.md"
-    },
-    {
-      "source": "skill-builder/skill-builder",
-      "target": "ideal-dev-workflow/ideal-yolo",
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "skill-builder optimizes any SKILL.md"

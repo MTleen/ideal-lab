@@ -2,6 +2,16 @@
 name: ideal-test-case
 description: Use when P6 plan review is completed and test case generation is needed. Extracts acceptance criteria and generates functional, boundary, and exception test cases.
 agents: [qa]
+io:
+  inputs:
+    - name: requirement_doc
+      source: ideal-requirement.requirement_doc
+    - name: dev_plan
+      source: ideal-dev-plan.dev_plan
+  outputs:
+    - name: test_cases
+      path: "P7-测试用例.md"
+      type: markdown
 ---
 
 # ideal-test-case（P7 测试用例生成）

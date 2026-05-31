@@ -2,6 +2,12 @@
 name: ideal-requirement
 description: "Use when: (1) starting a new feature, bug fix, or refactoring task, (2) user mentions '需求', '需求文档', 'PRD', 'requirement', '需求编写', '需求收集', 'bug修复', '重构需求'."
 agents: [pm, analyst]
+io:
+  inputs: []
+  outputs:
+    - name: requirement_doc
+      path: "P1-需求文档.md"
+      type: markdown
 ---
 
 # Ideal Requirement

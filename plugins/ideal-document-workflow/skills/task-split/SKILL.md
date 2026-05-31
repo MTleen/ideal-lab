@@ -4,6 +4,14 @@ description: |
   结构化文档 P3 任务拆分阶段。当需要将大纲拆分为可并行执行的写作任务时使用。
   触发场景：(1) workflow 调用本 skill (2) 用户要求"拆分任务"、"任务分配"
   产出：P3-任务拆分.md
+io:
+  inputs:
+    - name: outline
+      source: outline-generation.outline
+  outputs:
+    - name: task_split
+      path: "P3-任务拆分.md"
+      type: markdown
 ---
 
 # Task Split (P3)

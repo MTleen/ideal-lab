@@ -2,6 +2,14 @@
 name: ideal-dev-solution
 description: Use when P2 requirement review is completed and technical solution generation is needed. Analyzes requirements and generates comprehensive technical design including architecture, tech stack, data models, and risk analysis.
 agents: [general-purpose (x6 parallel)]
+io:
+  inputs:
+    - name: requirement_doc
+      source: ideal-requirement.requirement_doc
+  outputs:
+    - name: solution_doc
+      path: "P3-技术方案.md"
+      type: markdown
 ---
 
 > **Phase Skill 角色**：Team Lead。主智能体调用本 Skill 后，本 Skill 全权负责：加载上下文 → spawn sub-agent 完成所有工作 → 写入产物文件 → 返回摘要。主智能体只等待本 Skill 返回。

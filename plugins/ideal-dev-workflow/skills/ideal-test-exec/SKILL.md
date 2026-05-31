@@ -2,6 +2,14 @@
 name: ideal-test-exec
 description: Use when P10 code review is completed and test execution is needed. Executes test cases and generates test reports with defect tracking.
 agents: [qa, debug]
+io:
+  inputs:
+    - name: test_cases
+      source: ideal-test-case.test_cases
+  outputs:
+    - name: test_report
+      path: "P11-测试报告.md"
+      type: markdown
 ---
 
 # ideal-test-exec（P11 测试执行）

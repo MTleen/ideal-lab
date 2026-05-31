@@ -1,6 +1,15 @@
 ---
 name: panel-review
 description: "多维会审：自动分析上文产出，动态组建专家团队从多视角对抗性审查文档/代码/方案/PPT，输出按严重度排序的攻击面报告。支持 yolo_mode 自动模式供 workflow 编排器零交互调用。Use when user says \"审查\", \"会审\", \"挑刺\", \"review\", \"audit\", \"找问题\", \"看看有什么漏洞\", \"帮我审一下\", \"把把关\", \"红队\", \"有没有坑\"."
+io:
+  inputs:
+    - name: review_target
+      source: any
+  outputs:
+    - name: review_report
+      type: markdown
+    - name: verdict
+      type: json
 ---
 
 # Panel Review — 多维会审
