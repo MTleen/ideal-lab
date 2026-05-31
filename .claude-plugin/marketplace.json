@@ -84,6 +84,13 @@
       "description": "多维会审：根据上文产出自动组建专家团队，从多个视角对文档/代码/方案进行对抗性审查，输出按严重度排序的攻击面报告",
       "category": "development",
       "keywords": ["review", "panel", "adversarial", "audit", "team", "expert"]
+    },
+    {
+      "name": "ideal-graph-orchestrator",
+      "source": "./plugins/ideal-graph-orchestrator",
+      "description": "通用 Skill Graph 编排器 — 自然语言描述需求 → 自动匹配 skills-graph.json 已有 skill → 检测缺口自动 scaffold 新 skill → 编译 workflow.yml → 执行跨 plugin skill 路径",
+      "category": "development",
+      "keywords": ["orchestrator", "graph", "workflow", "compose", "compile"]
     }
   ]
 }

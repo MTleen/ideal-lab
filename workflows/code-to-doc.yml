@@ -1,0 +1,50 @@
+name: "代码转技术文档"
+generated_at: "2026-06-01T00:00:00"
+generated_from: "做一个代码转技术文档的流程，先需求分析再审方案，然后写文档导出 Word"
+
+path:
+  - skill: ideal-dev-workflow/ideal-requirement
+    match_confidence: 0.94
+  - skill: panel-review
+    yolo_mode: true
+    match_confidence: 0.97
+
+  - skill: ideal-dev-workflow/ideal-dev-solution
+    match_confidence: 0.91
+  - skill: panel-review
+    yolo_mode: true
+    match_confidence: 0.97
+
+  - skill: new
+    name: "方案转文档需求"
+    description: "将技术方案文档转换为文档写作所需的格式，提取关键架构信息和技术决策"
+    reason: "ideal-dev-solution 产出技术方案.md，document-writing 需要任务拆分+大纲，格式和粒度不匹配"
+    io:
+      inputs:
+        - name: solution_doc
+          source: ideal-dev-workflow/ideal-dev-solution.solution_doc
+      outputs:
+        - name: adapter_output
+          path: "adapter-文档需求.md"
+          type: markdown
+
+  - skill: panel-review
+    yolo_mode: true
+    match_confidence: 0.97
+
+  - skill: ideal-document-workflow/outline-generation
+    match_confidence: 0.88
+  - skill: panel-review
+    yolo_mode: true
+    match_confidence: 0.97
+
+  - skill: ideal-document-workflow/document-writing
+    match_confidence: 0.85
+  - skill: panel-review
+    yolo_mode: true
+    match_confidence: 0.97
+
+  - skill: ideal-document-workflow/document-render
+    params:
+      format: docx
+    match_confidence: 0.95
