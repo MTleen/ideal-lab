@@ -39,6 +39,8 @@ Execute 模式: 读 workflow.yml → 沿路径执行 → 产物
 
 ### 流程
 
+**前置检查：** 执行前确认 `skills-graph.json` 存在且可解析，否则报错退出（见异常处理表）。
+
 ```
 1. 解析意图
    → 将用户的自然语言需求分解为步骤序列
@@ -125,6 +127,8 @@ I/O 匹配:
 - 用户直接指定 workflow: `--from-workflow code-to-doc`
 
 ### 流程
+
+**前置检查：** 执行前确认 workflow.yml 存在且 YAML 可解析，否则报错退出（见异常处理表）。
 
 ```
 1. 读 workflow.yml → 解析 path
@@ -229,16 +233,16 @@ Promote（手动确认）
 
 | 场景 | 检测方式 | 处理 |
 |------|---------|------|
-| `skills-graph.json` 不存在 | 读文件失败 | 提示运行 `python scripts/build-graph/build-graph.py` 生成 graph |
-| `skills-graph.json` 格式损坏 | JSON parse 失败 | 报错退出，提示重新 build-graph |
-| Generate 模式匹配不到任何 skill | 语义匹配 top-3 全低于 0.5 | 降级为全部 skill: new，提示用户 graph 覆盖不足 |
+| `skills-graph.json` 不存在或损坏 | 读文件/JSON parse 失败 | 报错退出："skills-graph.json 不可用，请运行 `python scripts/build-graph/build-graph.py` 生成" |
+| Generate 模式匹配不到任何 skill | 语义匹配 top-3 全低于 0.5 | 降级：每个意图步骤生成一个 `skill: new`（name 取自步骤描述，description 由 LLM 推断），提示用户 graph 覆盖不足 |
 | `workflow.yml` 已存在 | 文件存在检查 | 询问：覆盖 / 改名 / 取消 |
-| `skill: new` 的 skill-builder 调用失败 | skill-builder 返回错误 | 标记该步骤为 blocked，继续执行其余步骤，最终报告失败步骤 |
+| `skill: new` 的 skill-builder 调用失败 | skill-builder 返回错误 | 标记该步骤为 blocked，继续执行不依赖它的独立步骤；依赖该步骤产出的后续步骤自动 skip，最终报告：哪些成功、哪些 blocked、哪些 skip |
 | workflow.yml 中引用的 skill 不在 graph 中 | Execute 时查 graph 失败 | 报错退出，列出不存在的 skill ID，提示检查 workflow.yml 或运行 build-graph |
 | workflow.yml 格式不合法 | YAML parse 失败 | 报错退出，提示检查 `path[]` 结构 |
 | artifact 传递链断裂 | 后置 skill 的 io.inputs.source 指向的 artifact 不在 state 中 | 报错退出，列出缺失的 artifact 和对应的 skill，提示可能是前置 skill 未正确产出 |
-| panel-review 连续 3 轮 verdict=="fail" | 重试计数器 | 熔断：停止 / 标 blocked / 输出未解决问题 / 人工介入 |
-| 用户中断 workflow | 用户发送停止指令 | 保存当前 state → 提示可从断点 `--from-state` 恢复 |
+| panel-review 连续 3 轮 verdict=="fail" | 重试计数器 | 熔断：停止当前 path / 标 blocked / 输出未解决问题 / 人工介入 |
+| 用户中断 workflow | 用户发送停止指令 | 保存当前 state 到 `workflows/{name}/state.json`，提示重新执行 `--from-workflow` 可从已完成的步骤后继续 |
+| 图循环依赖 | path 编译时检测 prerequisite 边形成环 | 报错退出，列出环中的 skill 和边，提示用户检查 skills-graph.json 中的 prerequisite 边 |
 
 ---
 
