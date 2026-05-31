@@ -225,6 +225,23 @@ Promote（手动确认）
 
 ---
 
+## 异常处理
+
+| 场景 | 检测方式 | 处理 |
+|------|---------|------|
+| `skills-graph.json` 不存在 | 读文件失败 | 提示运行 `python scripts/build-graph/build-graph.py` 生成 graph |
+| `skills-graph.json` 格式损坏 | JSON parse 失败 | 报错退出，提示重新 build-graph |
+| Generate 模式匹配不到任何 skill | 语义匹配 top-3 全低于 0.5 | 降级为全部 skill: new，提示用户 graph 覆盖不足 |
+| `workflow.yml` 已存在 | 文件存在检查 | 询问：覆盖 / 改名 / 取消 |
+| `skill: new` 的 skill-builder 调用失败 | skill-builder 返回错误 | 标记该步骤为 blocked，继续执行其余步骤，最终报告失败步骤 |
+| workflow.yml 中引用的 skill 不在 graph 中 | Execute 时查 graph 失败 | 报错退出，列出不存在的 skill ID，提示检查 workflow.yml 或运行 build-graph |
+| workflow.yml 格式不合法 | YAML parse 失败 | 报错退出，提示检查 `path[]` 结构 |
+| artifact 传递链断裂 | 后置 skill 的 io.inputs.source 指向的 artifact 不在 state 中 | 报错退出，列出缺失的 artifact 和对应的 skill，提示可能是前置 skill 未正确产出 |
+| panel-review 连续 3 轮 verdict=="fail" | 重试计数器 | 熔断：停止 / 标 blocked / 输出未解决问题 / 人工介入 |
+| 用户中断 workflow | 用户发送停止指令 | 保存当前 state → 提示可从断点 `--from-state` 恢复 |
+
+---
+
 ## 使用方式
 
 ```

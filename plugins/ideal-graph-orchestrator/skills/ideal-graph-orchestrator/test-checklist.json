@@ -1,0 +1,21 @@
+{
+  "checklist": [
+    "编排器是否为给定的自然语言需求生成了 workflow.yml，且包含 name、generated_at、generated_from、path[] 四个必需字段？",
+    "审批摘要是否展示了 M/N/K 统计（总步骤数 / 已有 skill 数 / 新建 skill 数）？",
+    "当需求涉及跨 plugin 步骤且前置 skill 的 io.outputs 不覆盖后置 skill 的 io.inputs 时，workflow.yml 中是否包含 skill: new 或 adapter 条目？",
+    "Execute 模式读取有效的 workflow.yml 后，是否按 path 顺序执行并产出 workflow_state（含 artifacts 和 reviews）？",
+    "当 workflow.yml 中 panel-review 节点的模拟 verdict 为 fail 时，编排器是否触发重试逻辑并有明确的熔断后停止行为？"
+  ],
+  "test_inputs": [
+    "帮我把项目代码结构写成技术文档，导出 Word",
+    "做个需求收集+评审的简单流程",
+    "--generate-only 做一个代码审查到文档生成的完整流程",
+    "--from-workflow code-to-doc",
+    "审一下刚才的方案文档",
+    "做一个项目流程（不说明具体要什么）",
+    "先分析需求，再设计方案，再评审，然后编码，再评审代码，最后写文档导出 PPT",
+    "帮忙搞一个流程，把 deep-research 的调研结果做成 PPT",
+    "传入一个 path 中 skill 指向不存在的 graph ID 的 workflow.yml → 执行",
+    "传入一个 path 中某 skill 的 io.inputs 需要的 artifact 不存在于前置产出的 workflow.yml → 执行"
+  ]
+}
