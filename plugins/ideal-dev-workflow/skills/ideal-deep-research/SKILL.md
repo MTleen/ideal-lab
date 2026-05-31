@@ -1,9 +1,9 @@
 ---
-name: ideal-deep-research
+name: deep-research
 description: Conducts enterprise-grade research with multi-source synthesis, citation tracking, and verification. Produces citation-backed reports through a structured pipeline with source credibility scoring. Triggers on "deep research", "comprehensive analysis", "research report", "compare X vs Y", "analyze trends", or "state of the art". Not for simple lookups, debugging, or questions answerable with 1-2 searches.
 ---
 
-# Ideal Deep Research
+# Deep Research
 
 ## Core Purpose
 
@@ -81,19 +81,10 @@ Mode Selection
 - Bibliography (COMPLETE - every citation, no placeholders)
 - Methodology Appendix
 
-**Output Location:**
-
-1. **Iteration Directory:** If current working directory is within `docs/迭代/{iteration_name}/`, output to:
-   ```
-   docs/迭代/{iteration_name}/research/{topic}_YYYYMMDD/
-   ```
-
-2. **Ask User:** If no iteration detected, use AskUserQuestion to prompt user for output location.
-
-**Output files:**
-- Markdown (primary source): `{topic}_research_YYYYMMDD.md`
-- HTML (McKinsey style, auto-opened): `{topic}_research_YYYYMMDD.html`
-- PDF (professional print, auto-opened): `{topic}_research_YYYYMMDD.pdf`
+**Output files (all to `~/Documents/[Topic]_Research_[YYYYMMDD]/`):**
+- Markdown (primary source)
+- HTML (McKinsey style, auto-opened)
+- PDF (professional print, auto-opened)
 
 **Quality standards:**
 - 10+ sources, 3+ per major claim

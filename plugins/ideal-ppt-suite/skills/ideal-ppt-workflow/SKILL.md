@@ -75,8 +75,21 @@ description: Use when user asks to "create slides", "make a presentation", "gene
 
 - P4 未通过前，**禁止进入 P5 及后续阶段**
 - 用户必须在 P4 明确批准策略方向（风格、结构、受众）
-- YOLO 模式下，P4 仍需用户确认或由 `ideal-yolo` 评审通过
+- YOLO 模式下，P4 仍需用户确认或由 `panel-review` 评审通过
 - 其他评审关卡（P2/P6/P8/P10/P12）可根据 review 配置自动通过
+
+### 评审阶段 → product_type 映射
+
+YOLO 模式下调用 panel-review 时，需传递 `product_type` 参数以指导攻击面选择：
+
+| 评审阶段 | 对应产物阶段 | product_type | 产物文件 |
+|----------|-------------|-------------|----------|
+| P2 | P1 | `ppt_requirements` | `analysis.md` |
+| P4 | P3 | `ppt_strategy` | `strategy.md` |
+| P6 | P5 | `ppt_outline` | `outline.md` |
+| P8 | P7 | `ppt_prompts` | `prompts/*.md` |
+| P10 | P9 | `ppt_images` | `images/*.png` |
+| P12 | P11 | `ppt_slides` | `html_output/*.html` 或 `images_output/*.png` |
 
 ---
 
@@ -136,14 +149,18 @@ YOLO 自动循环：
        → 立即回到循环起点（步骤 1）
   6. 如果 X 是评审阶段（P2/P4/P6/P8/P10/P12）：
        → 如果 X = P4（BLOCKING 关卡）：
-         → 调用 ideal-yolo 执行评审
-         → 通过 → approved，回到循环起点
-         → 熔断 → 输出报告，停止循环
-       → 其他评审阶段：
-         → 检查 review 配置，可自动通过则 auto_approved
-         → 否则调用 ideal-yolo 执行评审
-         → 通过 → approved，回到循环起点
-         → 熔断 → 输出报告，停止循环
+         → 调用 panel-review（yolo_mode: true, review_target: {产物路径}, product_type: {见映射表}, phase: P4）
+         → 解析 JSON 判定块
+         → verdict=="pass" → approved，回到循环起点
+         → verdict=="fail" 且连续失败 < 3 轮 → 修复产物 → 重新调用 panel-review → 回到循环起点
+         → 连续 3 轮 fail → 输出熔断报告，停止循环
+       → 其他评审阶段（P2/P6/P8/P10/P12）：
+         → 检查 review 配置，可自动通过则 auto_approved，回到循环起点
+         → 否则调用 panel-review（yolo_mode: true, review_target: {产物路径}, product_type: {见映射表}, phase: X）
+         → 解析 JSON 判定块
+         → verdict=="pass" → approved，回到循环起点
+         → verdict=="fail" 且连续失败 < 3 轮 → 修复产物 → 重新调用 panel-review → 回到循环起点
+         → 连续 3 轮 fail → 输出熔断报告，停止循环
   7. 如果 X = P13（交付阶段）：
        → 调用 ideal-ppt-export
        → 等待完成
@@ -154,7 +171,7 @@ YOLO 自动循环：
 **终止条件**（满足任一即停止）：
 - `status: 已完成` 或 `status: 已交付`
 - P13 阶段已完成（产物文件已生成）
-- 评审返回熔断信号 → 停止循环，报告未解决问题
+- `panel-review` 返回 verdict=="fail" 且连续 3 轮失败 → 停止循环，报告未解决问题
 
 **关键原则**：YOLO 模式下，主智能体在每次阶段完成后**立即回到循环起点**，不输出"等待用户确认"之类的提示，不停下来。循环直到终止条件满足。
 
@@ -305,10 +322,10 @@ updated_at: {YYYY-MM-DD HH:mm}
 
 ### YOLO 模式（yolo_mode: true）
 
-- 评审阶段由 `ideal-yolo` 自动处理
+- 评审阶段由 `panel-review` 自动处理
 - **P4 BLOCKING 关卡**：即使 YOLO 模式下，P4 仍执行完整评审流程
 - 其他评审关卡：根据 `review` 配置可自动通过
-- 熔断 → 停止循环，输出报告，等待人工介入
+- 连续 3 轮 panel-review 返回 verdict=="fail" → 熔断，停止循环，输出报告，等待人工介入
 
 ---
 

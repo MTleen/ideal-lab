@@ -57,7 +57,7 @@ Each card has an icon, name, stage count badge, and key feature list:
   ```
 - Right: 3 small skill invocation examples:
   `/ideal-dev-workflow:ideal-requirement`
-  `/ideal-ppt-suite:ideal-ppt-generator`
+  `/ideal-ppt-suite:ideal-ppt-workflow`
   `/ideal-deep-research:deep-research`
 
 ## Visual Details

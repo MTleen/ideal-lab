@@ -1,0 +1,1674 @@
+{
+  "metadata": {
+    "generated_at": "2026-05-31T12:26:42.692119",
+    "total_skills": 46,
+    "total_edges": 183,
+    "arity_distribution": {
+      "standalone": 20,
+      "orchestrator": 4,
+      "utility": 6,
+      "phase": 16
+    },
+    "relation_distribution": {
+      "embeds": 18,
+      "prerequisite": 14,
+      "enhancement": 146,
+      "alternative": 1,
+      "produces_for": 4
+    },
+    "orphan_skills": []
+  },
+  "nodes": [
+    {
+      "id": "baoyu-image-gen/baoyu-image-gen",
+      "name": "baoyu-image-gen",
+      "plugin": "baoyu-image-gen",
+      "category": "content",
+      "arity": "standalone",
+      "description": "AI image generation with OpenAI, Google and DashScope APIs. Supports text-to-image, reference images, aspect ratios. Sequential by default; parallel generation available on request. Use when user asks"
+    },
+    {
+      "id": "ideal-deep-research/deep-research",
+      "name": "deep-research",
+      "plugin": "ideal-deep-research",
+      "category": "research",
+      "arity": "standalone",
+      "description": "Conducts enterprise-grade research with multi-source synthesis, citation tracking, and verification. Produces citation-backed reports through a structured pipeline with source credibility scoring. Tri"
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-code-review",
+      "name": "ideal-code-review",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use for two-stage code review after batch execution. Reviews spec compliance first, then code quality. Called by ideal-dev-exec automatically."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-debugging",
+      "name": "ideal-debugging",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when encountering bugs, test failures, or unexpected behavior. Implements systematic debugging with root cause analysis before any fixes."
+    },
+    {
+      "id": "ideal-dev-workflow/deep-research",
+      "name": "deep-research",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Conducts enterprise-grade research with multi-source synthesis, citation tracking, and verification. Produces citation-backed reports through a structured pipeline with source credibility scoring. Tri"
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-delivery",
+      "name": "ideal-delivery",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when P14 wiki review is completed and the iteration needs to be finalized. Triggers on: 成果提交, 标记完成, 归档, 交付, delivery, submit, PR创建, 合并代码."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-dev-exec",
+      "name": "ideal-dev-exec",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when P8 test case review is completed and development execution is needed. Executes coding tasks following TDD principles with Git branch management."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-dev-plan",
+      "name": "ideal-dev-plan",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when P4 solution review is completed and coding plan generation is needed. Breaks down technical solution into atomic tasks with TDD organization."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-dev-solution",
+      "name": "ideal-dev-solution",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when P2 requirement review is completed and technical solution generation is needed. Analyzes requirements and generates comprehensive technical design including architecture, tech stack, data mod"
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-flow-control",
+      "name": "ideal-flow-control",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "orchestrator",
+      "description": "Use when managing workflow phase transitions and state control. Triggers on: 流程状态、阶段推进、下一阶段、YOLO模式、自动迭代、工作流编排、flow state、phase control. This is the orchestration protocol — it defines how the main age"
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-init",
+      "name": "ideal-init",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when initializing a new project to CC-Workflow, migrating an existing project, or user mentions \"初始化项目\", \"接入工作流\", \"/ideal-init\". Performs AI-powered project detection and configuration generation."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-requirement",
+      "name": "ideal-requirement",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when: (1) starting a new feature, bug fix, or refactoring task, (2) user mentions '需求', '需求文档', 'PRD', 'requirement', '需求编写', '需求收集', 'bug修复', '重构需求'."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-test-case",
+      "name": "ideal-test-case",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when P6 plan review is completed and test case generation is needed. Extracts acceptance criteria and generates functional, boundary, and exception test cases."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-test-exec",
+      "name": "ideal-test-exec",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when P10 code review is completed and test execution is needed. Executes test cases and generates test reports with defect tracking."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-wiki",
+      "name": "ideal-wiki",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when P12 test review is completed and wiki documentation generation is needed. Creates high-quality wiki documentation based on project context."
+    },
+    {
+      "id": "ideal-dev-workflow/ideal-yolo",
+      "name": "ideal-yolo",
+      "plugin": "ideal-dev-workflow",
+      "category": "development",
+      "arity": "standalone",
+      "description": "Use when user enables YOLO mode after P2 review approval. Automatically executes multi-perspective review team with iterative refinement until approved or circuit breaker triggers."
+    },
+    {
+      "id": "ideal-dify-generator/ideal-dify-generator",
+      "name": "ideal-dify-generator",
+      "plugin": "ideal-dify-generator",
+      "category": "development",
+      "arity": "utility",
+      "description": "完整的 Dify 智能体/工作流 DSL 生成器。从自然语言需求出发，生成可直接导入 Dify 的完整 DSL YAML 文件。支持端到端流程：需求分析 → 节点选型 → DSL 生成 → 自动校验 → 输出交付。融合 dify-dsl-generator 的案例驱动方法与 dify-workflow-skills 的精细化工程规范。"
+    },
+    {
+      "id": "ideal-document-workflow/document-render",
+      "name": "document-render",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "phase",
+      "description": "文档渲染输出阶段。将 Markdown 中间件渲染为指定格式的最终交付物。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"生成 Word\"、\"生成 PPT\"、\"导出文档\"\n产出：最终交付物（markdown/docx/pptx）"
+    },
+    {
+      "id": "ideal-document-workflow/document-writing",
+      "name": "document-writing",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "phase",
+      "description": "结构化文档 P7 并行写作阶段。当需要根据大纲和任务拆分执行并行写作时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"写章节\"、\"开始写作\"\n核心功能：基于写作任务卡执行内容写作，使用 What-Why-How 模式确保内容完整。"
+    },
+    {
+      "id": "ideal-document-workflow/ideal-document-workflow",
+      "name": "ideal-document-workflow",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "orchestrator",
+      "description": "结构化文档写作编排工作流。当用户需要撰写结构化长文档（技术方案、知识库文档、汇报材料等）时使用。\n核心功能：协调各阶段 skill 完成需求分析→大纲生成→任务拆分→并行写作→配图→渲染输出。\n各阶段之间设有审核关卡，需要人工确认后方可进入下一阶段。\n本 skill 为编排器，负责阶段流转和状态管理，各阶段实现详见独立 skills。"
+    },
+    {
+      "id": "ideal-document-workflow/illustration",
+      "name": "illustration",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "phase",
+      "description": "结构化文档 P5 智能配图阶段。识别文档中的配图位置，判断图片类型，选择合适的工具生成并插入图片。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"配图\"、\"智能配图\"、\"生成图片\"\n核心功能：分析章节内容 → 判断配图类型 → 选择生成工具 → 生成并插入图片。\n图片生成工具：Mermaid 官方 CLI（流程图/时序图）、`baoyu-image-gen`（架构图/路"
+    },
+    {
+      "id": "ideal-document-workflow/outline-generation",
+      "name": "outline-generation",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "phase",
+      "description": "结构化文档 P3 大纲生成阶段。当需要生成文档大纲（1-3级标题+篇幅估算）时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"生成大纲\"、\"文档大纲\"\n产出：P2-大纲.md"
+    },
+    {
+      "id": "ideal-document-workflow/requirement-analysis",
+      "name": "requirement-analysis",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "phase",
+      "description": "结构化文档 P1 需求分析阶段。当需要解析功能需求、非功能需求、技术约束时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"需求分析\"、\"解析需求\"\n产出：P1-需求分析.md"
+    },
+    {
+      "id": "ideal-document-workflow/task-split",
+      "name": "task-split",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "phase",
+      "description": "结构化文档 P3 任务拆分阶段。当需要将大纲拆分为可并行执行的写作任务时使用。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"拆分任务\"、\"任务分配\"\n产出：P3-任务拆分.md"
+    },
+    {
+      "id": "ideal-document-workflow/writing-skills",
+      "name": "writing-skills",
+      "plugin": "ideal-document-workflow",
+      "category": "content",
+      "arity": "standalone",
+      "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment"
+    },
+    {
+      "id": "ideal-knowledge-base/build-knowledge-base-workflow",
+      "name": "build-knowledge-base-workflow",
+      "plugin": "ideal-knowledge-base",
+      "category": "knowledge",
+      "arity": "orchestrator",
+      "description": "知识库构建编排工作流。当用户需要从项目原始素材中构建结构化知识库时使用。\n触发场景：(1) 用户要求\"构建知识库\"、\"分析项目\" (2) 用户提供了项目路径希望生成知识库"
+    },
+    {
+      "id": "ideal-knowledge-base/kb-deep-analysis",
+      "name": "kb-deep-analysis",
+      "plugin": "ideal-knowledge-base",
+      "category": "knowledge",
+      "arity": "phase",
+      "description": "知识库构建 P2 深度分析阶段。从原始材料中深度提取项目知识，建立完整的认知模型。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"深度分析\"、\"分析项目\"\n产出：P2-分析报告.md"
+    },
+    {
+      "id": "ideal-knowledge-base/kb-doc-planning",
+      "name": "kb-doc-planning",
+      "plugin": "ideal-knowledge-base",
+      "category": "knowledge",
+      "arity": "phase",
+      "description": "知识库构建 P3 文档规划阶段。根据分析结果规划知识库文档结构，确定文档清单和各文档内容要点。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"文档规划\"、\"规划知识库\"\n产出：P3-文档规划.md"
+    },
+    {
+      "id": "ideal-knowledge-base/kb-doc-writing",
+      "name": "kb-doc-writing",
+      "plugin": "ideal-knowledge-base",
+      "category": "knowledge",
+      "arity": "phase",
+      "description": "知识库构建 P4 文档生成阶段。根据文档规划，并行生成知识库文档。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"生成知识库文档\"、\"生成文档\"\n产出：知识库/项目名称/*.md"
+    },
+    {
+      "id": "ideal-knowledge-base/kb-index-review",
+      "name": "kb-index-review",
+      "plugin": "ideal-knowledge-base",
+      "category": "knowledge",
+      "arity": "phase",
+      "description": "P5（索引更新与质量审查）阶段技能 - 更新分类索引和主索引，执行知识库质量审查，确保文档完整性和标准化"
+    },
+    {
+      "id": "ideal-knowledge-base/kb-material-scope",
+      "name": "kb-material-scope",
+      "plugin": "ideal-knowledge-base",
+      "category": "knowledge",
+      "arity": "phase",
+      "description": "知识库构建 P1 材料收集与范围确认阶段。扫描项目原始素材，评估材料覆盖度，识别知识缺口，确认项目分类。\n触发场景：(1) workflow 调用本 skill (2) 用户要求\"扫描材料\"、\"材料收集\"\n产出：P1-材料清单.md"
+    },
+    {
+      "id": "ideal-lab-maintainer/ideal-lab-maintainer",
+      "name": "ideal-lab-maintainer",
+      "plugin": "ideal-lab-maintainer",
+      "category": "development",
+      "arity": "utility",
+      "description": "ideal-lab monorepo 维护工具。用于：提交改动并自动生成 changeset（/maintainer commit）、新增 skill（/maintainer add-skill）、新增 plugin（/maintainer add-plugin）、发布版本（/maintainer release）、全量校验（/maintainer validate）、更新 README（/mai"
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-executor",
+      "name": "ideal-ppt-executor",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "phase",
+      "description": "Use when P8 or P10 review is completed and HTML execution phase begins. Generates standalone HTML slides with embedded SVG graphics and AI images. Triggered by ideal-ppt-workflow at P11."
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-export",
+      "name": "ideal-ppt-export",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "phase",
+      "description": "Use when P12 review is completed and export/delivery phase begins. Dual-pipeline export — HTML mode (Playwright → editable native PPTX) and Image mode (PNG → pixel-perfect image-based PPTX). Also expo"
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-image",
+      "name": "ideal-ppt-image",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "standalone",
+      "description": "Use when P8 prompt review is completed AND design-spec image_approach is \"ai-generated\". Generates AI images for slide assets. Triggered by ideal-ppt-workflow at P9 (conditional)."
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-image-executor",
+      "name": "ideal-ppt-image-executor",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "utility",
+      "description": "Use when P8 or P10 review is completed AND rendering_mode=image in flow state. Generates slide images via gpt-image-2-compatible AI image generation. Triggered by ideal-ppt-workflow at P11."
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-outline",
+      "name": "ideal-ppt-outline",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "phase",
+      "description": "Use when P3 strategy review is completed and content outline generation phase begins. Triggered by ideal-ppt-workflow at P5."
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-prompt",
+      "name": "ideal-ppt-prompt",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "phase",
+      "description": "Use when P5 outline review is completed and prompt engineering phase begins. Supports dual rendering modes — html (CSS layout prompts) and image (content-rich image generation prompts). Triggered by i"
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-requirement",
+      "name": "ideal-ppt-requirement",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "standalone",
+      "description": "Use when starting a new PPT project. Performs requirements gathering through Socratic questioning and content analysis. Triggered by ideal-ppt-workflow at P1."
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-speaker-notes",
+      "name": "ideal-ppt-speaker-notes",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "utility",
+      "description": "Use when P11 (slide execution) is completed and speaker notes generation begins. Mode-independent — generates notes from outline/prompts/strategy regardless of rendering_mode. Triggered by ideal-ppt-w"
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-strategist",
+      "name": "ideal-ppt-strategist",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "phase",
+      "description": "Use when P1 research review is completed and strategy/design specification phase needs to begin. Triggered by ideal-ppt-workflow at P3."
+    },
+    {
+      "id": "ideal-ppt-suite/ideal-ppt-workflow",
+      "name": "ideal-ppt-workflow",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "standalone",
+      "description": "Use when user asks to \"create slides\", \"make a presentation\", \"generate deck\", \"PPT\", \"幻灯片\", \"生成PPT\", \"制作PPT\", \"制作演示文稿\""
+    },
+    {
+      "id": "ideal-ppt-suite/image-to-svg",
+      "name": "image-to-svg",
+      "plugin": "ideal-ppt-suite",
+      "category": "content",
+      "arity": "utility",
+      "description": "将 AI 生成的图片（PNG/JPG/WebP）转换为结构化、ppt-master 兼容的可编辑 SVG 文件。 通过 Claude Vision 分区精读图片内容（布局、文字、形状、颜色），逐字抄录后生成 原生矢量 SVG（每个元素可独立编辑）。输出可直接送入 ppt-master 的 svg_to_pptx 管线导出 PPTX。 Convert AI-generated images into"
+    },
+    {
+      "id": "ideal-ralph/ideal-ralph",
+      "name": "ideal-ralph",
+      "plugin": "ideal-ralph",
+      "category": "development",
+      "arity": "standalone",
+      "description": "苏格拉底式任务澄清 + 持久小步迭代验证循环。适用于需要保证完成质量的独立任务。"
+    },
+    {
+      "id": "panel-review/panel-review",
+      "name": "panel-review",
+      "plugin": "panel-review",
+      "category": "development",
+      "arity": "orchestrator",
+      "description": "多维会审：自动分析上文产出，动态组建专家团队从多视角对抗性审查文档/代码/方案/PPT，输出按严重度排序的攻击面报告。支持 yolo_mode 自动模式供 workflow 编排器零交互调用。Use when user says \"审查\", \"会审\", \"挑刺\", \"review\", \"audit\", \"找问题\", \"看看有什么漏洞\", \"帮我审一下\", \"把把关\", \"红队\", \"有没有坑\"."
+    },
+    {
+      "id": "skill-builder/skill-builder",
+      "name": "skill-builder",
+      "plugin": "skill-builder",
+      "category": "development",
+      "arity": "utility",
+      "description": "Skill 全生命周期引擎。从用户需求创建新 skill，持续优化已有 SKILL.md，或从外部 skill 吸收设计精华改进目标 skill。双重评估：结构评分（7 维度，75 分）+ checklist 实测（25 分）。爬山优化 + 对抗审稿 + same-judge 判卷 + 棘轮机制。Use when user mentions \"优化skill\", \"创建skill\", \"新建ski"
+    }
+  ],
+  "edges": [
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-delivery",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-delivery"
+    },
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-dev-exec",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-dev-exec"
+    },
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-dev-plan",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-dev-plan"
+    },
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-dev-solution",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-dev-solution"
+    },
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-requirement",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-requirement"
+    },
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-test-case",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-test-case"
+    },
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-test-exec",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-test-exec"
+    },
+    {
+      "source": "ideal-dev-workflow/ideal-flow-control",
+      "target": "ideal-dev-workflow/ideal-wiki",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-flow-control mentions ideal-wiki"
+    },
+    {
+      "source": "ideal-document-workflow/ideal-document-workflow",
+      "target": "ideal-document-workflow/document-render",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-document-workflow mentions document-render"
+    },
+    {
+      "source": "ideal-document-workflow/ideal-document-workflow",
+      "target": "ideal-document-workflow/document-writing",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-document-workflow mentions document-writing"
+    },
+    {
+      "source": "ideal-document-workflow/ideal-document-workflow",
+      "target": "ideal-document-workflow/illustration",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-document-workflow mentions illustration"
+    },
+    {
+      "source": "ideal-document-workflow/ideal-document-workflow",
+      "target": "ideal-document-workflow/outline-generation",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-document-workflow mentions outline-generation"
+    },
+    {
+      "source": "ideal-document-workflow/ideal-document-workflow",
+      "target": "ideal-document-workflow/requirement-analysis",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-document-workflow mentions requirement-analysis"
+    },
+    {
+      "source": "ideal-document-workflow/ideal-document-workflow",
+      "target": "ideal-document-workflow/task-split",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-document-workflow mentions task-split"
+    },
+    {
+      "source": "ideal-document-workflow/ideal-document-workflow",
+      "target": "ideal-document-workflow/writing-skills",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "ideal-document-workflow mentions writing-skills"
+    },
+    {
+      "source": "ideal-knowledge-base/build-knowledge-base-workflow",
+      "target": "ideal-knowledge-base/kb-deep-analysis",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "build-knowledge-base-workflow mentions kb-deep-analysis"
+    },
+    {
+      "source": "ideal-knowledge-base/build-knowledge-base-workflow",
+      "target": "ideal-knowledge-base/kb-doc-planning",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "build-knowledge-base-workflow mentions kb-doc-planning"
+    },
+    {
+      "source": "ideal-knowledge-base/build-knowledge-base-workflow",
+      "target": "ideal-knowledge-base/kb-material-scope",
+      "relation": "embeds",
+      "confidence": "extracted",
+      "evidence": "build-knowledge-base-workflow mentions kb-material-scope"
+    },
+    {
+      "source": "ideal-knowledge-base/kb-material-scope",
+      "target": "ideal-knowledge-base/kb-deep-analysis",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P1 → P2 phase ordering"
+    },
+    {
+      "source": "ideal-knowledge-base/kb-deep-analysis",
+      "target": "ideal-knowledge-base/kb-doc-planning",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P2 → P3 phase ordering"
+    },
+    {
+      "source": "ideal-knowledge-base/kb-doc-planning",
+      "target": "ideal-knowledge-base/kb-doc-writing",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P3 → P4 phase ordering"
+    },
+    {
+      "source": "ideal-knowledge-base/kb-doc-writing",
+      "target": "ideal-knowledge-base/kb-index-review",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P4 → P5 phase ordering"
+    },
+    {
+      "source": "ideal-ppt-suite/ideal-ppt-strategist",
+      "target": "ideal-ppt-suite/ideal-ppt-outline",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P1 → P3 phase ordering"
+    },
+    {
+      "source": "ideal-ppt-suite/ideal-ppt-outline",
+      "target": "ideal-ppt-suite/ideal-ppt-prompt",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P3 → P5 phase ordering"
+    },
+    {
+      "source": "ideal-ppt-suite/ideal-ppt-prompt",
+      "target": "ideal-ppt-suite/ideal-ppt-executor",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P5 → P8 phase ordering"
+    },
+    {
+      "source": "ideal-ppt-suite/ideal-ppt-executor",
+      "target": "ideal-ppt-suite/ideal-ppt-export",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P8 → P12 phase ordering"
+    },
+    {
+      "source": "ideal-document-workflow/requirement-analysis",
+      "target": "ideal-document-workflow/outline-generation",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P1 → P3 phase ordering"
+    },
+    {
+      "source": "ideal-document-workflow/requirement-analysis",
+      "target": "ideal-document-workflow/task-split",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P1 → P3 phase ordering"
+    },
+    {
+      "source": "ideal-document-workflow/outline-generation",
+      "target": "ideal-document-workflow/illustration",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P3 → P5 phase ordering"
+    },
+    {
+      "source": "ideal-document-workflow/task-split",
+      "target": "ideal-document-workflow/illustration",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P3 → P5 phase ordering"
+    },
+    {
+      "source": "ideal-document-workflow/illustration",
+      "target": "ideal-document-workflow/document-render",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P5 → P6 phase ordering"
+    },
+    {
+      "source": "ideal-document-workflow/document-render",
+      "target": "ideal-document-workflow/document-writing",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P6 → P7 phase ordering"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "baoyu-image-gen/baoyu-image-gen",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-deep-research/deep-research",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-code-review",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-debugging",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/deep-research",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-delivery",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-dev-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-dev-plan",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-dev-solution",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-init",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-test-case",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-test-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-wiki",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-dev-workflow/ideal-yolo",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-document-workflow/document-render",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-document-workflow/document-writing",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-document-workflow/illustration",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-document-workflow/outline-generation",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-document-workflow/requirement-analysis",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-document-workflow/task-split",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-document-workflow/writing-skills",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-knowledge-base/kb-deep-analysis",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-knowledge-base/kb-doc-planning",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-knowledge-base/kb-doc-writing",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-knowledge-base/kb-index-review",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-knowledge-base/kb-material-scope",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-executor",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-export",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-image",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-outline",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-prompt",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-strategist",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ppt-suite/ideal-ppt-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "ideal-ralph/ideal-ralph",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-debugging",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/deep-research",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-dev-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-dev-plan",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-dev-solution",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-flow-control",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-init",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-test-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/ideal-wiki",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dify-generator/ideal-dify-generator",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/document-render",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/document-writing",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/ideal-document-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/illustration",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/outline-generation",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/requirement-analysis",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/task-split",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-document-workflow/writing-skills",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-knowledge-base/build-knowledge-base-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-knowledge-base/kb-deep-analysis",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-knowledge-base/kb-doc-planning",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-knowledge-base/kb-doc-writing",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-knowledge-base/kb-index-review",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-knowledge-base/kb-material-scope",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-lab-maintainer/ideal-lab-maintainer",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-executor",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-export",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-image",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-image-executor",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-outline",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-prompt",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-strategist",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ppt-suite/image-to-svg",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-ralph/ideal-ralph",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "panel-review/panel-review",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "skill-builder/skill-builder",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-deep-research/deep-research",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-debugging",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-dev-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-dev-plan",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-dev-solution",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-flow-control",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-init",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-test-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dev-workflow/ideal-wiki",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-dify-generator/ideal-dify-generator",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/document-render",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/document-writing",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/ideal-document-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/illustration",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/outline-generation",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/requirement-analysis",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/task-split",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-document-workflow/writing-skills",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-knowledge-base/build-knowledge-base-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-knowledge-base/kb-deep-analysis",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-knowledge-base/kb-doc-planning",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-knowledge-base/kb-doc-writing",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-knowledge-base/kb-index-review",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-knowledge-base/kb-material-scope",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-lab-maintainer/ideal-lab-maintainer",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-executor",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-export",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-image",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-image-executor",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-outline",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-prompt",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-strategist",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/ideal-ppt-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ppt-suite/image-to-svg",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-ralph/ideal-ralph",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "panel-review/panel-review",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "skill-builder/skill-builder",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "baoyu-image-gen/baoyu-image-gen",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-deep-research/deep-research",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-code-review",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-debugging",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/deep-research",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-delivery",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-dev-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-dev-plan",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-dev-solution",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-init",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-test-case",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-test-exec",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-wiki",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-dev-workflow/ideal-yolo",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-document-workflow/writing-skills",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-ppt-suite/ideal-ppt-image",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-ppt-suite/ideal-ppt-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-ppt-suite/ideal-ppt-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "ideal-ralph/ideal-ralph",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-document-workflow/illustration",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-executor",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-export",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-image",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-image-executor",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-outline",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-prompt",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-requirement",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-speaker-notes",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-strategist",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/ideal-ppt-workflow",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "baoyu-image-gen/baoyu-image-gen",
+      "target": "ideal-ppt-suite/image-to-svg",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "baoyu-image-gen provides images for illustration/PPT skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-dev-workflow/deep-research",
+      "relation": "alternative",
+      "confidence": "explicit",
+      "evidence": "Duplicated deep-research skill across plugins"
+    },
+    {
+      "source": "ideal-document-workflow/document-render",
+      "target": "ideal-document-workflow/ideal-document-workflow",
+      "relation": "produces_for",
+      "confidence": "extracted",
+      "evidence": "document-render produces output consumed by ideal-document-workflow"
+    },
+    {
+      "source": "ideal-document-workflow/illustration",
+      "target": "ideal-document-workflow/document-writing",
+      "relation": "produces_for",
+      "confidence": "extracted",
+      "evidence": "illustration produces output consumed by document-writing"
+    },
+    {
+      "source": "ideal-document-workflow/writing-skills",
+      "target": "skill-builder/skill-builder",
+      "relation": "produces_for",
+      "confidence": "extracted",
+      "evidence": "writing-skills produces output consumed by skill-builder"
+    },
+    {
+      "source": "ideal-ppt-suite/image-to-svg",
+      "target": "ideal-ppt-suite/ideal-ppt-image",
+      "relation": "produces_for",
+      "confidence": "extracted",
+      "evidence": "image-to-svg produces output consumed by ideal-ppt-image"
+    }
+  ]
+}

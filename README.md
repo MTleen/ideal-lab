@@ -82,7 +82,7 @@ claude plugin install ideal-deep-research@ideal-lab
 
 ```
 /ideal-dev-workflow:ideal-requirement    # P1 需求收集
-/ideal-ppt-suite:ideal-ppt-generator    # PPT 生成
+/ideal-ppt-suite:ideal-ppt-workflow    # PPT 生成（14 阶段流水线）
 /ideal-deep-research:deep-research       # 深度调研
 ```
 

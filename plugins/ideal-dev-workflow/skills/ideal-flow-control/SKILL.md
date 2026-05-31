@@ -82,10 +82,15 @@ YOLO 自动循环：
        → 更新 flow state：X > current_phase 时才推进 current_phase → X，状态设为 completed/approved
        → 立即回到循环起点（步骤 1）
   5. 如果 X 是评审阶段（P2/P4/P6/P8/P10/P12/P14）：
-       → 调用 ideal-yolo 执行评审
+       → 调用 panel-review（yolo_mode: true, review_target: {产物文件路径}, product_type: {见下方映射表}, phase: X）
        → 等待评审结果
-       → 如果 "通过" → 更新为 approved（current_phase 不回退）→ 立即回到循环起点
-       → 如果 "熔断" → 输出熔断报告 → 停止循环，等待人工介入
+       → 解析报告末尾的 JSON 判定块
+       → 如果 verdict=="pass" → 更新为 approved（current_phase 不回退）→ 立即回到循环起点
+       → 如果 verdict=="fail" 且同一阶段连续失败次数 < 3：
+           → 根据 fatal 发现调用对应 Phase Skill 修复产物
+           → 重新调用 panel-review（Phase 5 重审语义）
+           → 重试计数 +1
+       → 如果 verdict=="fail" 且连续失败 >= 3 次 → 输出熔断报告 → 停止循环，等待人工介入
   6. 如果 X 是交付阶段（P15）：
        → 调用 ideal-delivery
        → 等待完成
@@ -103,7 +108,7 @@ YOLO 自动循环：
 **终止条件**（满足任一即停止）：
 - `status: 已完成` 或 `status: 已交付`
 - P15 阶段已完成（current_phase = P15 且评审通过）
-- `ideal-yolo` 返回熔断信号 → 停止循环，报告未解决问题
+- `panel-review` 返回 fail 且连续 3 轮失败 → 停止循环，报告未解决问题
 
 **关键原则**：YOLO 模式下，主智能体在每次阶段完成后**立即回到循环起点**，不输出"等待用户确认"之类的提示，不停下来。循环直到终止条件满足。
 
@@ -116,6 +121,22 @@ YOLO 自动循环：
 | **产物阶段** | P1, P3, P5, P7, P9, P11, P13 | 调用 Phase Skill，等待完成，更新 flow state |
 | **评审阶段** | P2, P4, P6, P8, P10, P12, P14 | YOLO/人工评审处理 |
 | **交付阶段** | P15 | 触发 ideal-delivery |
+
+---
+
+## 评审阶段 → product_type 映射
+
+YOLO 模式下调用 panel-review 时，需传递 `product_type` 参数以指导攻击面选择：
+
+| 评审阶段 | 对应产物阶段 | product_type |
+|----------|-------------|-------------|
+| P2 | P1 | `requirements_doc` |
+| P4 | P3 | `solution_doc` |
+| P6 | P5 | `dev_plan` |
+| P8 | P7 | `test_cases` |
+| P10 | P9 | `code` |
+| P12 | P11 | `test_results` |
+| P14 | P13 | `wiki` |
 
 ---
 
@@ -313,17 +334,17 @@ updated_at: {更新时间}
 | 当前阶段 | 前置条件 | 人工模式推进动作 | YOLO 模式推进动作 |
 |----------|----------|------------------|------------------|
 | P1 → P2 | P1 completed | 自动 | 自动 |
-| P2 → P3 | P2 approved | 展示摘要 → 询问 YOLO → 人工确认"通过" | 自动调用 ideal-yolo |
+| P2 → P3 | P2 approved | 展示摘要 → 询问 YOLO → 人工确认"通过" | 自动调用 panel-review |
 | P3 → P4 | P3 completed | 自动 | 自动 |
-| P4 → P5 | P4 approved | 人工说"通过" | 自动调用 ideal-yolo |
+| P4 → P5 | P4 approved | 人工说"通过" | 自动调用 panel-review |
 | P5 → P6 | P5 completed | 自动 | 自动 |
-| P6 → P7 | P6 approved | 人工说"通过" | 自动调用 ideal-yolo |
+| P6 → P7 | P6 approved | 人工说"通过" | 自动调用 panel-review |
 | P7 → P8 | P7 completed | 自动 | 自动 |
-| P8 → P9 | P8 approved | 人工说"通过" | 自动调用 ideal-yolo |
+| P8 → P9 | P8 approved | 人工说"通过" | 自动调用 panel-review |
 | P9 → P10 | P9 completed | 自动 | 自动 |
-| P10 → P11 | P10 approved | 人工说"通过" | 自动调用 ideal-yolo |
+| P10 → P11 | P10 approved | 人工说"通过" | 自动调用 panel-review |
 | P11 → P12 | P11 completed | 自动 | 自动 |
-| P12 → P13 | P12 approved | 人工说"通过" | 自动调用 ideal-yolo |
+| P12 → P13 | P12 approved | 人工说"通过" | 自动调用 panel-review |
 | P13 → P14 | P13 completed | 自动 | 自动 |
 | P14 → P15 | P14 approved | 自动 | 自动，触发 ideal-delivery |
 
@@ -336,9 +357,9 @@ updated_at: {更新时间}
 YOLO 模式下，主智能体永不停止，直到流程完成或熔断：
 
 1. **产物阶段完成 → 自动推进**：调用对应 Phase Skill，完成后立即更新 flow state 并进入下一阶段
-2. **评审阶段**：自动调用 `ideal-yolo` 执行评审
-   - `ideal-yolo` 返回"通过"→ 更新为 approved，立即推进到下一阶段
-   - `ideal-yolo` 返回"熔断"→ 输出熔断报告，停止循环，等待人工介入
+2. **评审阶段**：自动调用 `panel-review` 执行评审
+   - `panel-review` 返回 verdict=="pass" → 更新为 approved，立即推进到下一阶段
+   - `panel-review` 返回 verdict=="fail" 且连续 3 轮失败 → 输出熔断报告，停止循环，等待人工介入
 3. **P15 交付阶段**：调用 `ideal-delivery`，完成后更新状态为"已完成"，输出流程完成摘要
 
 **熔断处理**：当评审返回熔断信号时，主智能体停止循环，输出完整的熔断报告（包括未解决的问题列表），等待人工处理。人工介入后，可选择：
@@ -371,7 +392,7 @@ YOLO 模式下，主智能体永不停止，直到流程完成或熔断：
   4. [其他反馈] — 提供具体修改意见
 ```
 
-**切换到 YOLO 模式**：修改流程状态.md 中 `yolo_mode: false` → `yolo_mode: true`，后续所有评审阶段自动走 ideal-yolo，无需再次触发。
+**切换到 YOLO 模式**：修改流程状态.md 中 `yolo_mode: false` → `yolo_mode: true`，后续所有评审阶段自动走 panel-review，无需再次触发。
 
 ---
 
@@ -411,5 +432,5 @@ YOLO 模式下，主智能体永不停止，直到流程完成或熔断：
 | Worktree 创建失败（分支已存在/权限不足） | 输出具体错误原因，让用户选择：手动创建 / 切换已有 worktree / 跳过 worktree 在当前位置执行 |
 | Worktree 目录不存在（被手动删除） | 重新创建 worktree 或提示用户手动恢复 |
 | YOLO 循环内同一阶段连续 3 次重试仍失败 | 标记该阶段为 blocked，输出熔断报告，停止循环 |
-| 评审阶段 ideal-yolo 不可用 | 退化为人工评审模式，展示产物摘要并等待用户确认 |
+| 评审阶段 panel-review 不可用 | 退化为人工评审模式，展示产物摘要并等待用户确认 |
 | 产物文件写入后为空 | 不推进 current_phase，标记阶段为 revision，提示 Phase Skill 重新执行 |

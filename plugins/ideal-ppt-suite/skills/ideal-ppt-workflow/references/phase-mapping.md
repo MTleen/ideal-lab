@@ -100,7 +100,7 @@ slide-deck/{topic-slug}/
 | **Prerequisites** | P3 completed |
 | **BLOCKING** | **是** |
 
-**说明**：**P4 是唯一的硬性 BLOCKING 评审关卡。** 用户必须明确批准策略方向后才能进入 P5。未经 P4 批准，禁止进入 P5-P13 任何阶段。YOLO 模式下 P4 仍需通过 `ideal-yolo` 评审或用户明确批准。
+**说明**：**P4 是唯一的硬性 BLOCKING 评审关卡。** 用户必须明确批准策略方向后才能进入 P5。未经 P4 批准，禁止进入 P5-P13 任何阶段。YOLO 模式下 P4 仍需通过 `panel-review` 评审或用户明确批准。
 
 ---
 
