@@ -1,0 +1,2 @@
+timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode	pass_rate
+2026-05-31T12:55	003a810	ideal-graph-orchestrator	70.2	81.1	keep	edge_cases	Added 11-row exception table with inline guards	dry_run	0.86
