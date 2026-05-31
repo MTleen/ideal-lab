@@ -46,11 +46,6 @@ graph TD
     style ideal_document_workflow fill:none,stroke:#14b8a6
   end
 
-  subgraph "ideal-graph-orchestrator"
-    ideal_graph_orchestrator_ideal_graph_orchestrator["ideal-graph-orchestrator ⚙"]
-    style ideal_graph_orchestrator fill:none,stroke:#999999
-  end
-
   subgraph "ideal-knowledge-base"
     ideal_knowledge_base_build_knowledge_base_workflow["build-knowledge-base-workflow ⚙"]
     ideal_knowledge_base_kb_deep_analysis["kb-deep-analysis ◆"]
@@ -84,6 +79,11 @@ graph TD
   subgraph "ideal-ralph"
     ideal_ralph_ideal_ralph["ideal-ralph"]
     style ideal_ralph fill:none,stroke:#84cc16
+  end
+
+  subgraph "ideal-workflow-builder"
+    ideal_workflow_builder_ideal_workflow_builder["ideal-workflow-builder"]
+    style ideal_workflow_builder fill:none,stroke:#999999
   end
 
   subgraph "panel-review"
@@ -182,7 +182,6 @@ graph TD
   ideal_deep_research_deep_research -.->|enhances| ideal_document_workflow_requirement_analysis
   ideal_deep_research_deep_research -.->|enhances| ideal_document_workflow_task_split
   ideal_deep_research_deep_research -.->|enhances| ideal_document_workflow_writing_skills
-  ideal_deep_research_deep_research -.->|enhances| ideal_graph_orchestrator_ideal_graph_orchestrator
   ideal_deep_research_deep_research -.->|enhances| ideal_knowledge_base_build_knowledge_base_workflow
   ideal_deep_research_deep_research -.->|enhances| ideal_knowledge_base_kb_deep_analysis
   ideal_deep_research_deep_research -.->|enhances| ideal_knowledge_base_kb_doc_planning
@@ -201,6 +200,7 @@ graph TD
   ideal_deep_research_deep_research -.->|enhances| ideal_ppt_suite_ideal_ppt_workflow
   ideal_deep_research_deep_research -.->|enhances| ideal_ppt_suite_image_to_svg
   ideal_deep_research_deep_research -.->|enhances| ideal_ralph_ideal_ralph
+  ideal_deep_research_deep_research -.->|enhances| ideal_workflow_builder_ideal_workflow_builder
   ideal_deep_research_deep_research -.->|enhances| panel_review_panel_review
   ideal_deep_research_deep_research -.->|enhances| skill_builder_skill_builder
   ideal_dev_workflow_deep_research -.->|enhances| ideal_deep_research_deep_research
@@ -222,7 +222,6 @@ graph TD
   ideal_dev_workflow_deep_research -.->|enhances| ideal_document_workflow_requirement_analysis
   ideal_dev_workflow_deep_research -.->|enhances| ideal_document_workflow_task_split
   ideal_dev_workflow_deep_research -.->|enhances| ideal_document_workflow_writing_skills
-  ideal_dev_workflow_deep_research -.->|enhances| ideal_graph_orchestrator_ideal_graph_orchestrator
   ideal_dev_workflow_deep_research -.->|enhances| ideal_knowledge_base_build_knowledge_base_workflow
   ideal_dev_workflow_deep_research -.->|enhances| ideal_knowledge_base_kb_deep_analysis
   ideal_dev_workflow_deep_research -.->|enhances| ideal_knowledge_base_kb_doc_planning
@@ -241,6 +240,7 @@ graph TD
   ideal_dev_workflow_deep_research -.->|enhances| ideal_ppt_suite_ideal_ppt_workflow
   ideal_dev_workflow_deep_research -.->|enhances| ideal_ppt_suite_image_to_svg
   ideal_dev_workflow_deep_research -.->|enhances| ideal_ralph_ideal_ralph
+  ideal_dev_workflow_deep_research -.->|enhances| ideal_workflow_builder_ideal_workflow_builder
   ideal_dev_workflow_deep_research -.->|enhances| panel_review_panel_review
   ideal_dev_workflow_deep_research -.->|enhances| skill_builder_skill_builder
   skill_builder_skill_builder -.->|enhances| baoyu_image_gen_baoyu_image_gen

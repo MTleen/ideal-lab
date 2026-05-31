@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "generated_at": "2026-05-31T12:48:14.733392",
+    "generated_at": "2026-05-31T14:14:49.708643",
     "total_skills": 46,
     "total_edges": 183,
     "arity_distribution": {
       "standalone": 19,
-      "orchestrator": 5,
-      "utility": 6,
+      "orchestrator": 4,
+      "utility": 7,
       "phase": 16
     },
     "relation_distribution": {
@@ -212,14 +212,6 @@
       "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment"
     },
     {
-      "id": "ideal-graph-orchestrator/ideal-graph-orchestrator",
-      "name": "ideal-graph-orchestrator",
-      "plugin": "ideal-graph-orchestrator",
-      "category": "development",
-      "arity": "orchestrator",
-      "description": "通用 Skill Graph 编排器。双模式：(1) Generate — 自然语言描述需求，自动匹配 skills-graph.json 中的已有 skill、检测缺口、编译 workflow.yml；(2) Execute — 读取 workflow.yml，沿图路径顺序执行，处理已有 skill 复用和新建 skill scaffold。Use when user wants to comp"
-    },
-    {
       "id": "ideal-knowledge-base/build-knowledge-base-workflow",
       "name": "build-knowledge-base-workflow",
       "plugin": "ideal-knowledge-base",
@@ -370,6 +362,14 @@
       "category": "development",
       "arity": "standalone",
       "description": "苏格拉底式任务澄清 + 持久小步迭代验证循环。适用于需要保证完成质量的独立任务。"
+    },
+    {
+      "id": "ideal-workflow-builder/ideal-workflow-builder",
+      "name": "ideal-workflow-builder",
+      "plugin": "ideal-workflow-builder",
+      "category": "development",
+      "arity": "utility",
+      "description": "自然语言 → 自动编译工作流：解析意图 → 匹配已有 skill（skills-graph.json）→ 检测缺口 → scaffold 新 skill → 沿路径执行。Use when: 构造工作流、搭建流水线、串联 skill、组合流程、workflow builder、pipeline compose."
     },
     {
       "id": "panel-review/panel-review",
@@ -993,13 +993,6 @@
     },
     {
       "source": "ideal-deep-research/deep-research",
-      "target": "ideal-graph-orchestrator/ideal-graph-orchestrator",
-      "relation": "enhancement",
-      "confidence": "extracted",
-      "evidence": "deep-research provides research for analysis skills"
-    },
-    {
-      "source": "ideal-deep-research/deep-research",
       "target": "ideal-knowledge-base/build-knowledge-base-workflow",
       "relation": "enhancement",
       "confidence": "extracted",
@@ -1120,6 +1113,13 @@
     {
       "source": "ideal-deep-research/deep-research",
       "target": "ideal-ralph/ideal-ralph",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "ideal-workflow-builder/ideal-workflow-builder",
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "deep-research provides research for analysis skills"
@@ -1273,13 +1273,6 @@
     },
     {
       "source": "ideal-dev-workflow/deep-research",
-      "target": "ideal-graph-orchestrator/ideal-graph-orchestrator",
-      "relation": "enhancement",
-      "confidence": "extracted",
-      "evidence": "deep-research provides research for analysis skills"
-    },
-    {
-      "source": "ideal-dev-workflow/deep-research",
       "target": "ideal-knowledge-base/build-knowledge-base-workflow",
       "relation": "enhancement",
       "confidence": "extracted",
@@ -1400,6 +1393,13 @@
     {
       "source": "ideal-dev-workflow/deep-research",
       "target": "ideal-ralph/ideal-ralph",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "ideal-workflow-builder/ideal-workflow-builder",
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "deep-research provides research for analysis skills"

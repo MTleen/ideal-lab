@@ -1,6 +1,6 @@
 ---
-name: ideal-graph-orchestrator
-description: "通用 Skill Graph 编排器。双模式：(1) Generate — 自然语言描述需求，自动匹配 skills-graph.json 中的已有 skill、检测缺口、编译 workflow.yml；(2) Execute — 读取 workflow.yml，沿图路径顺序执行，处理已有 skill 复用和新建 skill scaffold。Use when user wants to compose skills into a new workflow."
+name: ideal-workflow-builder
+description: "自然语言 → 自动编译工作流：解析意图 → 匹配已有 skill（skills-graph.json）→ 检测缺口 → scaffold 新 skill → 沿路径执行。Use when: 构造工作流、搭建流水线、串联 skill、组合流程、workflow builder、pipeline compose."
 io:
   inputs:
     - name: user_intent
@@ -13,7 +13,7 @@ io:
       type: artifacts
 ---
 
-# ideal-graph-orchestrator（通用 Skill Graph 编排器）
+# ideal-workflow-builder（工作流构造器）
 
 ## 核心能力
 

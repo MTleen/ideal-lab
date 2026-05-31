@@ -86,11 +86,11 @@
       "keywords": ["review", "panel", "adversarial", "audit", "team", "expert"]
     },
     {
-      "name": "ideal-graph-orchestrator",
-      "source": "./plugins/ideal-graph-orchestrator",
-      "description": "通用 Skill Graph 编排器 — 自然语言描述需求 → 自动匹配 skills-graph.json 已有 skill → 检测缺口自动 scaffold 新 skill → 编译 workflow.yml → 执行跨 plugin skill 路径",
+      "name": "ideal-workflow-builder",
+      "source": "./plugins/ideal-workflow-builder",
+      "description": "自然语言 → 自动编译工作流：匹配已有 skill → 检测缺口 → scaffold 新 skill → 执行跨 plugin 路径",
       "category": "development",
-      "keywords": ["orchestrator", "graph", "workflow", "compose", "compile"]
+      "keywords": ["workflow", "builder", "compose", "pipeline", "orchestrator"]
     }
   ]
 }

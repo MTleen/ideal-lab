@@ -1,6 +1,6 @@
 # Skills Graph Statistics
 
-Generated: 2026-05-31T12:48:14.733392
+Generated: 2026-05-31T14:14:49.708643
 
 ## Overview
 
@@ -16,8 +16,8 @@ Generated: 2026-05-31T12:48:14.733392
 |-------|-------|
 | standalone | 19 |
 | phase | 16 |
-| utility | 6 |
-| orchestrator | 5 |
+| utility | 7 |
+| orchestrator | 4 |
 
 ## Edge Type Distribution
 
@@ -40,9 +40,9 @@ Generated: 2026-05-31T12:48:14.733392
 | baoyu-image-gen | 1 |
 | ideal-deep-research | 1 |
 | ideal-dify-generator | 1 |
-| ideal-graph-orchestrator | 1 |
 | ideal-lab-maintainer | 1 |
 | ideal-ralph | 1 |
+| ideal-workflow-builder | 1 |
 | panel-review | 1 |
 | skill-builder | 1 |
 

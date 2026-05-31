@@ -1,8 +1,0 @@
-{
-  "name": "ideal-graph-orchestrator",
-  "version": "1.0.0",
-  "description": "通用 Skill Graph 编排器 — 自然语言 → 自动匹配 skills-graph.json → 编译 workflow.yml → 执行跨 plugin skill 路径",
-  "author": { "name": "MTleen" },
-  "skills": "./skills",
-  "keywords": ["orchestrator", "graph", "workflow", "compose"]
-}

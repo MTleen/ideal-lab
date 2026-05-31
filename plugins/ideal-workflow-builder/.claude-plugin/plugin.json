@@ -1,0 +1,8 @@
+{
+  "name": "ideal-workflow-builder",
+  "version": "1.0.0",
+  "description": "自然语言 → 自动编译 workflow：匹配已有 skill + 检测缺口 + scaffold 新 skill → 执行跨 plugin 路径",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["workflow", "builder", "compose", "pipeline", "orchestrator"]
+}
