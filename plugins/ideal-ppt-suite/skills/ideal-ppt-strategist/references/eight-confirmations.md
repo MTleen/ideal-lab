@@ -6,10 +6,25 @@
 
 ## 总则
 
-1. **打包呈现**：八大确认必须一次性呈现给用户，不可逐条询问
+1. **分阶段路由呈现**：八大确认按依赖关系分 4 阶段呈现，**不可越阶段**
+   - 阶段 1（基础 3 问）：a 画幅 + b 页数 + c 受众与目的 — 一次性呈现
+   - 阶段 2（路由点）：d 美业方式 — **单独询问，是后续问题的路由开关**
+   - 阶段 3（风格 4 问）：e 配色 + f 图标 + g 字体 — 一次性呈现
+   - 阶段 4（条件问）：h 图片形式 — **仅在 d=html-mode 时才问，d=image-mode 时跳过**
 2. **推荐优先**：每项必须附带基于 research.md 的推荐值
 3. **用户修改**：用户可接受全部推荐、部分修改或全部推翻
 4. **确认闭环**：用户确认后生成摘要表格，再次确认后进入生成阶段
+5. **阶段间允许简短澄清**：进入下一阶段前可基于上一阶段答案做 1-2 个澄清追问（例如 d 选了 image-mode 后问"是否提供风格参考图"）
+
+### 路由示例
+
+```
+阶段 1 → 阶段 2(单独) → 阶段 3(批量)
+                   ↓
+              d = image-mode？
+                   ├─ 是 → 跳过阶段 4，直接生成 design-spec
+                   └─ 否 → 继续阶段 4(h 图片形式)
+```
 
 ---
 
@@ -141,9 +156,20 @@
 
 ---
 
-## 确认 d: 风格目标 (Style Objective)
+## 确认 d: 美业方式 + 风格目标 (Render Mode + Style)
+
+> **⚠️ 路由点**：本项单独询问，是阶段 4 (h 图片形式) 是否触发的开关。
 
 ### 呈现信息
+
+#### 第一步：美业方式（先问这个）
+
+| 模式 | 说明 | 每页 PPT 的本质 | 后续 |
+|------|------|----------------|------|
+| `image-mode` | 每页由 AI 生成一张完整大图，图就是页 | 图片即页面 | **跳过 h**，直接进入设计 |
+| `html-mode` | 每页用 HTML 排版（SVG/占位符/排版），图只是页内元素 | 排版即页面 | **继续问 h** |
+
+#### 第二步：风格目标（基于美业方式推荐）
 
 只提供两种预设风格：
 
@@ -166,15 +192,25 @@
 
 ### 推荐逻辑
 
-1. 从 research.md 提取内容类型和使用场景
-2. 按决策树选择 scientific 或 china-telecom
-3. 结合受众画像调整密度（dense / ultra-dense）
-4. 推荐 1 个主预设，说明为什么不是另一个预设
-5. 若有参考图，记录参考图用途和禁止复制项
+1. **美业方式推荐**：
+   - 内容以视觉/图为主（产品发布、品牌宣传、故事叙述）→ `image-mode`
+   - 内容以数据/方案/结构为主（论文、方案汇报、培训、战略）→ `html-mode`
+2. 从 research.md 提取内容类型和使用场景
+3. 按决策树选择 scientific 或 china-telecom
+4. 结合受众画像调整密度（dense / ultra-dense）
+5. 推荐 1 个主预设，说明为什么不是另一个预设
+6. 若有参考图，记录参考图用途和禁止复制项
+
+### image-mode 下的特殊处理
+
+- 每页 = 一张 AI 大图，无需询问"图片形式"（h 跳过）
+- **配色 e 和字体 g 仍正常询问**，其值将注入每页 AI 图像的 prompt 作为视觉约束（色彩基调、文字风格留白区、字体关键词等）
+- **图标 f 仍需问**（用于页内可叠加的小标签、章节标识），但 image-mode 下简化为 Binary 选择（Built-in Library / None），无需展开 AI-Generated / Emoji 选项
 
 ### 默认值
 
-**电信高信息密度风格 (china-telecom)**
+**美业方式：`html-mode`**
+**风格：电信高信息密度风格 (china-telecom)**
 
 四维参数：`clean + professional + geometric + ultra-dense`
 
@@ -319,7 +355,11 @@ Caption: 10-12px (0.56x-0.67x)
 
 ---
 
-## 确认 h: 图片使用 (Image Usage)
+## 确认 h: 图片使用 (Image Usage) — 仅 html-mode
+
+> **⚠️ 条件性确认**：仅当阶段 2 的 d = `html-mode` 时才询问本项。
+> - d = `image-mode` → 每页即一张图，无"图片形式"概念，**直接跳过本项**
+> - d = `html-mode` → HTML 排版中可能嵌入图片元素，按下表选
 
 ### 呈现信息
 
@@ -333,28 +373,32 @@ Caption: 10-12px (0.56x-0.67x)
 ### 决策树
 
 ```
-内容是否需要配图？
-├─ 不需要（纯数据/文字为主）→ None
-├─ 需要 ↓
-│   用户是否有现成素材？
-│   ├─ 有 → User-provided（询问素材路径）
-│   └─ 无 ↓
-│       是否需要高质量定制配图？
-│       ├─ 是 → AI-generated
-│       └─ 否 → Placeholders
-└─ 不确定 → Placeholders（灵活）
+d 是什么模式？
+├─ image-mode → 【跳过本项，不询问】
+└─ html-mode ↓
+
+    内容是否需要配图？
+    ├─ 不需要（纯数据/文字为主）→ None
+    └─ 需要 ↓
+        用户是否有现成素材？
+        ├─ 有 → User-provided（询问素材路径）
+        └─ 无 ↓
+            是否需要高质量定制配图？
+            ├─ 是 → AI-generated
+            └─ 否 → Placeholders
 ```
 
 ### 推荐逻辑
 
-1. 分析 research.md 中的内容类型
-2. 数据密集型 → 推荐 None 或最少图片
-3. 品牌推广型 → 推荐 User-provided 或 AI-generated
-4. 通用型 → 推荐 Placeholders
+1. **先判断 d**：d = image-mode 时**不要问这一题**（这是修复后的强制规则）
+2. 仅在 d = html-mode 下：
+   - 数据密集型 → 推荐 None 或最少图片
+   - 品牌推广型 → 推荐 User-provided 或 AI-generated
+   - 通用型 → 推荐 Placeholders
 
 ### 默认值
 
-**Placeholders**
+**Placeholders**（仅在 html-mode 下生效）
 
 ---
 
@@ -370,11 +414,13 @@ Caption: 10-12px (0.56x-0.67x)
 | a | 画幅格式 | PPT 16:9 | PPT 16:9 | ✅ 采纳推荐 |
 | b | 页数范围 | 10-12 页 | 8-12 页 | ⚡ 用户调整 |
 | c | 受众与目的 | 高管/战略决策 | 从业者/数据分析 | ⚡ 用户调整 |
-| d | 风格目标 | china-telecom | china-telecom | ✅ 采纳推荐 |
+| d | 美业方式 + 风格 | html-mode + china-telecom | html-mode + china-telecom | ✅ 采纳推荐 |
 | e | 配色方案 | 电信红蓝体系 | 电信红 #C41E24 + 科技蓝 #005BAC | ⚡ 用户调整 |
 | f | 图标使用 | Built-in Library | Built-in Library | ✅ 采纳推荐 |
 | g | 字体方案 | MiSans + Liter | MiSans + Liter | ✅ 采纳推荐 |
-| h | 图片使用 | AI-generated | Placeholders | ⚡ 用户调整 |
+| h | 图片使用 | (image-mode 跳过) / Placeholders | Placeholders | ⏭️ 跳过 / ⚡ 调整 |
 ```
+
+> **说明**：h 行的"用户选择"列若 d = image-mode 填 `(image-mode 跳过)`，状态列填 `⏭️ 跳过`；若 d = html-mode 则正常填值。
 
 确认无误后，自动生成 `design-spec.md`。

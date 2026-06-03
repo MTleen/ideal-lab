@@ -60,6 +60,7 @@
 
 | 维度 | 选择 | 说明 |
 |------|------|------|
+| 渲染模式 (Render Mode) | {{render_mode}} | image-mode: 每页 AI 大图 / html-mode: 每页 HTML 排版 |
 | 预设风格 | {{preset_name}} | {{preset_description}} |
 | Texture 质感 | {{texture}} | {{texture_description}} |
 | Mood 氛围 | {{mood}} | {{mood_description}} |
@@ -245,19 +246,36 @@ background: linear-gradient(180deg, {{aux_grad_start}} 0%, {{aux_grad_end}} 100%
 
 ## VIII. 图片资源列表 (Image Resource List)
 
-### 图片需求清单
+> **根据 d 美业方式渲染本节**：
+> - `image-mode`：每页 = 一张 AI 大图，本节按"逐页 prompt 清单"展开
+> - `html-mode`：页内可能含图片元素，本节按"页内图片资源表"展开
+
+### 8A. image-mode：逐页 AI 图像 Prompt 清单
+
+| 序号 | 所在页 | 主题 | 完整 Prompt | 负向约束 |
+|------|--------|------|-------------|----------|
+| 1 | {{page_num}} | {{page_topic}} | {{full_prompt}} | {{negative_prompt}} |
+| 2 | ... | ... | ... | ... |
+
+**image-mode 特殊规则**：
+- 每一行 = 一页 PPT
+- Prompt 必须包含：画幅、风格、密度、文本留白区、关键视觉元素
+- 负向约束必须包含：禁止图标替代内容、禁止占位符、禁止数据图表
+- 文本内容（如有）由另一通道注入 prompt，AI 图像仅生成背景与视觉
+
+### 8B. html-mode：页内图片资源表
 
 | 序号 | 所在页 | 尺寸 | 类型 | 来源 | 描述/Prompt |
 |------|--------|------|------|------|-------------|
 | 1 | {{page_num}} | {{img_size}} | {{img_type}} | {{source}} | {{description}} |
 | 2 | ... | ... | ... | ... | ... |
 
-### 图片处理规则
+### 图片处理规则（两种模式通用）
 
 - 统一圆角：{{img_border_radius}}px
 - 遮罩处理：按风格需要
 - 滤镜：按风格预设应用
-- 优先使用 SVG 矢量图形
+- 优先使用 SVG 矢量图形（html-mode 下）
 
 ---
 

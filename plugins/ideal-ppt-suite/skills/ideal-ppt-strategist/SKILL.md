@@ -36,11 +36,21 @@ description: Use when P1 research review is completed and strategy/design specif
    - 用户偏好（如有）
 2. 基于研究成果，生成初步策略推荐
 
-### Phase 2: 八大确认 (Eight Confirmations)
+### Phase 2: 八大确认 (Eight Confirmations) — 分阶段路由呈现
 
-**关键原则：八大确认必须一次性打包呈现给用户，等待用户整体确认后再进入生成阶段。**
+**关键原则：八大确认按依赖关系分 4 阶段呈现，不可越阶段。** 详细协议见 `references/eight-confirmations.md`。
 
-向用户呈现以下 8 项确认，每项附基于研究成果的推荐值：
+| 阶段 | 包含项 | 呈现方式 |
+|------|--------|----------|
+| 阶段 1 | a 画幅 + b 页数 + c 受众与目的 | 一次性呈现 |
+| 阶段 2 | **d 美业方式 + 风格** | **单独询问（路由开关）** |
+| 阶段 3 | e 配色 + f 图标 + g 字体 | 一次性呈现 |
+| 阶段 4 | **h 图片使用** | **仅 d=html-mode 时才问，d=image-mode 时跳过** |
+
+**核心约束**：
+- d 不可与 e/f/g 批量问，必须在阶段 2 单独出现
+- d=image-mode 时 h 严格不出现（每页即一张图，无"图片形式"概念）
+- d=html-mode 时 h 正常出现，按 None/User-provided/AI-generated/Placeholders 四选一
 
 #### a. 画幅格式 (Canvas Format)
 
@@ -72,7 +82,22 @@ description: Use when P1 research review is completed and strategy/design specif
 - **演示目的**：教育传授 / 方案汇报 / 数据分析 / 产品发布 / 战略决策 / 培训 / 说服
 - **认知负荷等级**：低（需引导） / 中（可自主） / 高（深度分析）
 
-#### d. 风格目标 (Style Objective)
+#### d. 美业方式 + 风格目标 (Render Mode + Style) — ⚠️ 路由点
+
+> **本项单独询问，是阶段 4 (h) 是否触发的开关。**
+
+**第一步：美业方式**
+
+| 模式 | 说明 | 后续 |
+|------|------|------|
+| `image-mode` | 每页由 AI 生成一张完整大图，图就是页 | **跳过 h** |
+| `html-mode` | 每页用 HTML 排版（SVG/占位符/排版），图只是页内元素 | **继续问 h** |
+
+**美业方式推荐**：
+- 内容以视觉/图为主（产品发布、品牌宣传、故事叙述）→ `image-mode`
+- 内容以数据/方案/结构为主（论文、方案汇报、培训、战略）→ `html-mode`
+
+**第二步：风格目标**
 
 只提供两种长期预设风格（参见 `ideal-ppt-prompt/references/dimensions/presets.md`）：
 
@@ -135,7 +160,9 @@ description: Use when P1 research review is completed and strategy/design specif
 
 附字号层级体系（基于 24px 或 18px 基准）。
 
-#### h. 图片使用 (Image Usage)
+#### h. 图片使用 (Image Usage) — 仅 html-mode
+
+> **⚠️ 条件性确认**：仅 d=html-mode 时才询问。d=image-mode 时直接跳过本项（每页即一张图，无"图片形式"概念）。
 
 | 选项 | 说明 |
 |------|------|
@@ -143,6 +170,8 @@ description: Use when P1 research review is completed and strategy/design specif
 | User-provided | 用户提供图片，需提供路径 |
 | AI-generated | AI 生成配图 |
 | Placeholders | 占位图，后续替换 |
+
+**推荐**：数据密集型 → None；品牌推广型 → User-provided 或 AI-generated；通用型 → Placeholders。
 
 ---
 
@@ -216,15 +245,40 @@ XII.  设计检查清单 (Design Checklist)
 用户已完成 P1 研究，主题为"2026年Q1销售业绩汇报"
 → 读取 research.md
 → 解读：内部汇报、数据驱动、面向管理层
-→ 打包呈现八大确认：
+
+【阶段 1：基础 3 问，一次性】
+→ 打包呈现 a 画幅 + b 页数 + c 受众
   a. 画幅：推荐 PPT 16:9（内部会议投影）
   b. 页数：8-12页（4个分析维度 + 开结尾）
   c. 受众：管理层 / 数据分析目的
-  d. 风格：推荐 `china-telecom`（企业高信息密度汇报）
+→ 用户确认
+
+【阶段 2：路由点，单独问】
+→ 单独问 d 美业方式
+  d. 美业方式 + 风格：推荐 html-mode + china-telecom（数据方案型，排版优于大图）
+→ 用户选 html-mode
+
+【阶段 3：风格 3 问，一次性】
+→ 打包呈现 e + f + g
   e. 配色：电信红 #C41E24 + 科技蓝 #005BAC + 深灰蓝 #25364D
   f. 图标：Built-in Library
   g. 字体：MiSans + Liter
+→ 用户确认
+
+【阶段 4：条件 h，因 d=html-mode 触发】
+→ 问 h 图片使用
   h. 图片：None（数据为主）
 → 用户确认
+
 → 生成 design-spec.md
+```
+
+**对比示例 — 选了 image-mode**：
+
+```
+【阶段 1】a + b + c（一次性）
+【阶段 2】d：用户选 image-mode
+【阶段 3】e + f + g（一次性）
+【阶段 4】⏭️ 跳过 h（image-mode 下每页即图，无图片形式问题）
+→ 直接生成 design-spec.md
 ```
