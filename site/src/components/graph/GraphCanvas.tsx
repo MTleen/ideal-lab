@@ -125,10 +125,10 @@ export default function GraphCanvas({
     });
     fg.d3ReheatSimulation();
 
-    fg.d3Force("charge")?.strength(-260);
-    fg.d3Force("link")?.distance((l: any) => (l.relation === "enhancement" ? 40 : 70));
-    fg.d3Force("center")?.strength(0.08);
-    fg.d3Force("collide", (window as any).d3?.forceCollide?.(18));
+    fg.d3Force("charge")?.strength(-380);
+    fg.d3Force("link")?.distance((l: any) => (l.relation === "enhancement" ? 40 : 80));
+    fg.d3Force("center")?.strength(0.05);
+    fg.d3Force("collide", (window as any).d3?.forceCollide?.(28));
   }, [data, size.w, size.h]);
 
   /* Node radius from in-degree. Large enough to hold a short label inside. */
