@@ -29,10 +29,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Render graph fallback SVG (best-effort)
+        continue-on-error: true
+        working-directory: .
+        run: |
+          if command -v npx >/dev/null 2>&1; then
+            npx -p @mermaid-js/mermaid-cli@10 mmdc -i docs/skills-graph.mmd -o site/public/graphs/skills-graph-fallback.svg 2>/dev/null || true
+          fi
       - run: npm install
       - run: npm run build
-        env:
-          NEXT_PUBLIC_BASE_PATH: /ideal-lab
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site/out

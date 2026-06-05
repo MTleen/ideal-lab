@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-label="Skills knowledge graph fallback">
+  <rect width="800" height="400" fill="var(--bp-surface-0, #fafaf9)"/>
+  <text x="400" y="40" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="var(--bp-text-0, #1a1a2e)">
+    Skills knowledge graph
+  </text>
+  <text x="400" y="64" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="var(--bp-text-2, #5a5a72)">
+    46 skills · 12 plugins · 183 relations
+  </text>
+  <g font-family="system-ui, sans-serif" font-size="11" fill="var(--bp-text-1, #3a3a52)">
+    <circle cx="120" cy="160" r="8" fill="#7b5cea"/>
+    <text x="135" y="164">ideal-dev-workflow (13)</text>
+    <circle cx="120" cy="200" r="8" fill="#0ea5a0"/>
+    <text x="135" y="204">ideal-ppt-suite (11)</text>
+    <circle cx="120" cy="240" r="8" fill="#0ea5a0"/>
+    <text x="135" y="244">ideal-document-workflow (8)</text>
+    <circle cx="120" cy="280" r="8" fill="#8ba60a"/>
+    <text x="135" y="284">ideal-knowledge-base (6)</text>
+    <circle cx="120" cy="320" r="8" fill="#9b6cea"/>
+    <text x="135" y="324">tooling &amp; research (8)</text>
+  </g>
+  <text x="400" y="380" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="var(--bp-text-3, #999)">
+    JavaScript disabled · use the plugins list below
+  </text>
+</svg>

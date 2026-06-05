@@ -1,0 +1,190 @@
+{
+  "ideal-dev-workflow": [
+    {
+      "title": "AI 写完代码没人审",
+      "detail": "Claude 直接给出几百行 diff，开发同学不敢 merge，但人工 review 又慢。ideal-code-review 提供两阶段自动评审：先看 spec compliance（是否偏离需求），再看 code quality（命名/边界/可读性），输出可操作的整改清单。"
+    },
+    {
+      "title": "改完代码不敢上线",
+      "detail": "测试不知道写没写、写没跑、跑过没过。ideal-test-exec 把验收用例跑到底，失败自动转 debugging——根因分析 + 最小修复建议，不让你反复扔给 AI 重写整段。"
+    },
+    {
+      "title": "需求到代码中间断链",
+      "detail": "PRD 写完，方案、计划、用例、代码之间互相不引用，半年后没人知道为什么这么改。ideal-dev-solution / ideal-dev-plan / ideal-test-case / ideal-wiki 强制每一步都引用上一阶段的产物 ID，留痕可追溯。"
+    },
+    {
+      "title": "15 阶段流程没人推得动",
+      "detail": "光有阶段没用，需要有人/有东西告诉你现在在哪、下一阶段是什么、YOLO 模式怎么开。ideal-flow-control 是状态机和路由协议——人工走也好、自动走也好，永远知道下一步。"
+    }
+  ],
+  "ideal-ppt-suite": [
+    {
+      "title": "PPT 从 0 到 1 太繁琐",
+      "detail": "要拼模板、想大纲、调风格、出图、改样式——5 个工具来回切，出来还是四不像。ideal-ppt-suite 把调研→策略→大纲→提示词→配图→生成→导出做成 14 阶段流水线，一站到底。"
+    },
+    {
+      "title": "AI 生成的图是位图，改不了",
+      "detail": "传统 image-mode PPT 出来就是 PNG，老板说\"把第三页那个图标换个位置\"——重生成还是手抠。image-to-svg 把 AI 图转成可编辑矢量，PPT-master 兼容，文字和形状都能改。"
+    },
+    {
+      "title": "风格定不下来",
+      "detail": "\"高端商务风\"和\"极简商务风\"差在哪？ideal-ppt-strategist 的八大确认协议把画幅、页数、受众、目的、风格、配色、字体逐项锁死，不留模糊空间。"
+    },
+    {
+      "title": "AI 出的 PPT 没法编辑",
+      "detail": "生成后是 HTML 演示版，要交给客户改怎么办？ideal-ppt-export 的 html 模式用 Playwright 渲染成可编辑原生 PPTX——每页都是真的形状和文本框，不是截图。"
+    }
+  ],
+  "ideal-document-workflow": [
+    {
+      "title": "长文档写到一半散了",
+      "detail": "写标书、写汇报、写方案——20 页以上就失控：结构乱、深度不均、配图错位。结构化文档工作流用 P1 需求→P3 大纲→P5 任务拆分→P7 并行写作→P9 配图→P11 渲染的关卡机制，每阶段人工审核才能进下一阶段。"
+    },
+    {
+      "title": "配图位置全靠手动",
+      "detail": "写完才发现需要配图，回头补；插图风格不统一；流程图用文字描述。illustration skill 自动识别章节配图位置、判断类型（Mermaid 流程图/架构图/数据图），调对应工具生成。"
+    },
+    {
+      "title": "多人写作风格不统一",
+      "detail": "A 写的前 5 章和 B 写的后 5 章读起来像两个人。document-writing 强制 What-Why-How 模式，每章按同一骨架写，配 4 维风格检查。"
+    },
+    {
+      "title": "Markdown 改 Word 排版全乱",
+      "detail": "标题层级、代码块、表格、引用——从 Markdown 转到 docx 一塌糊涂。document-render 专门处理这些样式映射，输出能直接交付的 docx/pptx。"
+    }
+  ],
+  "ideal-knowledge-base": [
+    {
+      "title": "项目材料散落各地",
+      "detail": "代码、wiki、文档、聊天记录、设计稿——没人知道完整知识在哪。kb-material-scope 扫描项目原始素材、评估材料覆盖度、识别知识缺口。"
+    },
+    {
+      "title": "知识库文档写出来浮于表面",
+      "detail": "直接照着 README 抄，没深度。kb-deep-analysis 从材料中提取项目认知模型——架构决策、模块依赖、设计权衡，写出来的不只是 what，是 why。"
+    },
+    {
+      "title": "知识库结构定不下来",
+      "detail": "是按模块分？按用户角色分？按时间分？kb-doc-planning 给出文档清单和每篇内容要点，不再是\"写完一篇算一篇\"。"
+    },
+    {
+      "title": "知识库写完就过时",
+      "detail": "代码迭代了，知识库没人跟。kb-index-review 做 P5 索引更新与质量审查——每轮迭代都跑一次，确保分类索引和主索引不漂移。"
+    }
+  ],
+  "ideal-deep-research": [
+    {
+      "title": "调研报告没法引用",
+      "detail": "AI 给个结论\"市场预期 5% 增长\"——哪儿说的？什么数据？deep-research 的引用追踪和可信度评分系统让每条结论都标 3+ 信息源，源被打分（高/中/低）。"
+    },
+    {
+      "title": "浅层搜索不够用",
+      "detail": "\"帮我调研 XX\" 出来 5 个搜索结果拼接，不够深。8 阶段管道（SCOPE→PLAN→RETRIEVE→TRIANGULATE→OUTLINE→SYNTHESIZE→CRITIQUE→REFINE→PACKAGE），要求 10+ 信息源、深度模式可到 ultradeep。"
+    },
+    {
+      "title": "拿来主义没法落地",
+      "detail": "调研完写报告就完了。deep-research 把产出整理为可交付的引用支撑报告，每条断言有源、能追溯、能复用。"
+    }
+  ],
+  "ideal-dify-generator": [
+    {
+      "title": "Dify 工作流从零搭太慢",
+      "detail": "节点类型几十种，连线规则多，DSL YAML 写错一个字段就跑不通。ideal-dify-generator 从自然语言需求出发，端到端生成可直接导入的完整 DSL 文件。"
+    },
+    {
+      "title": "生成的 DSL 没法验证",
+      "detail": "生成完不知道对不对，导入 Dify 才知道跑不通。生成器内置自动校验——节点类型、连线、变量引用、参数 schema 全部检查。"
+    },
+    {
+      "title": "复用已有 Dify 工作流难",
+      "detail": "想把 A 项目的某个 Dify 工作流搬到 B 项目去改，要重写。生成器支持把已有 Dify 导出文件作为输入，提取结构再二次生成。"
+    }
+  ],
+  "ideal-graph-orchestrator": [
+    {
+      "title": "跨 plugin 编排不知道用谁",
+      "detail": "需求来了不知道用哪个 skill，或者需要串多个 plugin 的 skill。ideal-graph-orchestrator 读 skills-graph.json，自动匹配已有 skill、检测缺口、编译 workflow.yml。"
+    },
+    {
+      "title": "复用 skill 路径难复制",
+      "detail": "上次走通了一个 5 步流程，下次想照搬但要微调。生成器把流程沉淀为 workflow.yml，下次直接读 yml 执行，可编辑可重跑。"
+    },
+    {
+      "title": "图谱有缺口没人知道",
+      "detail": "skills-graph.json 是手维护的，加新 skill 忘了登记就孤岛。orchestrator 在匹配时显式标出未登记的 skill，提示补充。"
+    }
+  ],
+  "ideal-lab-maintainer": [
+    {
+      "title": "Plugin 版本号总是忘改",
+      "detail": "改了 SKILL.md 没改 plugin.json 和 package.json 的 version，结果用户装的还是缓存里的旧版。maintainer commit 自动检测改动、生成 changeset、bump 版本、跨文件同步。"
+    },
+    {
+      "title": "新加 skill 流程繁琐",
+      "detail": "要建目录、写 SKILL.md frontmatter、加 plugin.json 引用、跑 validate 验证——四步容易漏。maintainer add-skill 一行命令全做。"
+    },
+    {
+      "title": "发布版本靠手写 changelog",
+      "detail": "改了什么、为什么改、影响什么，发布时全靠记忆。maintainer release 从 changeset 自动汇总 CHANGELOG.md，按 semver 自动 tag。"
+    }
+  ],
+  "ideal-ralph": [
+    {
+      "title": "任务做到一半跑了",
+      "detail": "AI 给出 100 步计划，做到第 3 步就\"差不多吧\"，质量稀烂。ideal-ralph 的小步迭代验证循环强制每步走完、有证据才进下一步。"
+    },
+    {
+      "title": "需求理解有歧义",
+      "detail": "用户说\"做一个好看点的页面\"——什么是好看？苏格拉底式任务澄清通过连续追问把模糊需求逼到具体可执行。"
+    },
+    {
+      "title": "质量 vs 速度没法兼顾",
+      "detail": "赶工时质量掉，认真做又慢。ideal-ralph 把质量门控嵌入流程——自动验证失败就重做，不放行；同时记录每次重做的证据，透明可追溯。"
+    }
+  ],
+  "panel-review": [
+    {
+      "title": "单视角评审容易漏",
+      "detail": "一个人/一个 AI 看方案，只能发现熟悉领域的 bug。panel-review 根据上文产出动态组建专家团队（产品/工程/安全/合规/UX），多视角对抗性审查。"
+    },
+    {
+      "title": "评审意见没结构",
+      "detail": "\"这个不太行\"——哪儿不行？多严重？要不要改？输出按严重度（critical/high/medium/low）排序的攻击面报告，每条都标具体位置和修复建议。"
+    },
+    {
+      "title": "评审成本高",
+      "detail": "请外部专家要钱、要时间。panel-review 在 Claude Code 内自动跑——支持 yolo_mode 零交互，供 workflow 编排器在每个阶段后自动调用。"
+    }
+  ],
+  "skill-builder": [
+    {
+      "title": "Skill 写出来质量不稳",
+      "detail": "同样的需求两次写的 SKILL.md 差很远。skill-builder 的 7 维度结构评分（75 分）+ checklist 实测（25 分）= 双重评估，每轮都跑同一套判卷标准。"
+    },
+    {
+      "title": "改了 SKILL.md 越改越差",
+      "detail": "\"这个 skill 上次跑得好，这次改了一下反而崩了\"。爬山优化 + 棘轮机制：每次评估分数必须 ≥ 上次，否则自动回滚到上一版本。"
+    },
+    {
+      "title": "判卷偏差大",
+      "detail": "同一份 skill 两个人打分差 30 分。skill-builder 用 same-judge 判卷——同一份 skill 全程同一个判卷 agent，消除主观漂移。"
+    },
+    {
+      "title": "从外部 skill 吸收设计精华难",
+      "detail": "看到别人写得好但不知道怎么借鉴。skill-builder 支持对标学习：把外部 SKILL.md 作为输入，吸收结构/原则/触发词，改进目标 skill。"
+    }
+  ],
+  "baoyu-image-gen": [
+    {
+      "title": "多 Provider 切换麻烦",
+      "detail": "OpenAI、Google、DashScope 各自 API 不同，鉴权不同，参数不同。baoyu-image-gen 统一接口——选 provider 就行，参数差异内部屏蔽。"
+    },
+    {
+      "title": "AI 出图用不上",
+      "detail": "生成了图就放在那。baoyu-image-gen 支持参考图、宽高比、批量生成，输出可直接喂给文档/PPT 工作流。"
+    },
+    {
+      "title": "出图慢拖死流程",
+      "detail": "一张一张等。默认 sequential 保证可追溯；需要批量时切 parallel 模式，并行出图，吞吐量翻几倍。"
+    }
+  ]
+}

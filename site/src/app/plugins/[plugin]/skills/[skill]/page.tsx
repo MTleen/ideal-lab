@@ -7,6 +7,10 @@ import Link from "next/link";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkHtml from "remark-html";
+import { parseSkillSummary } from "@/lib/skill-summary";
+import SkillCapabilities from "@/components/skill/SkillCapabilities";
+import SkillRelated from "@/components/skill/SkillRelated";
+import SkillToc from "@/components/skill/SkillToc";
 
 export function generateStaticParams() {
   const plugins = getAllPlugins();
@@ -32,43 +36,34 @@ export default async function SkillPage({
   const skill = plugin.skills.find((s: SkillMeta) => s.slug === skillSlug);
   if (!skill) notFound();
 
-  // Render markdown
   const rendered = await unified().use(remarkParse).use(remarkHtml).process(skill.content);
   const html = rendered.toString();
+  const summary = parseSkillSummary(skill.content);
+  const skillId = `${plugin.slug}/${skill.slug}`;
 
   return (
     <>
       <Nav />
-      <main className="flex-1 pt-20">
-        {/* Breadcrumb */}
-        <div className="container-site mb-8">
-          <div className="flex items-center gap-2 text-sm" style={{ color: "var(--bp-text-2)" }}>
-            <Link
-              href={`/`}
-              className="transition-colors hover:text-[var(--bp-text-0)] no-underline"
-              style={{ color: "inherit" }}
-            >
-              Home
-            </Link>
-            <span style={{ color: "var(--bp-text-3)" }}>/</span>
-            <Link
-              href={`/plugins/${pluginSlug}`}
-              className="transition-colors hover:text-[var(--bp-text-0)] no-underline"
-              style={{ color: "inherit" }}
-            >
-              {plugin.meta.name}
-            </Link>
-            <span style={{ color: "var(--bp-text-3)" }}>/</span>
-            <span style={{ color: "var(--bp-text-0)" }}>{skill.name}</span>
-          </div>
+      <main className="flex-1 pt-14">
+        <div className="container-site py-4">
+          <Link
+            href={`/plugins/${pluginSlug}/`}
+            className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors no-underline"
+            style={{ color: "var(--bp-text-2)" }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10 3L5 8l5 5" />
+            </svg>
+            {plugin.meta.name}
+          </Link>
         </div>
 
         {/* Header */}
-        <section className="container-site pb-10">
-          <div className="flex flex-wrap items-start gap-3 mb-4">
+        <section className="container-site pb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
             {skill.phase && (
               <span
-                className="text-[11px] font-medium px-3 py-1 rounded-full"
+                className="text-[10px] font-semibold tracking-widest uppercase px-2.5 py-1 rounded-full"
                 style={{
                   background: "var(--bp-brand-500)",
                   color: "#fff",
@@ -78,7 +73,7 @@ export default async function SkillPage({
               </span>
             )}
             <span
-              className="text-[11px] font-medium px-3 py-1 rounded-full"
+              className="text-[10px] font-medium tracking-widest uppercase px-2.5 py-1 rounded-full"
               style={{
                 background: "var(--bp-surface-2)",
                 color: "var(--bp-text-2)",
@@ -88,93 +83,86 @@ export default async function SkillPage({
             </span>
           </div>
           <h1
-            className="max-w-2xl font-bold leading-tight tracking-tight mb-4"
+            className="font-bold leading-tight tracking-tight mb-3"
             style={{
               fontSize: "clamp(28px, 4vw, 48px)",
               color: "var(--bp-text-0)",
+              maxWidth: 720,
             }}
           >
             {skill.name}
           </h1>
           <p
-            className="text-lg leading-relaxed max-w-xl"
-            style={{ color: "var(--bp-text-1)" }}
+            className="max-w-2xl leading-relaxed"
+            style={{ fontSize: 16, color: "var(--bp-text-1)" }}
           >
             {skill.description}
           </p>
         </section>
 
-        {/* Content + Sidebar */}
-        <section className="container-site pb-24">
-          <div className="flex gap-12">
-            {/* Main content */}
-            <div className="flex-1 min-w-0">
-              <article
-                className="prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: html }}
-              />
-            </div>
+        {/* Capabilities (auto-extracted; empty → hidden) */}
+        <section className="container-site">
+          <SkillCapabilities summary={summary} />
+        </section>
 
-            {/* Sidebar */}
-            {(skill.references.length > 0 || skill.scripts.length > 0) && (
-              <aside className="hidden lg:block w-56 shrink-0">
-                <div className="sticky top-24">
-                  {skill.references.length > 0 && (
-                    <div className="mb-8">
-                      <h4
-                        className="text-xs font-semibold tracking-widest uppercase mb-3"
-                        style={{ color: "var(--bp-text-2)" }}
-                      >
-                        References
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {skill.references.map((r, i) => (
-                          <li
-                            key={i}
-                            className="text-[13px] leading-relaxed"
-                            style={{ color: "var(--bp-text-2)" }}
-                          >
-                            <span
-                              className="font-mono text-[11px] px-1.5 py-0.5 rounded mr-2"
-                              style={{
-                                background: "var(--bp-surface-2)",
-                                color: "var(--bp-text-3)",
-                              }}
-                            >
-                              {r.split(".").pop()}
-                            </span>
-                            {r}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {skill.scripts.length > 0 && (
-                    <div>
-                      <h4
-                        className="text-xs font-semibold tracking-widest uppercase mb-3"
-                        style={{ color: "var(--bp-text-2)" }}
-                      >
-                        Scripts
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {skill.scripts.map((s, i) => (
-                          <li
-                            key={i}
-                            className="text-[13px] leading-relaxed font-mono"
-                            style={{ color: "var(--bp-text-2)" }}
-                          >
-                            {s}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </aside>
-            )}
+        {/* Related skills (with Mini Graph toggle) */}
+        <section className="container-site">
+          <SkillRelated skillId={skillId} />
+        </section>
+
+        {/* Body: TOC + markdown */}
+        <section className="container-site py-6">
+          <div className="flex gap-8">
+            <article
+              id="skill-prose"
+              className="prose max-w-none flex-1 min-w-0"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+            <div className="hidden lg:block shrink-0">
+              <SkillToc scopeSelector="#skill-prose" />
+            </div>
           </div>
         </section>
+
+        {/* References + Scripts */}
+        {(skill.references.length > 0 || skill.scripts.length > 0) && (
+          <section className="container-site py-8">
+            <h3
+              className="text-xs font-semibold tracking-widest uppercase mb-3"
+              style={{ color: "var(--bp-text-2)" }}
+            >
+              References &amp; scripts
+            </h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {skill.references.map((r, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border px-3 py-2 text-[12px] font-mono"
+                  style={{
+                    background: "var(--bp-surface-1)",
+                    borderColor: "var(--bp-border-0)",
+                    color: "var(--bp-text-2)",
+                  }}
+                >
+                  {r}
+                </div>
+              ))}
+              {skill.scripts.map((s, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border px-3 py-2 text-[12px] font-mono"
+                  style={{
+                    background: "var(--bp-surface-1)",
+                    borderColor: "var(--bp-border-0)",
+                    color: "var(--bp-text-2)",
+                  }}
+                >
+                  {s}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </>
