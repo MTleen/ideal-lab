@@ -59,6 +59,77 @@
 
   /* Nav */
   --bp-nav-height: 56px;
+
+  /* Graph — node (skill) */
+  --bp-graph-node-default-fill: var(--bp-surface-3);
+  --bp-graph-node-hover-glow: oklch(0.52 0.14 270 / 0.35);
+  --bp-graph-node-stroke: var(--bp-border-1);
+  --bp-graph-node-dim-opacity: 0.15;
+  --bp-graph-node-active-opacity: 1;
+  --bp-graph-node-selected-glow: oklch(0.52 0.14 270 / 0.55);
+  --bp-graph-node-min-radius: 8;
+  --bp-graph-node-max-radius: 24;
+  --bp-graph-node-radius-scale: 6;
+
+  /* Graph — category palette (5 categories) */
+  --bp-graph-cat-development: oklch(0.55 0.16 270);
+  --bp-graph-cat-content: oklch(0.55 0.12 180);
+  --bp-graph-cat-research: oklch(0.55 0.16 55);
+  --bp-graph-cat-knowledge: oklch(0.55 0.12 100);
+  --bp-graph-cat-tooling: oklch(0.48 0.08 290);
+
+  /* Graph — edge (5 relations) */
+  --bp-graph-edge-enhancement: oklch(0.72 0.003 270);
+  --bp-graph-edge-prerequisite: oklch(0.52 0.14 270);
+  --bp-graph-edge-embeds: oklch(0.55 0.12 180);
+  --bp-graph-edge-produces-for: oklch(0.55 0.16 55);
+  --bp-graph-edge-alternative: oklch(0.48 0.08 290);
+  --bp-graph-edge-enhancement-width: 0.8;
+  --bp-graph-edge-prerequisite-width: 1.5;
+  --bp-graph-edge-embeds-width: 1;
+  --bp-graph-edge-produces-for-width: 1.5;
+  --bp-graph-edge-alternative-width: 1.5;
+  --bp-graph-edge-default-opacity: 0.7;
+  --bp-graph-edge-dim-opacity: 0.1;
+
+  /* Graph — plugin halo (cluster boundary) */
+  --bp-graph-plugin-halo: oklch(0.78 0.003 270 / 0.35);
+  --bp-graph-plugin-halo-width: 1;
+  --bp-graph-plugin-halo-dash: "4 4";
+
+  /* Graph — task highlight overlay */
+  --bp-graph-task-highlight: oklch(0.52 0.14 270 / 0.18);
+  --bp-graph-task-stroke: #fff;
+
+  /* Mini Graph (subset of graph) */
+  --bp-mini-bg: var(--bp-surface-1);
+  --bp-mini-border: var(--bp-border-0);
+  --bp-mini-center-fill: var(--bp-brand-500);
+  --bp-mini-neighbor-fill: var(--bp-surface-3);
+  --bp-mini-neighbor-stroke: var(--bp-border-1);
+  --bp-mini-edge: var(--bp-graph-edge-enhancement);
+  --bp-mini-width: 360;
+  --bp-mini-height: 240;
+
+  /* Task Panel */
+  --bp-task-card-bg: var(--bp-surface-1);
+  --bp-task-card-bg-hover: var(--bp-surface-2);
+  --bp-task-card-border: var(--bp-border-0);
+  --bp-task-card-border-hover: var(--bp-border-1);
+  --bp-task-card-selected-bg: var(--bp-surface-3);
+  --bp-task-card-highlight-border: var(--bp-brand-500);
+  --bp-task-pill-bg: var(--bp-surface-2);
+  --bp-task-pill-text: var(--bp-text-2);
+  --bp-task-checkbox-accent: var(--bp-brand-500);
+
+  /* Skill Detail — TOC */
+  --bp-toc-width: 220;
+  --bp-toc-top-offset: 96;
+  --bp-toc-border: var(--bp-border-0);
+  --bp-toc-link: var(--bp-text-2);
+  --bp-toc-link-hover: var(--bp-text-0);
+  --bp-toc-link-active: var(--bp-brand-500);
+  --bp-toc-link-active-border: var(--bp-brand-500);
 }
 
 /* ── Dark Theme ── */
@@ -80,6 +151,27 @@
   --bp-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
   --bp-shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.4);
   --bp-shadow-brand: 0 4px 14px oklch(0.52 0.14 270 / 0.15);
+
+  /* Graph — dark mode tuning */
+  --bp-graph-node-default-fill: var(--bp-surface-3);
+  --bp-graph-node-hover-glow: oklch(0.62 0.14 270 / 0.45);
+  --bp-graph-node-stroke: var(--bp-border-1);
+  --bp-graph-edge-enhancement: oklch(0.52 0.008 270);
+  --bp-graph-plugin-halo: oklch(0.52 0.008 270 / 0.35);
+  --bp-graph-task-stroke: var(--bp-surface-0);
+
+  /* Mini Graph — dark */
+  --bp-mini-bg: var(--bp-surface-1);
+  --bp-mini-neighbor-fill: var(--bp-surface-3);
+
+  /* Task Panel — dark */
+  --bp-task-card-bg: var(--bp-surface-1);
+  --bp-task-card-bg-hover: var(--bp-surface-2);
+  --bp-task-card-selected-bg: var(--bp-surface-3);
+
+  /* TOC — dark */
+  --bp-toc-link: var(--bp-text-2);
+  --bp-toc-link-hover: var(--bp-text-0);
 }
 
 /* ── Theme integration ── */
