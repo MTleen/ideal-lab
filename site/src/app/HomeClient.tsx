@@ -118,10 +118,10 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             gridTemplateColumns: "minmax(0, 7fr) minmax(280px, 3fr)",
             borderColor: "var(--bp-border-0)",
             background: "var(--bp-surface-1)",
-            minHeight: 540,
+            height: "min(75vh, 720px)",
           }}
         >
-          <div className="relative" style={{ minHeight: 540 }}>
+          <div className="relative h-full overflow-hidden">
             <GraphCanvas
               nodes={graphNodes}
               edges={graphEdges}
