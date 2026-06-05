@@ -131,29 +131,23 @@ export default function GraphCanvas({
     fg.d3Force("collide", (window as any).d3?.forceCollide?.(18));
   }, [data, size.w, size.h]);
 
-  /* Node radius from in-degree */
+  /* Node radius from in-degree. Large enough to hold a short label inside. */
   const radiusOf = (n: GraphDatum) =>
-    Math.max(8, Math.min(24, Math.sqrt(n.inDegree + 1) * 6));
+    Math.max(18, Math.min(36, Math.sqrt(n.inDegree + 1) * 9));
 
   const isDim = (n: GraphDatum) =>
     highlightSet.size > 0 && !highlightSet.has(n.id) && n.id !== focusedSkillId;
 
   const isFocused = (n: GraphDatum) => n.id === focusedSkillId;
 
-  /* Custom node paint for category fill + glow on focus */
+  /* Custom node paint — circle big enough to contain a short label, with the
+   * skill name always visible. Plugin cluster label drawn outside the node. */
   const paintNode = (node: GraphDatum, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const r = radiusOf(node);
     const x = node.x ?? 0;
     const y = node.y ?? 0;
     const color = CATEGORY_COLORS[node.category] ?? CATEGORY_COLORS.other;
-
-    if (isDim(node)) {
-      ctx.globalAlpha = 0.15;
-    } else if (highlightSet.has(node.id) || isFocused(node)) {
-      ctx.globalAlpha = 1;
-    } else {
-      ctx.globalAlpha = highlightSet.size > 0 ? 0.25 : 0.95;
-    }
+    const dimmed = isDim(node);
 
     /* Focus glow */
     if (isFocused(node)) {
@@ -162,6 +156,8 @@ export default function GraphCanvas({
       ctx.fillStyle = "rgba(123, 92, 234, 0.35)";
       ctx.fill();
     }
+
+    ctx.globalAlpha = dimmed ? 0.25 : (highlightSet.has(node.id) || isFocused(node) ? 1 : 0.95);
 
     /* Node body */
     ctx.beginPath();
@@ -172,29 +168,57 @@ export default function GraphCanvas({
     ctx.strokeStyle = isFocused(node) ? "#fff" : "rgba(0,0,0,0.25)";
     ctx.stroke();
 
+    /* Always-visible label inside the node */
+    const fontSize = Math.max(8, Math.min(11, r / 3.5));
+    ctx.font = `600 ${fontSize}px Satoshi, system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = dimmed ? "rgba(255, 255, 255, 0.7)" : "#fff";
+    const label = node.name;
+    const maxChars = Math.max(5, Math.floor(r * 1.6 / fontSize));
+    const displayLabel = label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
+    ctx.fillText(displayLabel, x, y);
+
+    /* Bigger tooltip-style label on hover */
+    if (isFocused(node) && globalScale > 0.2) {
+      const tipFont = Math.max(10, 12 / globalScale);
+      ctx.font = `600 ${tipFont}px Satoshi, system-ui, -apple-system, sans-serif`;
+      const maxTipChars = Math.max(12, Math.floor(120 / tipFont));
+      const tipLabel = label.length > maxTipChars ? label.slice(0, maxTipChars - 1) + "…" : label;
+      const tipTextW = ctx.measureText(tipLabel).width;
+      const padding = 6;
+      const boxX = x - tipTextW / 2 - padding;
+      const boxY = y + r + 6;
+      const boxH = tipFont + padding;
+      ctx.fillStyle = "rgba(26, 26, 46, 0.95)";
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, tipTextW + padding * 2, boxH, 4);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.textBaseline = "middle";
+      ctx.fillText(tipLabel, x, boxY + boxH / 2);
+    }
+
     ctx.globalAlpha = 1;
   };
 
-  /* Custom link paint — all 5 relations render as the same "call" edge.
-   * Original relation is preserved on each link and surfaced via tooltip on hover. */
+  /* Custom link paint — only render "real" call relations (prerequisite,
+   * produces_for, alternative). Enhancement/embeds edges are hidden because
+   * they don't reflect an actual call between plugins. 146 of 183 edges are
+   * enhancement, hiding them leaves the ~19 meaningful call edges. */
+  const HARD_RELATIONS = new Set<Relation>(["prerequisite", "produces_for", "alternative"]);
+  const EDGE_COLOR = "var(--bp-brand-500)";
+
   const paintLink = (link: LinkDatum, ctx: CanvasRenderingContext2D) => {
     const src = link.source as GraphDatum;
     const tgt = link.target as GraphDatum;
     if (typeof src.x !== "number" || typeof tgt.x !== "number") return;
+    if (!HARD_RELATIONS.has(link.relation)) return;
     const dim = isDim(src) || isDim(tgt);
     ctx.strokeStyle = EDGE_COLOR;
-    ctx.globalAlpha = dim ? 0.15 : 0.5;
+    ctx.globalAlpha = dim ? 0.15 : 0.6;
     ctx.lineWidth = 1;
     ctx.setLineDash([]);
-
-    /* intra-plugin hidden edges: skip drawing (they only enforce clustering) */
-    if (src.plugin === tgt.plugin && link.relation === "enhancement" && !edges.find(
-      (e) =>
-        ((e.source === src.id && e.target === tgt.id) ||
-          (e.source === tgt.id && e.target === src.id)),
-    )) {
-      return;
-    }
 
     ctx.beginPath();
     ctx.moveTo(src.x!, src.y!);

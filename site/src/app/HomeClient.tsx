@@ -10,7 +10,6 @@ import { getPluginPainPoints } from "@/lib/plugin-pain-points";
 import TaskPanel from "@/components/tasks/TaskPanel";
 import TaskScriptView from "@/components/tasks/TaskScriptView";
 import GraphLegend from "@/components/graph/GraphLegend";
-import GraphControls from "@/components/graph/GraphControls";
 
 const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), {
   ssr: false,
@@ -138,12 +137,11 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             hoveredSkillId={hoveredSkillId}
           />
         </div>
-        {/* Legend + controls as bottom strip — gives graph full vertical space */}
+        {/* Legend as bottom strip — gives graph full vertical space */}
         <div
-          className="mt-3 flex flex-wrap items-center justify-between gap-3"
+          className="mt-3 flex flex-wrap items-center"
         >
           <GraphLegend />
-          <GraphControls />
         </div>
         <style>{`
           @media (max-width: 900px) {
