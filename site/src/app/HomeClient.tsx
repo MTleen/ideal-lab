@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { GraphNode, Task, CategoryInfo } from "@/lib/types";
 import { getAllTasks, getTasksContainingSkill } from "@/lib/tasks";
 import { graphNodes, graphEdges, getNode } from "@/lib/graph";
@@ -72,10 +73,15 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
     [selectedTask],
   );
 
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    const [plugin, skill] = node.id.split("/");
-    window.location.href = `/plugins/${plugin}/skills/${skill}/`;
-  }, []);
+  const router = useRouter();
+  const handleNodeClick = useCallback(
+    (node: GraphNode) => {
+      const [plugin, skill] = node.id.split("/");
+      // Use router.push so basePath is applied automatically
+      router.push(`/plugins/${plugin}/skills/${skill}/`);
+    },
+    [router],
+  );
 
   return (
     <div>
