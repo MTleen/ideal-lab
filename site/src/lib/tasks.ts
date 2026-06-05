@@ -46,7 +46,7 @@ export function getTasksContainingSkill(skillId: string): Task[] {
 export const relationTypes = [
   "enhancement",
   "prerequisite",
-  "embeds",
+  "calls",
   "produces_for",
   "alternative",
 ] as const;

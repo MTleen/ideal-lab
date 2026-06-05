@@ -44,7 +44,12 @@ export interface SearchEntry {
 
 /* ── Skills Graph (knowledge graph data layer) ── */
 
-export type Relation = "enhancement" | "prerequisite" | "embeds" | "produces_for" | "alternative";
+export type Relation =
+  | "enhancement"
+  | "prerequisite"
+  | "calls"
+  | "produces_for"
+  | "alternative";
 export type Category = "development" | "content" | "research" | "knowledge" | "tooling" | "other";
 
 export interface GraphNode {

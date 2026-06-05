@@ -202,22 +202,24 @@ export default function GraphCanvas({
     ctx.globalAlpha = 1;
   };
 
-  /* Custom link paint — only render "real" call relations (prerequisite,
-   * produces_for, alternative). Enhancement/embeds edges are hidden because
-   * they don't reflect an actual call between plugins. 146 of 183 edges are
-   * enhancement, hiding them leaves the ~19 meaningful call edges. */
-  const HARD_RELATIONS = new Set<Relation>(["prerequisite", "produces_for", "alternative"]);
+  /* Custom link paint — only render "calls" edges. These connect orchestrator
+   * skills to the phase/step skills they invoke at runtime — the single
+   * relation that genuinely describes how skills call each other. Other
+   * relations (enhancement / prerequisite / produces_for / alternative) are
+   * metadata kept in the data layer for the skill detail page's "Related
+   * skills" section, but they don't reflect an actual call. */
+  const EDGE_RELATION = "calls";
   const EDGE_COLOR = "var(--bp-brand-500)";
 
   const paintLink = (link: LinkDatum, ctx: CanvasRenderingContext2D) => {
     const src = link.source as GraphDatum;
     const tgt = link.target as GraphDatum;
     if (typeof src.x !== "number" || typeof tgt.x !== "number") return;
-    if (!HARD_RELATIONS.has(link.relation)) return;
+    if (link.relation !== EDGE_RELATION) return;
     const dim = isDim(src) || isDim(tgt);
     ctx.strokeStyle = EDGE_COLOR;
-    ctx.globalAlpha = dim ? 0.15 : 0.6;
-    ctx.lineWidth = 1;
+    ctx.globalAlpha = dim ? 0.15 : 0.7;
+    ctx.lineWidth = 1.2;
     ctx.setLineDash([]);
 
     ctx.beginPath();

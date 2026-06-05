@@ -107,7 +107,7 @@ export function getEdgeCountsByRelation(): Record<Relation, number> {
   const counts: Record<Relation, number> = {
     enhancement: 0,
     prerequisite: 0,
-    embeds: 0,
+    calls: 0,
     produces_for: 0,
     alternative: 0,
   };

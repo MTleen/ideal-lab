@@ -392,126 +392,126 @@
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-delivery",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-delivery"
     },
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-dev-exec",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-dev-exec"
     },
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-dev-plan",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-dev-plan"
     },
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-dev-solution",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-dev-solution"
     },
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-requirement",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-requirement"
     },
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-test-case",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-test-case"
     },
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-test-exec",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-test-exec"
     },
     {
       "source": "ideal-dev-workflow/ideal-flow-control",
       "target": "ideal-dev-workflow/ideal-wiki",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-flow-control mentions ideal-wiki"
     },
     {
       "source": "ideal-document-workflow/ideal-document-workflow",
       "target": "ideal-document-workflow/document-render",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-document-workflow mentions document-render"
     },
     {
       "source": "ideal-document-workflow/ideal-document-workflow",
       "target": "ideal-document-workflow/document-writing",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-document-workflow mentions document-writing"
     },
     {
       "source": "ideal-document-workflow/ideal-document-workflow",
       "target": "ideal-document-workflow/illustration",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-document-workflow mentions illustration"
     },
     {
       "source": "ideal-document-workflow/ideal-document-workflow",
       "target": "ideal-document-workflow/outline-generation",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-document-workflow mentions outline-generation"
     },
     {
       "source": "ideal-document-workflow/ideal-document-workflow",
       "target": "ideal-document-workflow/requirement-analysis",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-document-workflow mentions requirement-analysis"
     },
     {
       "source": "ideal-document-workflow/ideal-document-workflow",
       "target": "ideal-document-workflow/task-split",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-document-workflow mentions task-split"
     },
     {
       "source": "ideal-document-workflow/ideal-document-workflow",
       "target": "ideal-document-workflow/writing-skills",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "ideal-document-workflow mentions writing-skills"
     },
     {
       "source": "ideal-knowledge-base/build-knowledge-base-workflow",
       "target": "ideal-knowledge-base/kb-deep-analysis",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "build-knowledge-base-workflow mentions kb-deep-analysis"
     },
     {
       "source": "ideal-knowledge-base/build-knowledge-base-workflow",
       "target": "ideal-knowledge-base/kb-doc-planning",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "build-knowledge-base-workflow mentions kb-doc-planning"
     },
     {
       "source": "ideal-knowledge-base/build-knowledge-base-workflow",
       "target": "ideal-knowledge-base/kb-material-scope",
-      "relation": "embeds",
+      "relation": "calls",
       "confidence": "extracted",
       "evidence": "build-knowledge-base-workflow mentions kb-material-scope"
     },

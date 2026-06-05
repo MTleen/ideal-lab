@@ -140,7 +140,6 @@ export default function MiniGraph({
                 y2={t.y}
                 stroke="var(--bp-mini-edge, #a3a3a3)"
                 strokeWidth={1}
-                strokeDasharray={e.relation === "embeds" ? "3 3" : undefined}
               />
             );
           })}
