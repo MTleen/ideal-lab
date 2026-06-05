@@ -1,14 +1,15 @@
 import painPointsData from "../data/plugin-pain-points.json";
-import { getAllPlugins } from "./plugins";
+import { graphNodes } from "./graph";
 import type { PluginPainPoints, PluginPainPoint } from "./types";
 
 const data = painPointsData as PluginPainPoints;
 
-/* ── Build-time validation ── */
+/* Build-time validation against known graph plugins (no fs dependency) */
 
-const knownPluginSlugs = new Set(getAllPlugins().map((p) => p.slug));
+const knownSlugs = new Set(graphNodes.map((n) => n.plugin));
+
 for (const slug of Object.keys(data)) {
-  if (!knownPluginSlugs.has(slug)) {
+  if (!knownSlugs.has(slug)) {
     throw new Error(`plugin-pain-points.json: unknown plugin "${slug}"`);
   }
   for (const pp of data[slug]) {
@@ -18,7 +19,7 @@ for (const slug of Object.keys(data)) {
   }
 }
 
-/* ── Public API ── */
+/* Public API */
 
 export function getAllPluginPainPoints(): PluginPainPoints {
   return data;

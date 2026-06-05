@@ -1,14 +1,13 @@
 import tasksData from "../data/tasks.json";
-import { getAllPlugins } from "./plugins";
 import { graphNodes } from "./graph";
 import type { Task } from "./types";
 
 const tasks = tasksData as Task[];
 
-/* ── Build-time validation ── */
+/* Build-time validation against known graph skills (no fs dependency) */
 
 const knownSkillIds = new Set(graphNodes.map((n) => n.id));
-const knownPluginSlugs = new Set(getAllPlugins().map((p) => p.slug));
+const knownPluginSlugs = new Set(graphNodes.map((n) => n.plugin));
 
 for (const task of tasks) {
   if (!task.id || !task.title) {
@@ -26,7 +25,7 @@ for (const task of tasks) {
   }
 }
 
-/* ── Public API ── */
+/* Public API */
 
 export function getAllTasks(): Task[] {
   return tasks;

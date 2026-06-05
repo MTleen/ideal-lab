@@ -1,176 +1,250 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import type { PluginData, CategoryInfo } from "@/lib/types";
-import PluginCard from "@/components/PluginCard";
-import SearchBar from "@/components/SearchBar";
-import CategoryFilter from "@/components/CategoryFilter";
-import { formatDate } from "@/lib/utils";
+import type { GraphNode, Task, CategoryInfo } from "@/lib/types";
+import { getAllTasks, getTasksContainingSkill } from "@/lib/tasks";
+import { graphNodes, graphEdges, getNode } from "@/lib/graph";
+import { getPluginPainPoints } from "@/lib/plugin-pain-points";
+import TaskPanel from "@/components/tasks/TaskPanel";
+import TaskScriptView from "@/components/tasks/TaskScriptView";
+import GraphLegend from "@/components/graph/GraphLegend";
+import GraphControls from "@/components/graph/GraphControls";
+
+const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="w-full h-full flex items-center justify-center"
+      style={{ minHeight: 360, background: "var(--bp-surface-0)" }}
+    >
+      <p className="text-sm" style={{ color: "var(--bp-text-2)" }}>
+        Loading knowledge graph...
+      </p>
+    </div>
+  ),
+});
 
 interface Props {
-  plugins: PluginData[];
   categories: CategoryInfo[];
+  pluginSlugs: string[];
 }
 
-export default function HomeClient({
-  plugins,
-  categories,
-}: Props) {
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
+export default function HomeClient({ categories, pluginSlugs }: Props) {
+  const tasks = useMemo(() => getAllTasks(), []);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [hoveredSkillId, setHoveredSkillId] = useState<string | null>(null);
+  const [scriptVisible, setScriptVisible] = useState(false);
 
-  const filtered = useMemo(() => {
-    let results = plugins;
-
-    // Category filter
-    if (category !== "all") {
-      results = results.filter((p) => {
-        const kw = (p.meta.keywords ?? []).join(" ");
-        if (/workflow|development|requirement|testing|review/.test(kw))
-          return category === "development";
-        if (/content|ppt|presentation|document|writing/.test(kw))
-          return category === "content";
-        if (/research|analysis|deep/.test(kw)) return category === "research";
-        if (/knowledge|wiki/.test(kw)) return category === "knowledge";
-        if (/tooling|maintainer|ralph/.test(kw)) return category === "tooling";
-        return category === "other";
-      });
+  /* Read task from URL */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("task");
+    if (t && tasks.find((x) => x.id === t)) {
+      setSelectedTaskId(t);
+      setScriptVisible(true);
     }
+  }, [tasks]);
 
-    // Search
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      results = results.filter((p) => {
-        if (p.meta.name.toLowerCase().includes(q)) return true;
-        if (p.meta.description.toLowerCase().includes(q)) return true;
-        if ((p.meta.keywords ?? []).some((k) => k.toLowerCase().includes(q)))
-          return true;
-        if (p.skills.some((s) => s.name.toLowerCase().includes(q))) return true;
-        return false;
-      });
-    }
+  /* Write task to URL */
+  const handleSelectTask = useCallback(
+    (id: string | null) => {
+      setSelectedTaskId(id);
+      setScriptVisible(id !== null);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (id) url.searchParams.set("task", id);
+        else url.searchParams.delete("task");
+        window.history.replaceState(null, "", url.toString());
+      }
+    },
+    [],
+  );
 
-    return results;
-  }, [plugins, query, category]);
+  const selectedTask = useMemo(
+    () => (selectedTaskId ? tasks.find((t) => t.id === selectedTaskId) ?? null : null),
+    [selectedTaskId, tasks],
+  );
 
-  const timeline = useMemo(() => {
-    return [...plugins]
-      .filter((p) => p.updatedAt)
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-      )
-      .slice(0, 8);
-  }, [plugins]);
+  const highlightedSkillIds = useMemo(
+    () => (selectedTask ? selectedTask.skillIds : []),
+    [selectedTask],
+  );
+
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    const [plugin, skill] = node.id.split("/");
+    window.location.href = `/plugins/${plugin}/skills/${skill}/`;
+  }, []);
 
   return (
-    <div className="container-site">
-      {/* Filter bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-10">
-        <SearchBar value={query} onChange={setQuery} />
-        <div className="sm:ml-auto">
-          <CategoryFilter
-            categories={categories}
-            selected={category}
-            onSelect={setCategory}
+    <div>
+      {/* Hero band */}
+      <section className="container-site pt-8 pb-4">
+        <div
+          className="inline-block text-[11px] font-medium tracking-widest uppercase mb-3 px-3 py-1 rounded-full"
+          style={{
+            background: "var(--bp-surface-2)",
+            color: "var(--bp-brand-500)",
+          }}
+        >
+          Best Practices
+        </div>
+        <h1
+          className="font-black leading-[1.05] tracking-[-0.03em] mb-3"
+          style={{
+            fontSize: "clamp(32px, 4.5vw, 56px)",
+            color: "var(--bp-text-0)",
+            maxWidth: 720,
+          }}
+        >
+          {graphNodes.length} skills · {pluginSlugs.length} plugins · {graphEdges.length} relations
+        </h1>
+        <p
+          className="max-w-2xl leading-relaxed"
+          style={{ fontSize: 17, color: "var(--bp-text-1)" }}
+        >
+          Click any skill to see what it does, who uses it, and which problems it solves.
+          Pick a task to highlight the skills that work together.
+        </p>
+      </section>
+
+      {/* Graph + Task Panel split */}
+      <section className="container-site pb-8">
+        <div
+          className="grid gap-4 rounded-xl border overflow-hidden"
+          style={{
+            gridTemplateColumns: "minmax(0, 7fr) minmax(280px, 3fr)",
+            borderColor: "var(--bp-border-0)",
+            background: "var(--bp-surface-1)",
+            minHeight: 540,
+          }}
+        >
+          <div className="relative" style={{ minHeight: 540 }}>
+            <GraphCanvas
+              nodes={graphNodes}
+              edges={graphEdges}
+              highlightedSkillIds={highlightedSkillIds}
+              focusedSkillId={hoveredSkillId}
+              onNodeClick={handleNodeClick}
+              onNodeHover={(n) => setHoveredSkillId(n?.id ?? null)}
+            />
+            <GraphLegend />
+            <GraphControls />
+          </div>
+          <TaskPanel
+            tasks={tasks}
+            selectedTaskId={selectedTaskId}
+            onSelectTask={handleSelectTask}
+            hoveredSkillId={hoveredSkillId}
           />
         </div>
-      </div>
+        <style>{`
+          @media (max-width: 900px) {
+            .container-site > .grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </section>
 
-      {/* Results */}
-      {filtered.length > 0 ? (
-        <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))" }}>
-          {filtered.map((p, i) => (
-            <div
-              key={p.slug}
-              style={{
-                animation: `stagger-item 0.5s var(--bp-ease-out-expo) ${i * 60}ms both`,
-              }}
-            >
-              <PluginCard plugin={p} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20">
-          <div
-            className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
-            style={{ background: "var(--bp-surface-2)" }}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              style={{ color: "var(--bp-text-3)" }}
-            >
-              <circle cx="7" cy="7" r="4.5" />
-              <path d="M10.5 10.5L14 14" />
-            </svg>
-          </div>
-          <p className="text-sm" style={{ color: "var(--bp-text-2)" }}>
-            No plugins match your search
-          </p>
-          <button
-            onClick={() => { setQuery(""); setCategory("all"); }}
-            className="mt-3 text-sm font-medium"
-            style={{ color: "var(--bp-brand-500)" }}
-          >
-            Clear filters
-          </button>
-        </div>
+      {/* Task script (when selected) */}
+      {scriptVisible && selectedTask && (
+        <section className="container-site">
+          <TaskScriptView
+            task={selectedTask}
+            onClose={() => {
+              handleSelectTask(null);
+              setScriptVisible(false);
+            }}
+          />
+        </section>
       )}
 
-      {/* Timeline */}
-      {timeline.length > 0 && (
-        <div className="mt-20">
-          <h2
-            className="text-lg font-semibold mb-6"
-            style={{ color: "var(--bp-text-0)" }}
-          >
-            Recently Updated
-          </h2>
-          <div
-            className="rounded-xl border divide-y overflow-hidden"
-            style={{
-              borderColor: "var(--bp-border-0)",
-              borderBottomColor: "var(--bp-border-0)",
-            }}
-          >
-            {timeline.map((p) => (
+      {/* Plugin index with pain points (top 4) */}
+      <section className="container-site pt-8 pb-4">
+        <h2
+          className="text-2xl font-bold mb-2"
+          style={{ color: "var(--bp-text-0)" }}
+        >
+          Common problems
+        </h2>
+        <p className="text-sm mb-6" style={{ color: "var(--bp-text-2)" }}>
+          Each plugin solves real pain points documented from its SKILL.md capabilities.
+        </p>
+        <div
+          className="grid gap-4"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
+        >
+          {pluginSlugs.slice(0, 4).map((slug) => {
+            const pp = getPluginPainPoints(slug);
+            if (pp.length === 0) return null;
+            const first = pp[0];
+            return (
               <Link
-                key={p.slug}
-                href={`/plugins/${p.slug}`}
-                className="flex items-center gap-4 px-5 py-3 transition-colors no-underline hover:bg-[var(--bp-surface-1)]"
-                style={{ color: "inherit", borderColor: "var(--bp-border-0)" }}
+                key={slug}
+                href={`/plugins/${slug}/`}
+                className="block rounded-lg border p-4 transition-all no-underline"
+                style={{
+                  background: "var(--bp-surface-1)",
+                  borderColor: "var(--bp-border-0)",
+                  color: "inherit",
+                }}
               >
-                <span
-                  className="text-xs shrink-0 w-20"
-                  style={{ color: "var(--bp-text-3)" }}
+                <div
+                  className="text-[10px] font-medium tracking-widest uppercase mb-1.5"
+                  style={{ color: "var(--bp-brand-500)" }}
                 >
-                  {formatDate(p.updatedAt)}
-                </span>
-                <span
-                  className="text-sm font-medium"
+                  {slug}
+                </div>
+                <h3
+                  className="text-sm font-semibold mb-1.5"
                   style={{ color: "var(--bp-text-0)" }}
                 >
-                  {p.meta.name}
-                </span>
-                <span
-                  className="text-xs ml-auto"
-                  style={{ color: "var(--bp-text-3)" }}
+                  {first.title}
+                </h3>
+                <p
+                  className="text-xs leading-relaxed"
+                  style={{ color: "var(--bp-text-2)" }}
                 >
-                  v{p.meta.version}
-                </span>
+                  {first.detail.slice(0, 120)}…
+                </p>
               </Link>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+      </section>
+
+      {/* Plugin grid */}
+      <section className="container-site py-8">
+        <h2
+          className="text-2xl font-bold mb-2"
+          style={{ color: "var(--bp-text-0)" }}
+        >
+          All plugins ({pluginSlugs.length})
+        </h2>
+        <p className="text-sm mb-6" style={{ color: "var(--bp-text-2)" }}>
+          Browse by category or jump into a specific plugin.
+        </p>
+        <div
+          className="grid gap-3"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}
+        >
+          {pluginSlugs.map((slug) => (
+            <Link
+              key={slug}
+              href={`/plugins/${slug}/`}
+              className="rounded-lg border px-3 py-2.5 text-sm transition-colors no-underline"
+              style={{
+                background: "var(--bp-surface-1)",
+                borderColor: "var(--bp-border-0)",
+                color: "var(--bp-text-0)",
+              }}
+            >
+              {slug}
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
-
