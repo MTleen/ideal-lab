@@ -1,0 +1,197 @@
+[
+  {
+    "id": "make-ppt",
+    "title": "做一个市场汇报 PPT",
+    "problem": "PPT 从 0 到 1：要拼模板、想大纲、调风格、出图、改样式，5 个工具来回切，出来还是四不像。",
+    "outcome": "交付一份可编辑原生 PPTX，16:9 / 10-30 页，配图到位，风格统一。",
+    "scope": "lead",
+    "skillIds": [
+      "ideal-ppt-suite/ideal-ppt-workflow",
+      "ideal-ppt-suite/ideal-ppt-requirement",
+      "ideal-ppt-suite/ideal-ppt-strategist",
+      "ideal-ppt-suite/ideal-ppt-outline",
+      "ideal-ppt-suite/ideal-ppt-prompt",
+      "ideal-ppt-suite/ideal-ppt-image",
+      "ideal-ppt-suite/ideal-ppt-executor",
+      "ideal-ppt-suite/ideal-ppt-export"
+    ],
+    "relatedPluginSlugs": ["ideal-ppt-suite"],
+    "estimatedSteps": 8
+  },
+  {
+    "id": "deep-research-topic",
+    "title": "把一份主题调研透",
+    "problem": "浅层搜索出来 5 个结果拼接，结论没法引用，源不可信。",
+    "outcome": "引用支撑报告，每条断言标 3+ 信息源，源被打分（高/中/低）。",
+    "scope": "lead",
+    "skillIds": [
+      "ideal-deep-research/deep-research",
+      "ideal-ppt-suite/ideal-ppt-requirement"
+    ],
+    "relatedPluginSlugs": ["ideal-deep-research", "ideal-ppt-suite"],
+    "estimatedSteps": 6
+  },
+  {
+    "id": "full-dev-cycle",
+    "title": "走一次完整的开发流程",
+    "problem": "需求到代码中间断链，半年后没人知道为什么这么改。",
+    "outcome": "15 阶段全跑完：需求→方案→计划→编码→测试→评审→交付，每步留痕。",
+    "scope": "lead",
+    "skillIds": [
+      "ideal-dev-workflow/ideal-init",
+      "ideal-dev-workflow/ideal-flow-control",
+      "ideal-dev-workflow/ideal-requirement",
+      "ideal-dev-workflow/ideal-dev-solution",
+      "ideal-dev-workflow/ideal-dev-plan",
+      "ideal-dev-workflow/ideal-test-case",
+      "ideal-dev-workflow/ideal-dev-exec",
+      "ideal-dev-workflow/ideal-debugging",
+      "ideal-dev-workflow/ideal-code-review",
+      "ideal-dev-workflow/ideal-test-exec",
+      "ideal-dev-workflow/ideal-wiki",
+      "ideal-dev-workflow/ideal-delivery",
+      "ideal-dev-workflow/deep-research"
+    ],
+    "relatedPluginSlugs": ["ideal-dev-workflow"],
+    "estimatedSteps": 15
+  },
+  {
+    "id": "review-solution",
+    "title": "评审一份技术方案",
+    "problem": "单视角评审容易漏，意见没结构（\"这个不太行\"——哪儿不行？多严重？）。",
+    "outcome": "按严重度排序的攻击面报告，每条都标具体位置和修复建议。",
+    "scope": "support",
+    "skillIds": [
+      "panel-review/panel-review",
+      "ideal-dev-workflow/ideal-code-review",
+      "ideal-dev-workflow/ideal-debugging"
+    ],
+    "relatedPluginSlugs": ["panel-review", "ideal-dev-workflow"],
+    "estimatedSteps": 5
+  },
+  {
+    "id": "write-solution",
+    "title": "写一份技术方案",
+    "problem": "PRD 写完直接给 AI 写代码，中间方案设计经常被跳过。",
+    "outcome": "架构 + 技术栈 + 数据模型 + 风险分析的完整技术方案文档。",
+    "scope": "lead",
+    "skillIds": [
+      "ideal-dev-workflow/ideal-dev-solution",
+      "ideal-dev-workflow/ideal-dev-plan"
+    ],
+    "relatedPluginSlugs": ["ideal-dev-workflow"],
+    "estimatedSteps": 4
+  },
+  {
+    "id": "generate-test-cases",
+    "title": "生成验收用例",
+    "problem": "需求到测试之间断层——测试不知道写什么、写多少。",
+    "outcome": "从需求文档抽取验收标准，生成功能/边界/异常三类测试用例。",
+    "scope": "support",
+    "skillIds": [
+      "ideal-dev-workflow/ideal-test-case"
+    ],
+    "relatedPluginSlugs": ["ideal-dev-workflow"],
+    "estimatedSteps": 3
+  },
+  {
+    "id": "exec-and-review",
+    "title": "执行编码 + 自动评审",
+    "problem": "AI 写完代码没人审，测试跑了不知道结果。",
+    "outcome": "TDD 编码 + 两阶段自动评审（spec compliance + code quality）+ 测试执行 + 缺陷追踪。",
+    "scope": "support",
+    "skillIds": [
+      "ideal-dev-workflow/ideal-dev-exec",
+      "ideal-dev-workflow/ideal-code-review",
+      "ideal-dev-workflow/ideal-test-exec",
+      "ideal-dev-workflow/ideal-debugging"
+    ],
+    "relatedPluginSlugs": ["ideal-dev-workflow"],
+    "estimatedSteps": 6
+  },
+  {
+    "id": "build-knowledge-base",
+    "title": "建一个结构化知识库",
+    "problem": "项目材料散落各地，文档写出来浮于表面，结构定不下来，写完就过时。",
+    "outcome": "从材料分析到索引审查的 5 阶段知识库，每轮迭代都跑索引更新。",
+    "scope": "lead",
+    "skillIds": [
+      "ideal-knowledge-base/build-knowledge-base-workflow",
+      "ideal-knowledge-base/kb-material-scope",
+      "ideal-knowledge-base/kb-deep-analysis",
+      "ideal-knowledge-base/kb-doc-planning",
+      "ideal-knowledge-base/kb-doc-writing",
+      "ideal-knowledge-base/kb-index-review"
+    ],
+    "relatedPluginSlugs": ["ideal-knowledge-base"],
+    "estimatedSteps": 5
+  },
+  {
+    "id": "write-long-doc",
+    "title": "写一份长文档（标书/方案/汇报）",
+    "problem": "20 页以上文档写到一半散——结构乱、深度不均、配图错位。",
+    "outcome": "What-Why-How 骨架的完整长文档，结构统一，配图到位，可导出 docx/pptx。",
+    "scope": "lead",
+    "skillIds": [
+      "ideal-document-workflow/ideal-document-workflow",
+      "ideal-document-workflow/requirement-analysis",
+      "ideal-document-workflow/outline-generation",
+      "ideal-document-workflow/task-split",
+      "ideal-document-workflow/document-writing",
+      "ideal-document-workflow/illustration",
+      "ideal-document-workflow/document-render"
+    ],
+    "relatedPluginSlugs": ["ideal-document-workflow"],
+    "estimatedSteps": 7
+  },
+  {
+    "id": "generate-images",
+    "title": "调一个图片生成模型",
+    "problem": "多 Provider API 各自不同，要切换麻烦；AI 出图用不上。",
+    "outcome": "通过 baoyu-image-gen 调 OpenAI/Google/DashScope，参考图/宽高比/批量并行，输出喂给文档或 PPT。",
+    "scope": "infra",
+    "skillIds": [
+      "baoyu-image-gen/baoyu-image-gen",
+      "ideal-ppt-suite/ideal-ppt-image"
+    ],
+    "relatedPluginSlugs": ["baoyu-image-gen", "ideal-ppt-suite"],
+    "estimatedSteps": 2
+  },
+  {
+    "id": "generate-dify-dsl",
+    "title": "生成一个 Dify 工作流 DSL",
+    "problem": "Dify 工作流从零搭慢，DSL 写错一个字段就跑不通。",
+    "outcome": "自然语言需求 → 节点选型 → DSL 生成 → 自动校验 → 可直接导入 Dify 的 YAML。",
+    "scope": "lead",
+    "skillIds": [
+      "ideal-dify-generator/ideal-dify-generator"
+    ],
+    "relatedPluginSlugs": ["ideal-dify-generator"],
+    "estimatedSteps": 3
+  },
+  {
+    "id": "maintain-ideal-lab",
+    "title": "维护 ideal-lab 仓库",
+    "problem": "改 SKILL.md 忘改 plugin.json 版本号，新加 skill 流程繁琐，发布靠手写 changelog。",
+    "outcome": "/maintainer commit / add-skill / add-plugin / release / validate 一行命令全做。",
+    "scope": "infra",
+    "skillIds": [
+      "ideal-lab-maintainer/ideal-lab-maintainer"
+    ],
+    "relatedPluginSlugs": ["ideal-lab-maintainer"],
+    "estimatedSteps": 3
+  },
+  {
+    "id": "optimize-skill",
+    "title": "优化 / 评审一个 skill 自身",
+    "problem": "Skill 写出来质量不稳，改了越改越差，判卷偏差大。",
+    "outcome": "7 维度结构评分 + checklist 实测 + 棘轮机制自动回滚 + 对抗审稿 + same-judge 判卷。",
+    "scope": "support",
+    "skillIds": [
+      "skill-builder/skill-builder",
+      "panel-review/panel-review"
+    ],
+    "relatedPluginSlugs": ["skill-builder", "panel-review"],
+    "estimatedSteps": 4
+  }
+]

@@ -41,3 +41,58 @@ export interface SearchEntry {
   keywords: string[];
   category?: string;
 }
+
+/* ── Skills Graph (knowledge graph data layer) ── */
+
+export type Relation = "enhancement" | "prerequisite" | "embeds" | "produces_for" | "alternative";
+export type Category = "development" | "content" | "research" | "knowledge" | "tooling" | "other";
+export type Arity = "standalone" | "phase" | "utility" | "orchestrator";
+
+export interface GraphNode {
+  id: string;            // "plugin/skill-slug"
+  name: string;
+  plugin: string;
+  category: Category;
+  arity: Arity;
+  description: string;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  relation: Relation;
+}
+
+export interface SkillsGraph {
+  metadata: {
+    generated_at: string;
+    total_skills: number;
+    total_edges: number;
+  };
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+/* ── Tasks (user-facing task panel) ── */
+
+export type TaskScope = "lead" | "support" | "infra";
+
+export interface Task {
+  id: string;
+  title: string;
+  problem: string;
+  outcome: string;
+  scope: TaskScope;
+  skillIds: string[];
+  relatedPluginSlugs: string[];
+  estimatedSteps: number;
+}
+
+/* ── Plugin Pain Points ── */
+
+export interface PluginPainPoint {
+  title: string;
+  detail: string;
+}
+
+export type PluginPainPoints = Record<string, PluginPainPoint[]>;
