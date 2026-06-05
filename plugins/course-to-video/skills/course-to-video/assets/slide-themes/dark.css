@@ -1,0 +1,13 @@
+/* Dark Theme (default) — override in <style> after template CSS */
+:root {
+  --bg: #1a1a2e;
+  --surface: rgba(255,255,255,0.06);
+  --surface-border: rgba(255,255,255,0.12);
+  --text: #e0e0e0;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #3b82f6;
+  --accent-light: #93c5fd;
+  --code-bg: rgba(0,0,0,0.4);
+  --tag-bg: #3b82f6;
+}

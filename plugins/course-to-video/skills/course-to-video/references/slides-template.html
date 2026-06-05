@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>{{COURSE_TITLE}}</title>
+<style>
+/* === DESIGN TOKENS (theme-able via CSS variables) === */
+:root {
+  --bg: #1a1a2e;
+  --surface: rgba(255,255,255,0.06);
+  --surface-border: rgba(255,255,255,0.12);
+  --text: #e0e0e0;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #3b82f6;
+  --accent-light: #93c5fd;
+  --code-bg: rgba(0,0,0,0.4);
+  --tag-bg: #3b82f6;
+  --good: #4ade80;
+  --bad: #f87171;
+  --warn: #f59e0b;
+  --radius: 10px;
+  --font: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+/* === BASE RESET === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  width: 1280px;
+  height: 720px;
+}
+
+/* === SLIDE SYSTEM === */
+.slide {
+  display: none;
+  width: 1280px;
+  height: 720px;
+  padding: 60px 80px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.slide.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* === SLIDE TYPE: Cover === */
+.slide-cover {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.slide-cover h1 { font-size: 48px; font-weight: 700; margin-bottom: 16px; }
+
+/* === SLIDE TYPE: Section Divider === */
+.slide-section {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.slide-section h2 { font-size: 42px; font-weight: 700; color: var(--accent-light); }
+
+/* === SLIDE TYPE: Content (default) === */
+.slide-content h2 { font-size: 36px; font-weight: 700; margin-bottom: 20px; color: #fff; }
+
+/* === SLIDE TYPE: Code === */
+.slide-code pre {
+  background: var(--code-bg);
+  padding: 24px 28px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 16px;
+  flex: 1;
+}
+
+/* === SLIDE TYPE: Summary === */
+.slide-summary { justify-content: center; }
+
+/* === TYPOGRAPHY === */
+h1 { font-size: 48px; font-weight: 700; margin-bottom: 16px; }
+h2 { font-size: 36px; font-weight: 700; margin-bottom: 20px; color: #fff; }
+h3 { font-size: 22px; font-weight: 600; margin-bottom: 10px; color: var(--accent-light); }
+p, li { font-size: 20px; line-height: 1.6; }
+
+/* === COMPONENTS === */
+.subtitle { font-size: 24px; color: var(--text-dim); margin-top: 12px; }
+.muted { color: var(--text-muted); font-size: 18px; margin-top: 16px; }
+.accent { color: var(--accent-light); }
+.good { color: var(--good); }
+.bad { color: var(--bad); }
+
+.center { text-align: center; justify-content: center; align-items: center; }
+
+.tag {
+  display: inline-block;
+  background: var(--tag-bg);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 16px;
+  margin: 4px;
+}
+.tag.green { background: #22c55e; }
+.tag.orange { background: var(--warn); }
+.tag.red { background: #ef4444; }
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.card h3 { margin-bottom: 8px; }
+.card p { font-size: 17px; color: var(--text-dim); }
+
+.emoji { font-size: 28px; }
+
+blockquote {
+  border-left: 4px solid var(--accent);
+  padding-left: 16px;
+  margin: 16px 0;
+  font-style: normal;
+  color: #cbd5e1;
+}
+
+ul { padding-left: 24px; }
+li { margin-bottom: 6px; }
+
+pre {
+  background: var(--code-bg);
+  padding: 16px 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+code {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+code.inline {
+  background: rgba(255,255,255,0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* === FOOTER (page counter, hidden during capture) === */
+.slides-nav {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  color: #475569;
+  font-size: 16px;
+  z-index: 100;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+  SLIDE TEMPLATES — copy the pattern you need
+
+  COVER SLIDE:
+  <div class="slide slide-cover active" id="slide-1">
+    <div class="center" style="width:100%">
+      <h1>课程标题</h1>
+      <p class="subtitle">副标题</p>
+      <p class="muted" style="margin-top:40px">标签行</p>
+    </div>
+  </div>
+
+  CONTENT SLIDE:
+  <div class="slide slide-content" id="slide-2">
+    <h2>页面标题</h2>
+    <p>正文内容</p>
+    <div class="grid2">...</div>
+  </div>
+
+  CODE SLIDE:
+  <div class="slide slide-code" id="slide-3">
+    <h2>代码演示</h2>
+    <pre><code>code here</code></pre>
+  </div>
+
+  SECTION DIVIDER:
+  <div class="slide slide-section" id="slide-4">
+    <h2>章节标题</h2>
+  </div>
+
+  SUMMARY SLIDE:
+  <div class="slide slide-summary" id="slide-5">
+    <h2>总结</h2>
+    <div class="grid2">
+      <div class="card"><span class="emoji">✅</span><p>成果 1</p></div>
+      <div class="card"><span class="emoji">✅</span><p>成果 2</p></div>
+    </div>
+  </div>
+============================================================ -->
+
+<!-- SLIDES GO HERE -->
+<div class="slide slide-cover active" id="slide-1">
+  <div class="center" style="width:100%">
+    <h1>{{COURSE_TITLE}}</h1>
+    <p class="subtitle">{{COURSE_SUBTITLE}}</p>
+    <p class="muted" style="margin-top:40px">{{COURSE_TAGS}}</p>
+  </div>
+</div>
+
+<div class="slides-nav"><span id="slideNum">1</span> / <span id="slideTotal">1</span></div>
+
+<script>
+// === NAVIGATION (for headless capture and keyboard browsing) ===
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+
+// Update total count display
+const totalEl = document.getElementById('slideTotal');
+if (totalEl) totalEl.textContent = total;
+
+function showSlide(n) {
+  slides[current].classList.remove('active');
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+  const numEl = document.getElementById('slideNum');
+  if (numEl) numEl.textContent = current + 1;
+}
+
+// Keyboard navigation for live preview
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); showSlide(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); showSlide(current - 1); }
+});
+</script>
+</body>
+</html>

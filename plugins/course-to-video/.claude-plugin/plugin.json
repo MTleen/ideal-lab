@@ -1,0 +1,8 @@
+{
+  "name": "course-to-video",
+  "version": "1.0.0",
+  "description": "课程转视频：参考资料 → 课程 Markdown → HTML 幻灯片 → TTS 旁白 → 教学视频",
+  "author": { "name": "MTleen" },
+  "skills": "./skills",
+  "keywords": ["course", "video", "tts", "slides", "education", "narration"]
+}
