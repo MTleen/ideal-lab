@@ -1,21 +1,16 @@
 ---
 name: course-to-video
 description: >
-  Create course content from reference materials AND transform it into narrated
-  teaching videos. Full pipeline: reference materials → course markdown → parse
-  → HTML slides → narration scripts → TTS audio (edge-tts) → screenshots
-  (Playwright) → compose video (ffmpeg). Use when the user asks to make a
-  teaching video, course video, narrated slideshow, instructional video, course
-  recording, 课件视频, 课程视频, 教学视频, 配音课件, 录课, 自动录课,
-  TTS 视频, 文字转视频, markdown 转 视频, 课件录制, 幻灯片视频, slide to
-  video, markdown to video, create course from materials, generate course
-  content, 写课件, 生成课件, 课程制作, or wants to convert course
-  content/slides/HTML into a video with voiceover. Also triggers on: "make a
-  video from my course", "add narration to slides", "generate audio for course",
-  "batch TTS", "edge-tts video", "course pipeline", "课程转视频",
-  "生成教学视频". Even if the user only asks for partial work (just slides, just
-  audio, just screenshots, just course content), use this skill — it handles
-  individual stages as well as the full pipeline. IMPORTANT: content generation
+  Transform course materials into narrated teaching videos. Full pipeline:
+  reference materials → course markdown → HTML slides → narration scripts
+  → TTS audio (edge-tts) → screenshots (Playwright) → video (ffmpeg).
+  Handles individual stages (just slides, just audio, just compose) or full
+  pipeline. Triggers on: 教学视频, 课程视频, 课件视频, 微课, 演示视频,
+  配音课件, 录课, 自动录课, 课程转视频, 课程制作, 写课件, 生成课件,
+  批量生成课程音频, 文字转视频, markdown转视频, 幻灯片视频, slide to
+  video, markdown to video, course video, teaching video, narrated slideshow,
+  instructional video, micro-course, demo video, course pipeline, batch TTS,
+  edge-tts video, add narration to slides. IMPORTANT: content generation
   requires reference materials as anchor — never fabricate factual content.
 ---
 
