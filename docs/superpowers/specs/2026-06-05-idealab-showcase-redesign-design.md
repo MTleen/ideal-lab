@@ -142,8 +142,10 @@ site/
 ├── public/
 │   └── graphs/
 │       └── skills-graph-fallback.svg  # build-time 用 mermaid 渲染的静态降级图
-├── next.config.ts
-├── package.json                       # 加 react-force-graph-2d, @types/d3-force
+├── .github/workflows/
+│   └── deploy-site.yml                # 新增：GitHub Pages 部署
+├── next.config.ts                      # 改：output: 'export' + basePath '/ideal-lab' + trailingSlash
+├── package.json                        # 加 react-force-graph-2d, d3-force, @types/d3-force
 └── ...
 ```
 
@@ -568,43 +570,121 @@ for (const slug of Object.keys(plugins)) {
 
 ---
 
-## 12. CI/CD 与准实时更新
+## 12. CI/CD 与准实时更新（GitHub Pages）
 
-**目标**：仓库 push → 1-3 分钟内线上反映新内容。
+**目标**：仓库 push → 1-3 分钟内 `https://MTleen.github.io/ideal-lab` 反映新内容。
 
 **当前**：仓库 push → 已有 `validate` workflow（lint）→ 但**没有**自动触发站点部署。
 
-**实施**：
+### 12.1 Next.js 静态导出配置
+
+`site/next.config.ts` 必须改为静态导出（GitHub Pages 不支持 server runtime）：
+
+```ts
+const nextConfig: NextConfig = {
+  output: 'export',           // 纯静态 HTML + assets
+  basePath: '/ideal-lab',     // 项目页路径
+  assetPrefix: '/ideal-lab',  // 静态资源前缀
+  images: { unoptimized: true },  // 静态导出禁用 next/image 优化
+  trailingSlash: true,        // GitHub Pages 对 /path/index.html 解析更稳
+};
+```
+
+**静态导出约束（必须遵守，否则 build 失败）**：
+- ❌ 不允许 `dynamic = 'force-dynamic'`
+- ❌ 不允许 `revalidate` / `revalidatePath`
+- ❌ 不允许 API route (`route.ts`)——`tasks.json` 校验在 build-time 跑，**不**做运行时 endpoint
+- ❌ 不允许 `cookies()` / `headers()` / `searchParams` 等 server runtime API
+- ✅ 允许 `generateStaticParams` 显式枚举（已在用）
+- ✅ 允许 `dynamic = 'force-static'` 或默认值
+
+**当前 spec 兼容性核对**：
+- 首页、Plugin 详情、Skill 详情都是 SSG + `generateStaticParams` ✅
+- 任务过滤 / 图谱交互全部在客户端（`useState` + URL searchParams via `useSearchParams`） ✅
+- 数据层 `fs.readFileSync` 是 build-time IO ✅
+- `notFound()` 调用——Next 16 静态导出支持 ✅
+
+### 12.2 CI 工作流
 
 ```yaml
 # .github/workflows/deploy-site.yml
-name: Deploy Site
+name: Deploy Site to GitHub Pages
+
 on:
   push:
     branches: [main]
     paths:
       - 'site/**'
-      - 'plugins/**'        # SKILL.md 改了也要触发
+      - 'plugins/**'              # SKILL.md 改了也要触发
       - 'skills-graph.json'
       - '.github/workflows/deploy-site.yml'
+  workflow_dispatch:               # 允许手动触发
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci
-      - run: npm --prefix site run build
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --prefix site
+
+      - name: Render graph fallback SVG
+        run: |
+          npm install -g @mermaid-js/mermaid-cli
+          mmdc -i docs/skills-graph.mmd -o site/public/graphs/skills-graph-fallback.svg
+
+      - name: Build static site
+        run: npm run build --prefix site
         env:
-          # Vercel / Cloudflare Pages token
-      - run: npm --prefix site run deploy
+          NEXT_PUBLIC_BASE_PATH: /ideal-lab
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
 ```
 
-**注意**：
+### 12.3 仓库配置
+
+- 仓库 **Settings → Pages → Source** 选 "GitHub Actions"（不是 "Deploy from a branch"）
+- 首次部署前需把 main 分支保护规则允许 bot push
+- 自定义域名（可选）：放 `site/out/CNAME` 或 `site/public/CNAME`，build 时复制到 `out/`
+
+### 12.4 注意
+
 - `plugins/**` 改动也要触发站点 build——因为 `site/src/lib/plugins.ts` 是 build-time IO
 - 不做客户端轮询；不做 SSE
-- 部署目标平台（Vercel / Cloudflare / 自建）由用户决定
+- 部署目标：**GitHub Pages（项目页 `MTleen.github.io/ideal-lab`）**
+- basePath 必须在 `next.config.ts` 里 hardcode，**不**读 `process.env.NEXT_PUBLIC_BASE_PATH`（避免 build 飘）
 
 ---
 
@@ -615,7 +695,7 @@ jobs:
 | **S1 设计系统迁移** | `globals.css` 应用 design-system.md 全部 token；字体加载（已有）；dark mode（已有）；新增图谱/Mini Graph 专用 token | Lighthouse 100/100/100/100；dark mode 切换通过 |
 | **S2 数据层** | `lib/graph.ts`、`lib/tasks.ts`、`lib/plugin-pain-points.ts`、`lib/skill-summary.ts`、`data/tasks.json`（13 个）、`data/plugin-pain-points.json`（≥8/11） | build-time 校验全部通过：所有 task 的 skillId 在 graph 中存在；所有 plugin-pain-points 的 slug 是真实 plugin |
 | **S3 首屏图谱 + 任务面板** | `GraphCanvas.tsx` + `GraphLegend.tsx` + `GraphControls.tsx` + `TaskPanel.tsx` + `TaskCard.tsx` + `TaskScriptView.tsx` + 首页重写 | Playwright 截图首屏；Lighthouse mobile 性能 ≥ 90；键盘导航通过 axe-core；URL 持久化通过 |
-| **S4 Plugin/Skill 详情页 + TOC + Mini Graph + CI** | `PluginHero` / `PluginPainPoints` / `PluginMetrics` / `PluginSkillList` + `SkillCapabilities` / `SkillPainPoints` / `SkillRelated` / `SkillToc` / `MiniGraph` + 详情页重写 + `.github/workflows/deploy-site.yml` + `public/graphs/skills-graph-fallback.svg` | 跑通 11 plugin × 3 skill 详情页无报错；TOC 折叠在长 SKILL.md 上正确工作；CI 部署一次验证 1-3 分钟可见 |
+| **S4 Plugin/Skill 详情页 + TOC + Mini Graph + CI** | `PluginHero` / `PluginPainPoints` / `PluginMetrics` / `PluginSkillList` + `SkillCapabilities` / `SkillPainPoints` / `SkillRelated` / `SkillToc` / `MiniGraph` + 详情页重写 + `next.config.ts` 改 `output: 'export'` + `basePath: '/ideal-lab'` + `.github/workflows/deploy-site.yml` + `public/graphs/skills-graph-fallback.svg` | 跑通 11 plugin × 3 skill 详情页无报错；TOC 折叠在长 SKILL.md 上正确工作；`next build` 成功生成 `site/out/`；CI 部署一次验证 `https://MTleen.github.io/ideal-lab` 1-3 分钟可见；所有静态资源 URL 包含 `/ideal-lab/` 前缀 |
 
 ---
 
@@ -627,9 +707,11 @@ jobs:
 | tasks.json 中 13 个任务 skillId 拼错 | 中 | 中 | S2 末尾 build-time check |
 | 痛点卡内容"看起来像编的" | 高 | 中 | 留空比编造好；S4 至少 8/11 plugin 有真实内容 |
 | SKILL.md 渲染破坏现有 prose 样式 | 低 | 中 | 不改 `.prose`；只改外层 wrapper |
-| 部署目标平台未确定 | 中 | 中 | S4 留 stub；用户决定后接入 |
+| **Next.js 16 静态导出与某未来需求冲突**（如想加 SSR 端 endpoint） | 中 | 高 | 节 12.1 列出禁止项；如未来需要 server runtime，必须迁出 GitHub Pages |
 | 13 个任务的 skillId 在 skills-graph.json 中已变 | 低 | 中 | build-time check 兜底 |
 | 移动端图谱 pinch-zoom 兼容性 | 低 | 低 | react-force-graph-2d 内置支持；不行则禁用移动端图谱 |
+| basePath / assetPrefix 漏改导致资源 404 | 中 | 高 | next.config.ts 改动在 S1 末尾 + S4 部署前再核对 |
+| mermaid CLI 渲染 fallback SVG 在 CI 超时 | 低 | 中 | CI 加 60s 超时；fallback 不是关键路径 |
 
 ---
 
@@ -662,9 +744,11 @@ jobs:
 
 ## 17. 开放问题（implementation phase 决定）
 
-| 问题 | 暂定 | 决策点 |
-|------|------|--------|
-| 部署目标平台 | Vercel（默认） | 用户确认 |
+| 问题 | 决策 | 备注 |
+|------|------|------|
+| 部署目标平台 | ✅ **GitHub Pages 项目页** `MTleen.github.io/ideal-lab` | 节 12 完整定义 |
+| Next.js 输出模式 | ✅ **`output: 'export'`**（静态导出） | GitHub Pages 强制 |
+| Base path | ✅ **`/ideal-lab`** | hardcode in `next.config.ts` |
 | 痛点卡第一版完整度 | 8/11 plugin 有内容 | 用户确认是否接受留空 |
 | 字体加载 | 保留 Satoshi（Fontshare CDN） | 已有 |
 | 导出 PNG | 工具栏预留位置，逻辑 P2 | 实施时定 |
