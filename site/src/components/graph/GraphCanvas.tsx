@@ -124,15 +124,26 @@ export default function GraphCanvas({
     return () => ro.disconnect();
   }, []);
 
-  /* Apply d3-force config */
+  /* Apply d3-force config + pre-warm simulation */
   useEffect(() => {
     const fg = fgRef.current;
     if (!fg) return;
-    // d3-force default strengths
-    fg.d3Force("charge")?.strength(-120);
-    fg.d3Force("link")?.distance((l: any) => (l.relation === "enhancement" ? 30 : 60));
-    fg.d3Force("center")?.strength(0.05);
-  }, [data]);
+    // Pre-position nodes: spread across the canvas using golden angle
+    const w = size.w || 800;
+    const h = size.h || 600;
+    data.nodes.forEach((n: any, i: number) => {
+      const angle = i * 2.39996; // golden angle
+      const radius = Math.min(w, h) * 0.35 * Math.sqrt((i + 1) / data.nodes.length);
+      n.x = w / 2 + radius * Math.cos(angle);
+      n.y = h / 2 + radius * Math.sin(angle);
+    });
+    fg.d3ReheatSimulation();
+
+    fg.d3Force("charge")?.strength(-260);
+    fg.d3Force("link")?.distance((l: any) => (l.relation === "enhancement" ? 40 : 70));
+    fg.d3Force("center")?.strength(0.08);
+    fg.d3Force("collide", (window as any).d3?.forceCollide?.(18));
+  }, [data, size.w, size.h]);
 
   /* Node radius from in-degree */
   const radiusOf = (n: GraphDatum) =>

@@ -118,7 +118,7 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             gridTemplateColumns: "minmax(0, 7fr) minmax(280px, 3fr)",
             borderColor: "var(--bp-border-0)",
             background: "var(--bp-surface-1)",
-            height: "min(75vh, 720px)",
+            height: "min(70vh, 660px)",
           }}
         >
           <div className="relative h-full overflow-hidden">
@@ -130,8 +130,6 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
               onNodeClick={handleNodeClick}
               onNodeHover={(n) => setHoveredSkillId(n?.id ?? null)}
             />
-            <GraphLegend />
-            <GraphControls />
           </div>
           <TaskPanel
             tasks={tasks}
@@ -139,6 +137,13 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             onSelectTask={handleSelectTask}
             hoveredSkillId={hoveredSkillId}
           />
+        </div>
+        {/* Legend + controls as bottom strip — gives graph full vertical space */}
+        <div
+          className="mt-3 flex flex-wrap items-center justify-between gap-3"
+        >
+          <GraphLegend />
+          <GraphControls />
         </div>
         <style>{`
           @media (max-width: 900px) {

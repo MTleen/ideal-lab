@@ -46,14 +46,12 @@ export interface SearchEntry {
 
 export type Relation = "enhancement" | "prerequisite" | "embeds" | "produces_for" | "alternative";
 export type Category = "development" | "content" | "research" | "knowledge" | "tooling" | "other";
-export type Arity = "standalone" | "phase" | "utility" | "orchestrator";
 
 export interface GraphNode {
   id: string;            // "plugin/skill-slug"
   name: string;
   plugin: string;
   category: Category;
-  arity: Arity;
   description: string;
 }
 

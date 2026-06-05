@@ -1,6 +1,6 @@
 import { getAllPlugins, loadPlugin } from "@/lib/plugins";
 import { getTasksByPlugin } from "@/lib/tasks";
-import { getNode, graphEdges } from "@/lib/graph";
+import { graphEdges } from "@/lib/graph";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -29,11 +29,10 @@ export default async function PluginPage({
 
   const tasks = getTasksByPlugin(slug);
 
-  /* Metrics: skills, phases, relations involving this plugin, has orchestrator */
+  /* Metrics: skills, phases, relations involving this plugin */
   const phaseSet = new Set<string>();
   let relationsIn = 0;
   let relationsOut = 0;
-  let hasOrchestrator = false;
   for (const skill of plugin.skills) {
     if (skill.phase) phaseSet.add(skill.phase);
     for (const e of graphEdges) {
@@ -41,11 +40,15 @@ export default async function PluginPage({
       if (e.source === `${plugin.slug}/${skill.slug}`) relationsOut++;
     }
   }
-  /* Check orchestrator */
-  for (const skill of plugin.skills) {
-    const n = getNode(`${plugin.slug}/${skill.slug}`);
-    if (n && n.arity === "orchestrator") hasOrchestrator = true;
-  }
+  /* Check orchestrator (plugin-level, hardcoded — orchestrators are workflow meta-skills) */
+  const ORCHESTRATOR_PLUGINS = new Set([
+    "ideal-dev-workflow",
+    "ideal-ppt-suite",
+    "ideal-document-workflow",
+    "ideal-knowledge-base",
+    "ideal-graph-orchestrator",
+  ]);
+  const hasOrchestrator = ORCHESTRATOR_PLUGINS.has(slug);
   const totalRelations = relationsIn + relationsOut;
 
   return (
