@@ -91,6 +91,13 @@
       "description": "通用 Skill Graph 编排器 — 自然语言描述需求 → 自动匹配 skills-graph.json 已有 skill → 检测缺口自动 scaffold 新 skill → 编译 workflow.yml → 执行跨 plugin skill 路径",
       "category": "development",
       "keywords": ["orchestrator", "graph", "workflow", "compose", "compile"]
+    },
+    {
+      "name": "course-to-video",
+      "source": "./plugins/course-to-video",
+      "description": "课程转视频全链路：参考资料→课程 Markdown→HTML 幻灯片→TTS 旁白→Playwright 截图→ffmpeg 合成教学视频",
+      "category": "content",
+      "keywords": ["course", "video", "tts", "slides", "education", "narration", "markdown"]
     }
   ]
 }

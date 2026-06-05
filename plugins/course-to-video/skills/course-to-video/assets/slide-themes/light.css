@@ -1,0 +1,13 @@
+/* Light Theme — override in <style> after template CSS */
+:root {
+  --bg: #ffffff;
+  --surface: rgba(0,0,0,0.04);
+  --surface-border: rgba(0,0,0,0.10);
+  --text: #1e293b;
+  --text-dim: #64748b;
+  --text-muted: #94a3b8;
+  --accent: #2563eb;
+  --accent-light: #3b82f6;
+  --code-bg: #f1f5f9;
+  --tag-bg: #2563eb;
+}
