@@ -24,21 +24,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: "#6e6e82",
 };
 
-const EDGE_COLORS: Record<Relation, string> = {
-  enhancement: "#a3a3a3",
-  prerequisite: "#7b5cea",
-  embeds: "#0ea5a0",
-  produces_for: "#d98b0a",
-  alternative: "#9b6cea",
-};
-
-const EDGE_WIDTHS: Record<Relation, number> = {
-  enhancement: 0.8,
-  prerequisite: 1.5,
-  embeds: 1.0,
-  produces_for: 1.5,
-  alternative: 1.5,
-};
+const EDGE_COLOR = "var(--bp-brand-500)";
 
 interface GraphDatum {
   id: string;
@@ -189,18 +175,19 @@ export default function GraphCanvas({
     ctx.globalAlpha = 1;
   };
 
-  /* Custom link paint for 5 relation styles */
+  /* Custom link paint — all 5 relations render as the same "call" edge.
+   * Original relation is preserved on each link and surfaced via tooltip on hover. */
   const paintLink = (link: LinkDatum, ctx: CanvasRenderingContext2D) => {
     const src = link.source as GraphDatum;
     const tgt = link.target as GraphDatum;
     if (typeof src.x !== "number" || typeof tgt.x !== "number") return;
     const dim = isDim(src) || isDim(tgt);
-    const color = EDGE_COLORS[link.relation];
-    ctx.strokeStyle = color;
-    ctx.globalAlpha = dim ? 0.1 : 0.7;
-    ctx.lineWidth = EDGE_WIDTHS[link.relation];
+    ctx.strokeStyle = EDGE_COLOR;
+    ctx.globalAlpha = dim ? 0.15 : 0.5;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
 
-    /* intra-plugin hidden edges: skip drawing */
+    /* intra-plugin hidden edges: skip drawing (they only enforce clustering) */
     if (src.plugin === tgt.plugin && link.relation === "enhancement" && !edges.find(
       (e) =>
         ((e.source === src.id && e.target === tgt.id) ||
@@ -209,19 +196,10 @@ export default function GraphCanvas({
       return;
     }
 
-    if (link.relation === "embeds") {
-      ctx.setLineDash([3, 3]);
-    } else if (link.relation === "alternative") {
-      ctx.setLineDash([1, 3]);
-    } else {
-      ctx.setLineDash([]);
-    }
-
     ctx.beginPath();
     ctx.moveTo(src.x!, src.y!);
     ctx.lineTo(tgt.x!, tgt.y!);
     ctx.stroke();
-    ctx.setLineDash([]);
     ctx.globalAlpha = 1;
   };
 
@@ -252,8 +230,6 @@ export default function GraphCanvas({
           nodeRelSize={6}
           nodeId="id"
           nodeVal={(n: any) => radiusOf(n as GraphDatum)}
-          linkColor={(l: any) => EDGE_COLORS[(l as LinkDatum).relation]}
-          linkWidth={(l: any) => EDGE_WIDTHS[(l as LinkDatum).relation]}
           linkDirectionalParticles={0}
           enableNodeDrag
           enableZoomInteraction

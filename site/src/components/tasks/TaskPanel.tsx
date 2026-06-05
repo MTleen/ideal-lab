@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import type { Task, Relation } from "@/lib/types";
+import { useMemo } from "react";
+import type { Task } from "@/lib/types";
 import TaskCard from "./TaskCard";
-import { getEdgeCountsByRelation } from "@/lib/graph";
-import { getAllTasks, getTasksContainingSkill } from "@/lib/tasks";
+import { getTasksContainingSkill } from "@/lib/tasks";
 
 interface Props {
   tasks: Task[];
@@ -13,41 +12,23 @@ interface Props {
   hoveredSkillId: string | null;
 }
 
-const RELATION_LABELS: Record<Relation, string> = {
-  enhancement: "enhancement",
-  prerequisite: "prerequisite",
-  embeds: "embeds",
-  produces_for: "produces_for",
-  alternative: "alternative",
-};
-
 export default function TaskPanel({
   tasks,
   selectedTaskId,
   onSelectTask,
   hoveredSkillId,
 }: Props) {
-  const [selectedRelations, setSelectedRelations] = useState<Set<Relation>>(new Set());
-  const edgeCounts = useMemo(() => getEdgeCountsByRelation(), []);
-
   /* Reverse-link: tasks that include the hovered skill */
   const highlightedTaskIds = useMemo(() => {
     if (!hoveredSkillId) return new Set<string>();
     return new Set(getTasksContainingSkill(hoveredSkillId).map((t) => t.id));
   }, [hoveredSkillId]);
 
-  const toggleRelation = (r: Relation) => {
-    const next = new Set(selectedRelations);
-    if (next.has(r)) next.delete(r);
-    else next.add(r);
-    setSelectedRelations(next);
-  };
-
   const handleSelect = (id: string) => {
     onSelectTask(selectedTaskId === id ? null : id);
   };
 
-  const totalTasks = getAllTasks().length;
+  const totalTasks = tasks.length;
 
   return (
     <aside
@@ -74,45 +55,6 @@ export default function TaskPanel({
             onClick={() => handleSelect(task.id)}
           />
         ))}
-      </div>
-
-      <div
-        className="px-4 py-3 border-t space-y-2"
-        style={{ borderColor: "var(--bp-border-0)" }}
-      >
-        <div className="text-[11px] font-semibold" style={{ color: "var(--bp-text-1)" }}>
-          Relation type
-        </div>
-        <div className="space-y-1">
-          {(Object.keys(RELATION_LABELS) as Relation[]).map((r) => (
-            <label
-              key={r}
-              className="flex items-center gap-2 text-[11px] cursor-pointer"
-              style={{ color: "var(--bp-text-1)" }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedRelations.has(r)}
-                onChange={() => toggleRelation(r)}
-                style={{ accentColor: "var(--bp-task-checkbox-accent)" }}
-              />
-              <span>{RELATION_LABELS[r]}</span>
-              <span style={{ color: "var(--bp-text-3)" }}>({edgeCounts[r]})</span>
-            </label>
-          ))}
-        </div>
-        {(selectedTaskId || selectedRelations.size > 0) && (
-          <button
-            onClick={() => {
-              onSelectTask(null);
-              setSelectedRelations(new Set());
-            }}
-            className="text-[11px] font-medium mt-1"
-            style={{ color: "var(--bp-brand-500)" }}
-          >
-            Clear filters
-          </button>
-        )}
       </div>
     </aside>
   );
