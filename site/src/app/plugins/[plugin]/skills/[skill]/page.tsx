@@ -11,6 +11,7 @@ import { parseSkillSummary } from "@/lib/skill-summary";
 import SkillCapabilities from "@/components/skill/SkillCapabilities";
 import SkillRelated from "@/components/skill/SkillRelated";
 import SkillToc from "@/components/skill/SkillToc";
+import BackLink from "@/components/BackLink";
 
 export function generateStaticParams() {
   const plugins = getAllPlugins();
@@ -46,16 +47,7 @@ export default async function SkillPage({
       <Nav />
       <main className="flex-1 pt-14">
         <div className="container-site py-4">
-          <Link
-            href={`/plugins/${pluginSlug}/`}
-            className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors no-underline"
-            style={{ color: "var(--bp-text-2)" }}
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10 3L5 8l5 5" />
-            </svg>
-            {plugin.meta.name}
-          </Link>
+          <BackLink href={`/plugins/${pluginSlug}/`} label={plugin.meta.name} />
         </div>
 
         {/* Header */}
@@ -63,17 +55,17 @@ export default async function SkillPage({
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {skill.phase && (
               <span
-                className="text-[10px] font-semibold tracking-widest uppercase px-2.5 py-1 rounded-full"
+                className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded"
                 style={{
                   background: "var(--bp-brand-500)",
                   color: "#fff",
                 }}
               >
-                Phase {skill.phase}
+                P{skill.phase}
               </span>
             )}
             <span
-              className="text-[10px] font-medium tracking-widest uppercase px-2.5 py-1 rounded-full"
+              className="text-[11px] font-medium px-2 py-0.5 rounded"
               style={{
                 background: "var(--bp-surface-2)",
                 color: "var(--bp-text-2)",
@@ -101,7 +93,7 @@ export default async function SkillPage({
         </section>
 
         {/* Capabilities (auto-extracted; empty → hidden) */}
-        <section className="container-site">
+        <section className="container-site pt-12">
           <SkillCapabilities summary={summary} />
         </section>
 
@@ -111,7 +103,7 @@ export default async function SkillPage({
         </section>
 
         {/* Body: TOC + markdown */}
-        <section className="container-site py-6">
+        <section className="container-site pt-12 pb-12">
           <div className="flex gap-8">
             <article
               id="skill-prose"
@@ -126,9 +118,9 @@ export default async function SkillPage({
 
         {/* References + Scripts */}
         {(skill.references.length > 0 || skill.scripts.length > 0) && (
-          <section className="container-site py-8">
+          <section className="container-site py-12">
             <h3
-              className="text-xs font-semibold tracking-widest uppercase mb-3"
+              className="text-xs font-semibold mb-3"
               style={{ color: "var(--bp-text-2)" }}
             >
               References &amp; scripts

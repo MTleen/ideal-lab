@@ -76,7 +76,7 @@ export default function SkillToc({ scopeSelector }: Props) {
       style={{ top: "var(--bp-toc-top-offset)", width: "var(--bp-toc-width)" }}
     >
       <div
-        className="text-[11px] font-semibold mb-2 uppercase tracking-wider"
+        className="text-[11px] font-semibold mb-2"
         style={{ color: "var(--bp-text-3)" }}
       >
         On this page

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 
 interface Props {
   value: string;
@@ -23,19 +24,12 @@ export default function SearchBar({ value, onChange }: Props) {
 
   return (
     <div className="relative max-w-md w-full">
-      <svg
+      <MagnifyingGlass
+        size={16}
+        weight="regular"
         className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
         style={{ color: "var(--bp-text-3)" }}
-      >
-        <circle cx="7" cy="7" r="4.5" />
-        <path d="M10.5 10.5L14 14" />
-      </svg>
+      />
       <input
         ref={inputRef}
         type="text"

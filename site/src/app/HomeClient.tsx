@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { GraphNode, Task, CategoryInfo } from "@/lib/types";
+import type { GraphNode, CategoryInfo } from "@/lib/types";
 import { getAllTasks, getTasksContainingSkill } from "@/lib/tasks";
 import { graphNodes, graphEdges, getNode } from "@/lib/graph";
 import { getPluginPainPoints } from "@/lib/plugin-pain-points";
@@ -36,6 +36,13 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [hoveredSkillId, setHoveredSkillId] = useState<string | null>(null);
   const [scriptVisible, setScriptVisible] = useState(false);
+  /* Defer mounting of the (graphically rich) TaskPanel for one tick so it
+   * fades in alongside GraphCanvas instead of popping in next to the loader. */
+  const [panelReady, setPanelReady] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setPanelReady(true), 120);
+    return () => window.clearTimeout(t);
+  }, []);
 
   /* Read task from URL */
   useEffect(() => {
@@ -86,7 +93,7 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
   return (
     <div>
       {/* Hero band */}
-      <section className="container-site pt-8 pb-4">
+      <section className="container-site pt-8 pb-12">
         <div
           className="inline-block text-[11px] font-medium tracking-widest uppercase mb-3 px-3 py-1 rounded-full"
           style={{
@@ -104,19 +111,30 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             maxWidth: 720,
           }}
         >
-          {graphNodes.length} skills · {pluginSlugs.length} plugins · {graphEdges.length} relations
+          Plugins that compose into working Claude Code workflows
         </h1>
         <p
-          className="max-w-2xl leading-relaxed"
+          className="max-w-2xl leading-relaxed mb-5"
           style={{ fontSize: 17, color: "var(--bp-text-1)" }}
         >
           Click any skill to see what it does, who uses it, and which problems it solves.
           Pick a task to highlight the skills that work together.
         </p>
+        {/* Metadata strip — kept monotone to avoid competing with H1 */}
+        <div
+          className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] font-mono"
+          style={{ color: "var(--bp-text-2)" }}
+        >
+          <span>{graphNodes.length} skills</span>
+          <span style={{ color: "var(--bp-text-3)" }}>·</span>
+          <span>{pluginSlugs.length} plugins</span>
+          <span style={{ color: "var(--bp-text-3)" }}>·</span>
+          <span>{graphEdges.length} relations</span>
+        </div>
       </section>
 
       {/* Graph + Task Panel split */}
-      <section className="container-site pb-8">
+      <section className="container-site pb-12">
         <div
           className="grid gap-4 rounded-xl border overflow-hidden"
           style={{
@@ -136,12 +154,26 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
               onNodeHover={(n) => setHoveredSkillId(n?.id ?? null)}
             />
           </div>
-          <TaskPanel
-            tasks={tasks}
-            selectedTaskId={selectedTaskId}
-            onSelectTask={handleSelectTask}
-            hoveredSkillId={hoveredSkillId}
-          />
+          {panelReady ? (
+            <TaskPanel
+              tasks={tasks}
+              selectedTaskId={selectedTaskId}
+              onSelectTask={handleSelectTask}
+              hoveredSkillId={hoveredSkillId}
+            />
+          ) : (
+            <aside
+              className="flex flex-col h-full overflow-hidden p-4 gap-2"
+              style={{ background: "var(--bp-surface-0)" }}
+              aria-hidden="true"
+            >
+              <div className="skeleton h-3 w-16" />
+              <div className="skeleton h-2 w-32 mb-3" />
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="skeleton h-12 w-full" />
+              ))}
+            </aside>
+          )}
         </div>
         {/* Legend as bottom strip — gives graph full vertical space */}
         <div
@@ -169,8 +201,8 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
         </section>
       )}
 
-      {/* Plugin index with pain points (top 4) */}
-      <section className="container-site pt-8 pb-4">
+      {/* Common problems (top 4 plugins, mixed sizes for rhythm) */}
+      <section className="container-site py-12">
         <h2
           className="text-2xl font-bold mb-2"
           style={{ color: "var(--bp-text-0)" }}
@@ -182,12 +214,17 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
         </p>
         <div
           className="grid gap-4"
-          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
+          style={{
+            /* Asymmetric 2-col: one wider card + a 2x2 stack on desktop, single col on mobile */
+            gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
+            gridAutoRows: "minmax(0, auto)",
+          }}
         >
-          {pluginSlugs.slice(0, 4).map((slug) => {
+          {pluginSlugs.slice(0, 4).map((slug, i) => {
             const pp = getPluginPainPoints(slug);
             if (pp.length === 0) return null;
             const first = pp[0];
+            const featured = i === 0;
             return (
               <Link
                 key={slug}
@@ -197,6 +234,7 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
                   background: "var(--bp-surface-1)",
                   borderColor: "var(--bp-border-0)",
                   color: "inherit",
+                  gridColumn: featured ? "1 / -1" : "auto",
                 }}
               >
                 <div
@@ -223,36 +261,47 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
         </div>
       </section>
 
-      {/* Plugin grid */}
-      <section className="container-site py-8">
-        <h2
-          className="text-2xl font-bold mb-2"
-          style={{ color: "var(--bp-text-0)" }}
-        >
-          All plugins ({pluginSlugs.length})
-        </h2>
+      {/* All plugins — list (NOT a uniform card grid) */}
+      <section className="container-site py-12">
+        <div className="flex items-baseline justify-between mb-2">
+          <h2
+            className="text-2xl font-bold"
+            style={{ color: "var(--bp-text-0)" }}
+          >
+            All plugins
+          </h2>
+          <span
+            className="text-sm font-mono"
+            style={{ color: "var(--bp-text-3)" }}
+          >
+            {pluginSlugs.length}
+          </span>
+        </div>
         <p className="text-sm mb-6" style={{ color: "var(--bp-text-2)" }}>
           Browse by category or jump into a specific plugin.
         </p>
-        <div
-          className="grid gap-3"
-          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}
+        <ul
+          className="divide-y rounded-lg border overflow-hidden"
+          style={{ borderColor: "var(--bp-border-0)" }}
         >
           {pluginSlugs.map((slug) => (
-            <Link
-              key={slug}
-              href={`/plugins/${slug}/`}
-              className="rounded-lg border px-3 py-2.5 text-sm transition-colors no-underline"
-              style={{
-                background: "var(--bp-surface-1)",
-                borderColor: "var(--bp-border-0)",
-                color: "var(--bp-text-0)",
-              }}
-            >
-              {slug}
-            </Link>
+            <li key={slug}>
+              <Link
+                href={`/plugins/${slug}/`}
+                className="flex items-center justify-between px-4 py-2.5 text-sm transition-colors no-underline hover:bg-[var(--bp-surface-1)]"
+                style={{ color: "var(--bp-text-0)" }}
+              >
+                <span className="font-medium">{slug}</span>
+                <span
+                  className="text-[11px] font-mono"
+                  style={{ color: "var(--bp-text-3)" }}
+                >
+                  →
+                </span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
     </div>
   );

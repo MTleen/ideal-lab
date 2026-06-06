@@ -27,9 +27,9 @@ export default function PluginCard({ plugin }: { plugin: PluginData }) {
       <div className="h-1 w-full" style={{ background: cat.color }} />
 
       <div className="p-5 flex flex-col flex-1">
-        {/* Category label */}
+        {/* Category label (NOT an eyebrow — small caps only) */}
         <div
-          className="text-[10px] font-medium tracking-widest uppercase mb-2"
+          className="text-[11px] font-medium mb-2"
           style={{ color: cat.color }}
         >
           {cat.label}

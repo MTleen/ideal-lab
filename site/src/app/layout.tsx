@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s · Ideal Best Practices",
   },
   description:
-    "Claude Code 最佳实践插件库 — 从需求到交付的完整开发链路，可复用的 AI 工程方法论。",
+    "Claude Code 最佳实践插件库:从需求到交付的完整开发链路,可复用的 AI 工程方法论。",
 };
 
 export default function RootLayout({

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import NotFoundIcon from "@/components/NotFoundIcon";
 
 export default function NotFound() {
   return (
@@ -11,19 +12,7 @@ export default function NotFound() {
             className="w-20 h-20 mx-auto mb-8 rounded-full flex items-center justify-center"
             style={{ background: "var(--bp-surface-2)" }}
           >
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              style={{ color: "var(--bp-text-3)" }}
-            >
-              <circle cx="8" cy="8" r="1" />
-              <path d="M3 8a5 5 0 0110 0" />
-              <path d="M4 5a4 4 0 018 0" />
-            </svg>
+            <NotFoundIcon />
           </div>
           <h1
             className="text-2xl font-bold mb-3"

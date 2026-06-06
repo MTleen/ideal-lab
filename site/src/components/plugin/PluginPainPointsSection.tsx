@@ -10,7 +10,7 @@ export default function PluginPainPointsSection({ plugin }: Props) {
   const pp = getPluginPainPoints(plugin.slug);
   if (pp.length === 0) return null;
   return (
-    <section className="container-site py-8">
+    <section className="container-site py-12">
       <h2
         className="text-xl font-bold mb-2"
         style={{ color: "var(--bp-text-0)" }}
@@ -33,12 +33,6 @@ export default function PluginPainPointsSection({ plugin }: Props) {
               borderColor: "var(--bp-border-0)",
             }}
           >
-            <div
-              className="text-[11px] font-semibold mb-1.5"
-              style={{ color: "var(--bp-brand-500)" }}
-            >
-              {String(i + 1).padStart(2, "0")}
-            </div>
             <h3
               className="text-base font-semibold mb-2"
               style={{ color: "var(--bp-text-0)" }}

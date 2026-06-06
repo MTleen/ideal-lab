@@ -60,6 +60,12 @@
   /* Nav */
   --bp-nav-height: 56px;
 
+  /* Z-index scale (use these instead of hardcoded z-50 / z-10) */
+  --bp-z-base: 0;
+  --bp-z-graph-tooltip: 10;
+  --bp-z-graph-controls: 10;
+  --bp-z-nav: 50;
+
   /* Graph — node (skill) */
   --bp-graph-node-default-fill: var(--bp-surface-3);
   --bp-graph-node-hover-glow: oklch(0.52 0.14 270 / 0.35);
@@ -186,19 +192,10 @@
   --color-text-2: var(--bp-text-2);
   --font-sans: "Satoshi", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", ui-monospace, monospace;
-  --animate-page-enter: page-enter 0.5s var(--bp-ease-out-expo) both;
-  --animate-stagger: stagger-item 0.5s var(--bp-ease-out-expo) both;
+  --animate-shimmer: shimmer 1.5s linear infinite;
 }
 
 /* ── Keyframes ── */
-@keyframes page-enter {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes stagger-item {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
@@ -308,12 +305,16 @@ body {
   position: relative;
 }
 
-/* ── Skeleton loading ── */
+/* ── Skeleton loading (gated by prefers-reduced-motion) ── */
 .skeleton {
   background: linear-gradient(90deg, var(--bp-surface-2) 25%, var(--bp-surface-3) 50%, var(--bp-surface-2) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
   border-radius: var(--bp-radius-md);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: shimmer 1.5s linear infinite;
+  }
 }
 
 /* ── Utility ── */

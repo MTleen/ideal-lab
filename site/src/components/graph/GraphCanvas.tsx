@@ -110,7 +110,7 @@ export default function GraphCanvas({
     return () => ro.disconnect();
   }, []);
 
-  /* Apply d3-force config + pre-warm simulation */
+  /* Apply d3-force config + pre-warm simulation (respects prefers-reduced-motion) */
   useEffect(() => {
     const fg = fgRef.current;
     if (!fg) return;
@@ -123,6 +123,21 @@ export default function GraphCanvas({
       n.x = w / 2 + radius * Math.cos(angle);
       n.y = h / 2 + radius * Math.sin(angle);
     });
+
+    // Honor prefers-reduced-motion: skip physics, freeze layout
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) {
+      // Pin nodes at their pre-positioned coords and skip the simulation
+      for (const n of data.nodes) {
+        (n as any).fx = n.x;
+        (n as any).fy = n.y;
+      }
+      return;
+    }
+
     fg.d3ReheatSimulation();
 
     fg.d3Force("charge")?.strength(-380);
@@ -260,8 +275,8 @@ export default function GraphCanvas({
           enableNodeDrag
           enableZoomInteraction
           enablePanInteraction
-          cooldownTicks={120}
-          warmupTicks={40}
+          cooldownTicks={typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : 120}
+          warmupTicks={typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : 40}
           nodeCanvasObject={paintNode}
           nodePointerAreaPaint={paintPointerArea as any}
           linkCanvasObjectMode={() => "replace" as const}
@@ -276,7 +291,7 @@ export default function GraphCanvas({
       )}
       {tooltip && (
         <div
-          className="pointer-events-none absolute z-10 rounded-md border px-3 py-2 text-xs"
+          className="pointer-events-none absolute rounded-md border px-3 py-2 text-xs"
           style={{
             left: tooltip.x + 12,
             top: tooltip.y + 12,
@@ -285,6 +300,7 @@ export default function GraphCanvas({
             color: "var(--bp-text-0)",
             boxShadow: "var(--bp-shadow-md)",
             maxWidth: 240,
+            zIndex: "var(--bp-z-graph-tooltip)" as unknown as number,
           }}
         >
           <div className="font-semibold">{tooltip.node.name}</div>

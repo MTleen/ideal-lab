@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import CodeBlock from "@/components/CodeBlock";
 import Link from "next/link";
 import PluginPainPointsSection from "@/components/plugin/PluginPainPointsSection";
+import { CaretBackLink, CtaArrowLink } from "@/components/PluginPageLinks";
 
 export function generateStaticParams() {
   const plugins = getAllPlugins();
@@ -56,16 +57,7 @@ export default async function PluginPage({
       <Nav />
       <main className="flex-1 pt-14">
         <div className="container-site py-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors no-underline"
-            style={{ color: "var(--bp-text-2)" }}
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10 3L5 8l5 5" />
-            </svg>
-            All plugins
-          </Link>
+          <CaretBackLink href="/" label="All plugins" />
         </div>
 
         {/* Hero */}
@@ -129,7 +121,7 @@ export default async function PluginPage({
 
         {/* Tasks using this plugin */}
         {tasks.length > 0 && (
-          <section className="container-site py-8">
+          <section className="container-site py-12">
             <h2 className="text-xl font-bold mb-2" style={{ color: "var(--bp-text-0)" }}>
               Tasks using this plugin
             </h2>
@@ -161,7 +153,7 @@ export default async function PluginPage({
         )}
 
         {/* Skills list */}
-        <section className="container-site py-8">
+        <section className="container-site py-12">
           <h2 className="text-xl font-bold mb-2" style={{ color: "var(--bp-text-0)" }}>
             Skills ({plugin.skillCount})
           </h2>
@@ -203,17 +195,11 @@ export default async function PluginPage({
         </section>
 
         {/* CTA: view in graph */}
-        <section className="container-site py-8 text-center">
-          <Link
+        <section className="container-site py-12 text-center">
+          <CtaArrowLink
             href={`/?focus=${plugin.slug}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors no-underline"
-            style={{
-              background: "var(--bp-brand-500)",
-              color: "#fff",
-            }}
-          >
-            Open in knowledge graph →
-          </Link>
+            label="Open in knowledge graph"
+          />
         </section>
       </main>
       <Footer />
@@ -233,7 +219,7 @@ function Metric({ label, value }: { label: string; value: number | string }) {
       <div className="text-lg font-bold" style={{ color: "var(--bp-text-0)" }}>
         {value}
       </div>
-      <div className="text-[10px] uppercase tracking-wider" style={{ color: "var(--bp-text-3)" }}>
+      <div className="text-[11px] font-medium" style={{ color: "var(--bp-text-3)" }}>
         {label}
       </div>
     </div>
