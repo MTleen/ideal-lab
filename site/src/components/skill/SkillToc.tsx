@@ -30,6 +30,7 @@ export default function SkillToc({ scopeSelector }: Props) {
       h.id = id;
       return { level: h.tagName === "H2" ? 2 : 3, text, id };
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 从已渲染 DOM 同步 TOC，仅依赖 scopeSelector
     setLinks(ls);
 
     const observer = new IntersectionObserver(
@@ -51,7 +52,6 @@ export default function SkillToc({ scopeSelector }: Props) {
   const fold = h2s.length >= FOLD_THRESHOLD;
   const visibleH2 = fold ? h2s.slice(0, h2s.length - FOLD_COUNT) : h2s;
   const foldedH2 = fold ? h2s.slice(h2s.length - FOLD_COUNT) : [];
-  const foldedIds = new Set(foldedH2.map((h) => h.id));
 
   const renderLink = (l: TocLink) => (
     <li key={l.id}>
@@ -85,7 +85,7 @@ export default function SkillToc({ scopeSelector }: Props) {
         {visibleH2.map((h) => {
           const children = links.filter((l) => l.level === 3 && /* same parent */ true);
           /* Show H2 + its direct H3 children if any in visible range */
-          const h3Children = children.filter((c) => /* simplistic: all h3 between this h2 and next h2 */ true);
+          const h3Children = children.filter(() => true);
           return (
             <li key={h.id}>
               {renderLink(h)}

@@ -1,6 +1,5 @@
 import type { PluginData } from "@/lib/types";
 import { getPluginPainPoints } from "@/lib/plugin-pain-points";
-import { getTasksByPlugin } from "@/lib/tasks";
 
 interface Props {
   plugin: PluginData;
@@ -15,10 +14,10 @@ export default function PluginPainPointsSection({ plugin }: Props) {
         className="text-xl font-bold mb-2"
         style={{ color: "var(--bp-text-0)" }}
       >
-        Problems this solves
+        解决什么问题
       </h2>
       <p className="text-sm mb-6" style={{ color: "var(--bp-text-2)" }}>
-        Pain points derived from {plugin.slug} skills' capabilities.
+        以下痛点源自 {plugin.slug} 各 skill 的能力记录。
       </p>
       <div
         className="grid gap-4"

@@ -1,4 +1,7 @@
 "use client";
+/* react-force-graph-2d 的回调参数无友好泛型，d3-force 力学要求直接 mutate
+ * 节点坐标 —— 这是该库的既有约定，无法用更严格的类型 / 不可变写法规避。 */
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/immutability */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph2D, { ForceGraphMethods } from "react-force-graph-2d";

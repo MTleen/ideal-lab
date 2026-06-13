@@ -4,9 +4,9 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { GraphNode, CategoryInfo, PluginSummary } from "@/lib/types";
-import { getAllTasks, getTasksContainingSkill } from "@/lib/tasks";
-import { graphNodes, graphEdges, getNode, getEdgeCountsByRelation } from "@/lib/graph";
+import type { GraphNode, PluginSummary } from "@/lib/types";
+import { getAllTasks } from "@/lib/tasks";
+import { graphNodes, graphEdges, getEdgeCountsByRelation } from "@/lib/graph";
 import { getPluginPainPoints } from "@/lib/plugin-pain-points";
 import { getCategory } from "@/lib/utils";
 import TaskPanel from "@/components/tasks/TaskPanel";
@@ -28,11 +28,10 @@ const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), {
 });
 
 interface Props {
-  categories: CategoryInfo[];
   plugins: PluginSummary[];
 }
 
-export default function HomeClient({ categories, plugins }: Props) {
+export default function HomeClient({ plugins }: Props) {
   const tasks = useMemo(() => getAllTasks(), []);
   /* Visible relations = only the three edge types painted on the canvas
    * (prerequisite / calls / produces_for). enhancement / alternative are
@@ -63,6 +62,7 @@ export default function HomeClient({ categories, plugins }: Props) {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("task");
     if (t && tasks.find((x) => x.id === t)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 从 URL 读取初始任务（仅 client）
       setSelectedTaskId(t);
       setScriptVisible(true);
     }

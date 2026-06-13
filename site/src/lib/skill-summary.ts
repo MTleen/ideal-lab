@@ -5,7 +5,7 @@
 
 import { remark } from "remark";
 import remarkParse from "remark-parse";
-import type { Root, Heading, Paragraph, Text } from "mdast";
+import type { Root, Heading, Paragraph } from "mdast";
 
 export interface TocEntry {
   level: 2 | 3;
@@ -31,14 +31,16 @@ function slugify(s: string): string {
     .replace(/^-|-$/g, "");
 }
 
+type Walkable = { type: string; value?: string; children?: Walkable[] };
+
 function firstSentenceOf(node: Paragraph | undefined): string | undefined {
   if (!node) return undefined;
   const texts: string[] = [];
-  const walk = (n: any) => {
-    if (n.type === "text") texts.push((n as Text).value);
-    if (n.children) for (const c of n.children) walk(c);
+  const walk = (n: Walkable): void => {
+    if (n.type === "text" && typeof n.value === "string") texts.push(n.value);
+    for (const c of n.children ?? []) walk(c);
   };
-  walk(node);
+  walk(node as unknown as Walkable);
   const text = texts.join(" ").trim();
   if (!text) return undefined;
   const m = text.match(/^[^。.!?！？\n]+[。.!?！？]/);
@@ -55,8 +57,8 @@ export function parseSkillSummary(content: string): SkillSummary {
     const node = tree.children[i];
     if (node.type === "heading" && (node.depth === 2 || node.depth === 3)) {
       const heading = node as Heading;
-      const text = heading.children
-        .map((c: any) => (c.type === "text" ? c.value : ""))
+      const text = (heading.children as unknown as Walkable[])
+        .map((c) => (c.type === "text" ? c.value ?? "" : ""))
         .join("")
         .trim();
       if (text) {

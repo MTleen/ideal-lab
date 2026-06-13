@@ -1,5 +1,5 @@
 import { getAllPlugins } from "@/lib/plugins";
-import { getAllCategories, detectCategory } from "@/lib/utils";
+import { detectCategory } from "@/lib/utils";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import HomeClient from "./HomeClient";
@@ -15,13 +15,11 @@ export default function HomePage() {
     skillCount: p.skillCount,
     category: detectCategory(p),
   }));
-  const categories = getAllCategories();
-
   return (
     <>
       <Nav />
       <main className="flex-1 pt-14">
-        <HomeClient categories={categories} plugins={pluginSummaries} />
+        <HomeClient plugins={pluginSummaries} />
       </main>
       <Footer />
     </>

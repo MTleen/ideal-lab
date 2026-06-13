@@ -8,6 +8,7 @@ export default function Nav() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR 安全读取初始主题（避免 hydration mismatch）
     setDark(document.documentElement.classList.contains("dark"));
   }, []);
 
