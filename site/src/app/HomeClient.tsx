@@ -21,7 +21,7 @@ const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), {
       style={{ minHeight: 360, background: "var(--bp-surface-0)" }}
     >
       <p className="text-sm" style={{ color: "var(--bp-text-2)" }}>
-        Loading knowledge graph...
+        正在加载知识图谱…
       </p>
     </div>
   ),
@@ -133,16 +133,25 @@ export default function HomeClient({ categories, plugins }: Props) {
           点击任意技能节点，查看它的作用与所解决的问题。
           选择一个任务，高亮其中协作的技能。
         </p>
-        {/* Metadata strip — kept monotone to avoid competing with H1 */}
-        <div
-          className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] font-mono"
-          style={{ color: "var(--bp-text-2)" }}
-        >
-          <span>{graphNodes.length} 个技能</span>
-          <span style={{ color: "var(--bp-text-3)" }}>·</span>
-          <span>{plugins.length} 个插件</span>
-          <span style={{ color: "var(--bp-text-3)" }}>·</span>
-          <span>{visibleRelations} 条关系</span>
+        {/* Stat band — 大号数字 + 小标签，作为 hero 的视觉锚点 */}
+        <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+          {[
+            { n: graphNodes.length, label: "技能" },
+            { n: plugins.length, label: "插件" },
+            { n: visibleRelations, label: "关系" },
+          ].map((s) => (
+            <div key={s.label} className="flex items-baseline gap-1.5">
+              <span
+                className="text-3xl font-black tabular-nums leading-none"
+                style={{ color: "var(--bp-text-0)" }}
+              >
+                {s.n}
+              </span>
+              <span className="text-xs" style={{ color: "var(--bp-text-2)" }}>
+                {s.label}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -216,6 +225,12 @@ export default function HomeClient({ categories, plugins }: Props) {
 
       {/* Common problems (top 4 plugins, mixed sizes for rhythm) */}
       <section className="container-site py-12">
+        <div
+          className="text-[11px] font-semibold tracking-widest uppercase mb-2"
+          style={{ color: "var(--bp-brand-500)" }}
+        >
+          痛点速览
+        </div>
         <h2
           className="text-2xl font-bold mb-2"
           style={{ color: "var(--bp-text-0)" }}
@@ -243,12 +258,13 @@ export default function HomeClient({ categories, plugins }: Props) {
               <Link
                 key={p.slug}
                 href={`/plugins/${p.slug}/`}
-                className="block rounded-lg border p-4 transition-all no-underline"
+                className="block rounded-lg border p-4 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-[var(--bp-border-1)]"
                 style={{
                   background: "var(--bp-surface-1)",
                   borderColor: "var(--bp-border-0)",
                   color: "inherit",
                   gridColumn: featured ? "1 / -1" : "auto",
+                  transitionTimingFunction: "var(--bp-ease-out-expo)",
                 }}
               >
                 <div className="flex items-center gap-1.5 mb-1.5">
@@ -289,6 +305,12 @@ export default function HomeClient({ categories, plugins }: Props) {
 
       {/* All plugins — list (NOT a uniform card grid) */}
       <section className="container-site py-12">
+        <div
+          className="text-[11px] font-semibold tracking-widest uppercase mb-2"
+          style={{ color: "var(--bp-brand-500)" }}
+        >
+          插件索引
+        </div>
         <div className="flex items-baseline justify-between mb-2">
           <h2
             className="text-2xl font-bold"
