@@ -10,7 +10,7 @@
       "phase": 16
     },
     "relation_distribution": {
-      "embeds": 18,
+      "calls": 18,
       "prerequisite": 14,
       "enhancement": 146,
       "alternative": 1,

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GraphNode, CategoryInfo } from "@/lib/types";
 import { getAllTasks, getTasksContainingSkill } from "@/lib/tasks";
-import { graphNodes, graphEdges, getNode } from "@/lib/graph";
+import { graphNodes, graphEdges, getNode, getEdgeCountsByRelation } from "@/lib/graph";
 import { getPluginPainPoints } from "@/lib/plugin-pain-points";
 import TaskPanel from "@/components/tasks/TaskPanel";
 import TaskScriptView from "@/components/tasks/TaskScriptView";
@@ -33,6 +33,13 @@ interface Props {
 
 export default function HomeClient({ categories, pluginSlugs }: Props) {
   const tasks = useMemo(() => getAllTasks(), []);
+  /* Visible relations = only the three edge types painted on the canvas
+   * (prerequisite / calls / produces_for). enhancement / alternative are
+   * hidden cross-cutting noise, so we don't advertise their count. */
+  const visibleRelations = useMemo(() => {
+    const c = getEdgeCountsByRelation();
+    return c.prerequisite + c.calls + c.produces_for;
+  }, []);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [hoveredSkillId, setHoveredSkillId] = useState<string | null>(null);
   const [scriptVisible, setScriptVisible] = useState(false);
@@ -129,7 +136,7 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
           <span style={{ color: "var(--bp-text-3)" }}>·</span>
           <span>{pluginSlugs.length} plugins</span>
           <span style={{ color: "var(--bp-text-3)" }}>·</span>
-          <span>{graphEdges.length} relations</span>
+          <span>{visibleRelations} relations</span>
         </div>
       </section>
 

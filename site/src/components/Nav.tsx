@@ -22,7 +22,7 @@ export default function Nav() {
     <nav
       className="fixed top-0 inset-x-0 h-14 flex items-center backdrop-blur-md border-b"
       style={{
-        background: "oklch(0.99 0.001 270 / 0.8)",
+        background: "var(--bp-nav-bg)",
         borderColor: "var(--bp-border-0)",
         zIndex: "var(--bp-z-nav)" as unknown as number,
       }}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph2D, { ForceGraphMethods } from "react-force-graph-2d";
 import type { GraphNode, GraphEdge, Relation } from "@/lib/types";
+import GraphControls from "./GraphControls";
 
 interface Props {
   nodes: GraphNode[];
@@ -15,16 +16,19 @@ interface Props {
   onNodeHover?: (node: GraphNode | null) => void;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  development: "#7b5cea",
-  content: "#0ea5a0",
-  research: "#d98b0a",
-  knowledge: "#8ba60a",
-  tooling: "#9b6cea",
-  other: "#6e6e82",
+/* Relations that describe a real skill→skill flow and should be drawn.
+ * enhancement / alternative are cross-cutting noise (panel-review, deep-research
+ * and skill-builder fan out one-to-many) — kept only for force clustering and
+ * the skill detail "Related skills" section, never painted on the canvas.
+ * This is the fix for the old "render only calls" policy, which starved the
+ * graph of its prerequisite skeleton and left 54% of nodes isolated. */
+const VISIBLE_RELATIONS: Record<Relation, boolean> = {
+  prerequisite: true,
+  calls: true,
+  produces_for: true,
+  enhancement: false,
+  alternative: false,
 };
-
-const EDGE_COLOR = "var(--bp-brand-500)";
 
 interface GraphDatum {
   id: string;
@@ -35,12 +39,61 @@ interface GraphDatum {
   // d3-force injects:
   x?: number;
   y?: number;
+  fx?: number;
+  fy?: number;
 }
 
 interface LinkDatum {
   source: string | GraphDatum;
   target: string | GraphDatum;
   relation: Relation;
+}
+
+type Palette = {
+  cat: Record<string, string>;
+  edge: { prerequisite: string; calls: string; produces_for: string };
+};
+
+const FALLBACK_PALETTE: Palette = {
+  cat: {
+    development: "#7b5cea",
+    content: "#0ea5a0",
+    research: "#d98b0a",
+    knowledge: "#8ba60a",
+    tooling: "#9b6cea",
+    other: "#6e6e82",
+  },
+  edge: {
+    prerequisite: "#7b5cea",
+    calls: "#6b7280",
+    produces_for: "#d98b0a",
+  },
+};
+
+/* Read colors from CSS tokens (not hardcoded hex) so the canvas tracks the
+ * design system and adapts to dark mode. */
+function readPalette(): Palette {
+  if (typeof window === "undefined") return FALLBACK_PALETTE;
+  const cs = getComputedStyle(document.documentElement);
+  const token = (n: string) => cs.getPropertyValue(n).trim();
+  const cat = (key: string, fb: string) =>
+    token(`--bp-graph-cat-${key}`) || fb;
+  const edge = (n: string, fb: string) => token(n) || fb;
+  return {
+    cat: {
+      development: cat("development", FALLBACK_PALETTE.cat.development),
+      content: cat("content", FALLBACK_PALETTE.cat.content),
+      research: cat("research", FALLBACK_PALETTE.cat.research),
+      knowledge: cat("knowledge", FALLBACK_PALETTE.cat.knowledge),
+      tooling: cat("tooling", FALLBACK_PALETTE.cat.tooling),
+      other: FALLBACK_PALETTE.cat.other,
+    },
+    edge: {
+      prerequisite: edge("--bp-graph-edge-prerequisite", FALLBACK_PALETTE.edge.prerequisite),
+      calls: edge("--bp-graph-edge-calls", FALLBACK_PALETTE.edge.calls),
+      produces_for: edge("--bp-graph-edge-produces-for", FALLBACK_PALETTE.edge.produces_for),
+    },
+  };
 }
 
 export default function GraphCanvas({
@@ -54,15 +107,33 @@ export default function GraphCanvas({
   const fgRef = useRef<ForceGraphMethods<GraphDatum, LinkDatum> | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; node: GraphDatum } | null>(null);
+  const paletteRef = useRef<Palette>(readPalette());
+  const [, bumpRender] = useState(0);
 
   const highlightSet = useMemo(() => new Set(highlightedSkillIds), [highlightedSkillIds]);
 
-  /* Build graph data: include hidden intra-plugin edges to enforce clustering */
+  /* Re-read tokens when the theme (.dark) toggles so canvas colors follow
+   * light/dark without any hardcoded value. */
+  useEffect(() => {
+    const apply = () => {
+      paletteRef.current = readPalette();
+      bumpRender((n) => n + 1);
+      fgRef.current?.d3ReheatSimulation();
+    };
+    const mo = new MutationObserver(apply);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => mo.disconnect();
+  }, []);
+
+  /* in-degree counts ONLY visible relations (the ones we paint), so node size
+   * reflects what the user can actually see. Synthetic intra-plugin clustering
+   * edges are appended afterwards for force-layout grouping only. */
   const data = useMemo(() => {
     const inDeg = new Map<string, number>();
-    for (const e of edges) inDeg.set(e.target, (inDeg.get(e.target) ?? 0) + 1);
+    for (const e of edges) {
+      if (!VISIBLE_RELATIONS[e.relation]) continue;
+      inDeg.set(e.target, (inDeg.get(e.target) ?? 0) + 1);
+    }
 
     const gNodes: GraphDatum[] = nodes.map((n) => ({
       id: n.id,
@@ -78,7 +149,7 @@ export default function GraphCanvas({
       relation: e.relation,
     }));
 
-    /* Hidden intra-plugin clustering edges */
+    /* Hidden intra-plugin clustering edges (never painted; force-layout only) */
     const byPlugin = new Map<string, GraphDatum[]>();
     for (const n of gNodes) {
       const arr = byPlugin.get(n.plugin) ?? [];
@@ -95,6 +166,19 @@ export default function GraphCanvas({
 
     return { nodes: gNodes, links: gEdges };
   }, [nodes, edges]);
+
+  /* Seed node positions with the golden-angle spiral so the simulation starts
+   * from a sensible layout instead of a centroid pile-up. */
+  const seedPositions = (w: number, h: number) => {
+    data.nodes.forEach((n: any, i: number) => {
+      const angle = i * 2.39996;
+      const radius = Math.min(w, h) * 0.35 * Math.sqrt((i + 1) / data.nodes.length);
+      n.x = w / 2 + radius * Math.cos(angle);
+      n.y = h / 2 + radius * Math.sin(angle);
+      n.fx = undefined;
+      n.fy = undefined;
+    });
+  };
 
   /* Resize observer */
   useEffect(() => {
@@ -114,23 +198,15 @@ export default function GraphCanvas({
   useEffect(() => {
     const fg = fgRef.current;
     if (!fg) return;
-    // Pre-position nodes: spread across the canvas using golden angle
     const w = size.w || 800;
     const h = size.h || 600;
-    data.nodes.forEach((n: any, i: number) => {
-      const angle = i * 2.39996; // golden angle
-      const radius = Math.min(w, h) * 0.35 * Math.sqrt((i + 1) / data.nodes.length);
-      n.x = w / 2 + radius * Math.cos(angle);
-      n.y = h / 2 + radius * Math.sin(angle);
-    });
+    seedPositions(w, h);
 
-    // Honor prefers-reduced-motion: skip physics, freeze layout
     const reduceMotion =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     if (reduceMotion) {
-      // Pin nodes at their pre-positioned coords and skip the simulation
       for (const n of data.nodes) {
         (n as any).fx = n.x;
         (n as any).fy = n.y;
@@ -139,29 +215,34 @@ export default function GraphCanvas({
     }
 
     fg.d3ReheatSimulation();
-
     fg.d3Force("charge")?.strength(-380);
     fg.d3Force("link")?.distance((l: any) => (l.relation === "enhancement" ? 40 : 80));
     fg.d3Force("center")?.strength(0.05);
     fg.d3Force("collide", (window as any).d3?.forceCollide?.(28));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, size.w, size.h]);
 
-  /* Node radius from in-degree. Large enough to hold a short label inside. */
+  const handleReset = () => {
+    const fg = fgRef.current;
+    if (!fg) return;
+    seedPositions(size.w || 800, size.h || 600);
+    fg.d3ReheatSimulation();
+  };
+
+  /* Node radius from visible in-degree. */
   const radiusOf = (n: GraphDatum) =>
     Math.max(18, Math.min(36, Math.sqrt(n.inDegree + 1) * 9));
 
   const isDim = (n: GraphDatum) =>
     highlightSet.size > 0 && !highlightSet.has(n.id) && n.id !== focusedSkillId;
-
   const isFocused = (n: GraphDatum) => n.id === focusedSkillId;
 
-  /* Custom node paint — circle big enough to contain a short label, with the
-   * skill name always visible. Plugin cluster label drawn outside the node. */
+  /* Custom node paint. */
   const paintNode = (node: GraphDatum, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const r = radiusOf(node);
     const x = node.x ?? 0;
     const y = node.y ?? 0;
-    const color = CATEGORY_COLORS[node.category] ?? CATEGORY_COLORS.other;
+    const color = paletteRef.current.cat[node.category] ?? paletteRef.current.cat.other;
     const dimmed = isDim(node);
 
     /* Focus glow */
@@ -172,7 +253,7 @@ export default function GraphCanvas({
       ctx.fill();
     }
 
-    ctx.globalAlpha = dimmed ? 0.25 : (highlightSet.has(node.id) || isFocused(node) ? 1 : 0.95);
+    ctx.globalAlpha = dimmed ? 0.25 : highlightSet.has(node.id) || isFocused(node) ? 1 : 0.95;
 
     /* Node body */
     ctx.beginPath();
@@ -190,11 +271,11 @@ export default function GraphCanvas({
     ctx.textBaseline = "middle";
     ctx.fillStyle = dimmed ? "rgba(255, 255, 255, 0.7)" : "#fff";
     const label = node.name;
-    const maxChars = Math.max(5, Math.floor(r * 1.6 / fontSize));
+    const maxChars = Math.max(5, Math.floor((r * 1.6) / fontSize));
     const displayLabel = label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
     ctx.fillText(displayLabel, x, y);
 
-    /* Bigger tooltip-style label on hover */
+    /* Larger tooltip-style label on focus */
     if (isFocused(node) && globalScale > 0.2) {
       const tipFont = Math.max(10, 12 / globalScale);
       ctx.font = `600 ${tipFont}px Satoshi, system-ui, -apple-system, sans-serif`;
@@ -217,30 +298,63 @@ export default function GraphCanvas({
     ctx.globalAlpha = 1;
   };
 
-  /* Custom link paint — only render "calls" edges. These connect orchestrator
-   * skills to the phase/step skills they invoke at runtime — the single
-   * relation that genuinely describes how skills call each other. Other
-   * relations (enhancement / prerequisite / produces_for / alternative) are
-   * metadata kept in the data layer for the skill detail page's "Related
-   * skills" section, but they don't reflect an actual call. */
-  const EDGE_RELATION = "calls";
-  const EDGE_COLOR = "var(--bp-brand-500)";
+  /* Arrowhead at the target end of a link, inset by the node radius. */
+  const drawArrow = (
+    ctx: CanvasRenderingContext2D,
+    fromX: number, fromY: number,
+    toX: number, toY: number,
+    inset: number,
+  ) => {
+    const ang = Math.atan2(toY - fromY, toX - fromX);
+    const size = 7;
+    const tipX = toX - inset * Math.cos(ang);
+    const tipY = toY - inset * Math.sin(ang);
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - size * Math.cos(ang - Math.PI / 6), tipY - size * Math.sin(ang - Math.PI / 6));
+    ctx.lineTo(tipX + size * Math.cos(ang - Math.PI / 6), tipY + size * Math.sin(ang - Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  };
 
+  /* Custom link paint — render the three flow relations with distinct styles:
+   *   prerequisite  solid + arrowhead (phase ordering, the workflow backbone)
+   *   calls         thin solid, no head (orchestrator invokes phase skills)
+   *   produces_for  dashed + arrowhead (utility output consumed downstream)
+   * enhancement / alternative / synthetic clustering edges are skipped. */
   const paintLink = (link: LinkDatum, ctx: CanvasRenderingContext2D) => {
+    if (!VISIBLE_RELATIONS[link.relation]) return;
     const src = link.source as GraphDatum;
     const tgt = link.target as GraphDatum;
     if (typeof src.x !== "number" || typeof tgt.x !== "number") return;
-    if (link.relation !== EDGE_RELATION) return;
+
+    const relation = link.relation as "prerequisite" | "calls" | "produces_for";
     const dim = isDim(src) || isDim(tgt);
-    ctx.strokeStyle = EDGE_COLOR;
-    ctx.globalAlpha = dim ? 0.15 : 0.7;
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([]);
+    const color = paletteRef.current.edge[relation];
+
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.globalAlpha = dim ? 0.12 : 0.7;
+
+    if (relation === "produces_for") {
+      ctx.setLineDash([5, 3]);
+      ctx.lineWidth = 1.4;
+    } else if (relation === "prerequisite") {
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1.5;
+    } else {
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+    }
 
     ctx.beginPath();
     ctx.moveTo(src.x!, src.y!);
     ctx.lineTo(tgt.x!, tgt.y!);
     ctx.stroke();
+
+    if (relation !== "calls") {
+      drawArrow(ctx, src.x!, src.y!, tgt.x!, tgt.y!, radiusOf(tgt) + 2);
+    }
     ctx.globalAlpha = 1;
   };
 
@@ -284,31 +398,11 @@ export default function GraphCanvas({
           onNodeClick={(n: any) => onNodeClick?.((n as GraphDatum) as unknown as GraphNode)}
           onNodeHover={(n: any) => {
             const datum = (n as GraphDatum | null) ?? null;
-            setHoveredId(datum?.id ?? null);
             onNodeHover?.(datum ? (datum as unknown as GraphNode) : null);
           }}
         />
       )}
-      {tooltip && (
-        <div
-          className="pointer-events-none absolute rounded-md border px-3 py-2 text-xs"
-          style={{
-            left: tooltip.x + 12,
-            top: tooltip.y + 12,
-            background: "var(--bp-surface-1)",
-            borderColor: "var(--bp-border-1)",
-            color: "var(--bp-text-0)",
-            boxShadow: "var(--bp-shadow-md)",
-            maxWidth: 240,
-            zIndex: "var(--bp-z-graph-tooltip)" as unknown as number,
-          }}
-        >
-          <div className="font-semibold">{tooltip.node.name}</div>
-          <div className="text-[10px]" style={{ color: "var(--bp-text-2)" }}>
-            {tooltip.node.plugin} · {tooltip.node.category}
-          </div>
-        </div>
-      )}
+      <GraphControls onReset={handleReset} />
     </div>
   );
 }
