@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "generated_at": "2026-05-31T12:48:14.733392",
-    "total_skills": 46,
-    "total_edges": 183,
+    "generated_at": "2026-06-13T21:55:03.555906",
+    "total_skills": 47,
+    "total_edges": 187,
     "arity_distribution": {
-      "standalone": 19,
+      "standalone": 20,
       "orchestrator": 5,
       "utility": 6,
       "phase": 16
@@ -12,7 +12,7 @@
     "relation_distribution": {
       "calls": 18,
       "prerequisite": 14,
-      "enhancement": 146,
+      "enhancement": 150,
       "alternative": 1,
       "produces_for": 4
     },
@@ -26,6 +26,14 @@
       "category": "content",
       "arity": "standalone",
       "description": "AI image generation with OpenAI, Google and DashScope APIs. Supports text-to-image, reference images, aspect ratios. Sequential by default; parallel generation available on request. Use when user asks"
+    },
+    {
+      "id": "course-to-video/course-to-video",
+      "name": "course-to-video",
+      "plugin": "course-to-video",
+      "category": "content",
+      "arity": "standalone",
+      "description": "Transform course materials into narrated teaching videos. Full pipeline: reference materials → course markdown → HTML slides → narration scripts → TTS audio (edge-tts) → screenshots (Playwright) → vid"
     },
     {
       "id": "ideal-deep-research/deep-research",
@@ -544,34 +552,6 @@
       "evidence": "P4 → P5 phase ordering"
     },
     {
-      "source": "ideal-ppt-suite/ideal-ppt-strategist",
-      "target": "ideal-ppt-suite/ideal-ppt-outline",
-      "relation": "prerequisite",
-      "confidence": "extracted",
-      "evidence": "P1 → P3 phase ordering"
-    },
-    {
-      "source": "ideal-ppt-suite/ideal-ppt-outline",
-      "target": "ideal-ppt-suite/ideal-ppt-prompt",
-      "relation": "prerequisite",
-      "confidence": "extracted",
-      "evidence": "P3 → P5 phase ordering"
-    },
-    {
-      "source": "ideal-ppt-suite/ideal-ppt-prompt",
-      "target": "ideal-ppt-suite/ideal-ppt-executor",
-      "relation": "prerequisite",
-      "confidence": "extracted",
-      "evidence": "P5 → P8 phase ordering"
-    },
-    {
-      "source": "ideal-ppt-suite/ideal-ppt-executor",
-      "target": "ideal-ppt-suite/ideal-ppt-export",
-      "relation": "prerequisite",
-      "confidence": "extracted",
-      "evidence": "P8 → P12 phase ordering"
-    },
-    {
       "source": "ideal-document-workflow/requirement-analysis",
       "target": "ideal-document-workflow/outline-generation",
       "relation": "prerequisite",
@@ -614,8 +594,43 @@
       "evidence": "P6 → P7 phase ordering"
     },
     {
+      "source": "ideal-ppt-suite/ideal-ppt-strategist",
+      "target": "ideal-ppt-suite/ideal-ppt-outline",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P1 → P3 phase ordering"
+    },
+    {
+      "source": "ideal-ppt-suite/ideal-ppt-outline",
+      "target": "ideal-ppt-suite/ideal-ppt-prompt",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P3 → P5 phase ordering"
+    },
+    {
+      "source": "ideal-ppt-suite/ideal-ppt-prompt",
+      "target": "ideal-ppt-suite/ideal-ppt-executor",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P5 → P8 phase ordering"
+    },
+    {
+      "source": "ideal-ppt-suite/ideal-ppt-executor",
+      "target": "ideal-ppt-suite/ideal-ppt-export",
+      "relation": "prerequisite",
+      "confidence": "extracted",
+      "evidence": "P8 → P12 phase ordering"
+    },
+    {
       "source": "panel-review/panel-review",
       "target": "baoyu-image-gen/baoyu-image-gen",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "panel-review/panel-review",
+      "target": "course-to-video/course-to-video",
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "panel-review reviews documents/code/solutions/PPTs"
@@ -857,6 +872,13 @@
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "panel-review reviews documents/code/solutions/PPTs"
+    },
+    {
+      "source": "ideal-deep-research/deep-research",
+      "target": "course-to-video/course-to-video",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
     },
     {
       "source": "ideal-deep-research/deep-research",
@@ -1134,6 +1156,13 @@
     {
       "source": "ideal-deep-research/deep-research",
       "target": "skill-builder/skill-builder",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "deep-research provides research for analysis skills"
+    },
+    {
+      "source": "ideal-dev-workflow/deep-research",
+      "target": "course-to-video/course-to-video",
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "deep-research provides research for analysis skills"
@@ -1421,6 +1450,13 @@
     {
       "source": "skill-builder/skill-builder",
       "target": "baoyu-image-gen/baoyu-image-gen",
+      "relation": "enhancement",
+      "confidence": "extracted",
+      "evidence": "skill-builder optimizes any SKILL.md"
+    },
+    {
+      "source": "skill-builder/skill-builder",
+      "target": "course-to-video/course-to-video",
       "relation": "enhancement",
       "confidence": "extracted",
       "evidence": "skill-builder optimizes any SKILL.md"

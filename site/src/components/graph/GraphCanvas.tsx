@@ -52,6 +52,7 @@ interface LinkDatum {
 type Palette = {
   cat: Record<string, string>;
   edge: { prerequisite: string; calls: string; produces_for: string };
+  halo: string;
 };
 
 const FALLBACK_PALETTE: Palette = {
@@ -68,6 +69,7 @@ const FALLBACK_PALETTE: Palette = {
     calls: "#6b7280",
     produces_for: "#d98b0a",
   },
+  halo: "rgba(123, 92, 234, 0.20)",
 };
 
 /* Read colors from CSS tokens (not hardcoded hex) so the canvas tracks the
@@ -93,6 +95,7 @@ function readPalette(): Palette {
       calls: edge("--bp-graph-edge-calls", FALLBACK_PALETTE.edge.calls),
       produces_for: edge("--bp-graph-edge-produces-for", FALLBACK_PALETTE.edge.produces_for),
     },
+    halo: token("--bp-graph-plugin-halo") || FALLBACK_PALETTE.halo,
   };
 }
 
@@ -166,6 +169,27 @@ export default function GraphCanvas({
 
     return { nodes: gNodes, links: gEdges };
   }, [nodes, edges]);
+
+  /* Cluster membership + one anchor per plugin (≥2 nodes) to paint the halo.
+  * The anchor is the first node in data order so the halo tends to land
+  * beneath the rest of its cluster. */
+  const clusterOf = useMemo(() => {
+    const m = new Map<string, GraphDatum[]>();
+    for (const n of data.nodes) {
+      const arr = m.get(n.plugin) ?? [];
+      arr.push(n);
+      m.set(n.plugin, arr);
+    }
+    return m;
+  }, [data]);
+
+  const anchorIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const arr of clusterOf.values()) {
+      if (arr.length >= 2 && arr[0]) s.add(arr[0].id);
+    }
+    return s;
+  }, [clusterOf]);
 
   /* Seed node positions with the golden-angle spiral so the simulation starts
    * from a sensible layout instead of a centroid pile-up. */
@@ -244,6 +268,41 @@ export default function GraphCanvas({
     const y = node.y ?? 0;
     const color = paletteRef.current.cat[node.category] ?? paletteRef.current.cat.other;
     const dimmed = isDim(node);
+
+    /* Plugin cluster halo — painted by the cluster's anchor node so every
+     * plugin with ≥2 skills gets a soft dashed boundary. Half-transparent
+     * fill keeps nodes readable across paint order. */
+    if (anchorIds.has(node.id)) {
+      const members = clusterOf.get(node.plugin);
+      if (members && members.length >= 2) {
+        let cx = 0, cy = 0, counted = 0;
+        for (const m of members) {
+          if (typeof m.x === "number" && typeof m.y === "number") { cx += m.x; cy += m.y; counted++; }
+        }
+        if (counted > 0) {
+          cx /= counted; cy /= counted;
+          let haloR = 0;
+          for (const m of members) {
+            if (typeof m.x === "number" && typeof m.y === "number") {
+              const d = Math.hypot(m.x - cx, m.y - cy) + radiusOf(m) + 8;
+              if (d > haloR) haloR = d;
+            }
+          }
+          ctx.beginPath();
+          ctx.arc(cx, cy, haloR, 0, 2 * Math.PI);
+          ctx.fillStyle = paletteRef.current.halo;
+          ctx.globalAlpha = 0.6;
+          ctx.fill();
+          ctx.globalAlpha = 0.85;
+          ctx.strokeStyle = paletteRef.current.halo;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
 
     /* Focus glow */
     if (isFocused(node)) {
