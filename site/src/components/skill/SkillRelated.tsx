@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { GraphNode, GraphEdge } from "@/lib/types";
-import { getNode, graphEdges } from "@/lib/graph";
+import { getNode, getSubgraph, graphEdges } from "@/lib/graph";
 import MiniGraph from "@/components/graph-mini/MiniGraph";
 
 interface Props {
