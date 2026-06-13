@@ -5,10 +5,10 @@ import { getEdgeCountsByRelation } from "@/lib/graph";
 /* Categories that actually occur in the data (content / development / knowledge /
  * research). tooling / other exist in the palette as fallbacks but have no nodes. */
 const CATEGORIES = [
-  { key: "development", label: "Development" },
-  { key: "content", label: "Content" },
-  { key: "knowledge", label: "Knowledge" },
-  { key: "research", label: "Research" },
+  { key: "development", label: "开发" },
+  { key: "content", label: "内容" },
+  { key: "knowledge", label: "知识" },
+  { key: "research", label: "研究" },
 ];
 
 /* Mini SVG swatches mirror the canvas stroke styles in GraphCanvas:
@@ -50,11 +50,11 @@ export default function GraphLegend() {
       className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px]"
       style={{ color: "var(--bp-text-2)" }}
       role="note"
-      aria-label="Graph legend: node categories and edge relations"
+      aria-label="图谱图例：节点类别与关系类型"
     >
-      {/* Node categories */}
+      {/* 节点类别 */}
       <span className="font-semibold uppercase tracking-wider" style={{ color: "var(--bp-text-1)" }}>
-        Nodes
+        节点
       </span>
       {CATEGORIES.map((c) => (
         <span key={c.key} className="inline-flex items-center gap-1.5">
@@ -70,27 +70,26 @@ export default function GraphLegend() {
         │
       </span>
 
-      {/* Edge relations (only the three painted) */}
+      {/* 关系类型（仅画出的三种） */}
       <span className="font-semibold uppercase tracking-wider" style={{ color: "var(--bp-text-1)" }}>
-        Edges
+        关系
       </span>
       <span className="inline-flex items-center gap-1.5">
         <EdgeSwatch color="var(--bp-graph-edge-prerequisite)" arrow />
         <span>
-          prerequisite <span style={{ color: "var(--bp-text-3)" }}>· {counts.prerequisite}</span>
+          前置 <span style={{ color: "var(--bp-text-3)" }}>· {counts.prerequisite}</span>
         </span>
       </span>
       <span className="inline-flex items-center gap-1.5">
         <EdgeSwatch color="var(--bp-graph-edge-calls)" />
         <span>
-          calls <span style={{ color: "var(--bp-text-3)" }}>· {counts.calls}</span>
+          调用 <span style={{ color: "var(--bp-text-3)" }}>· {counts.calls}</span>
         </span>
       </span>
       <span className="inline-flex items-center gap-1.5">
         <EdgeSwatch color="var(--bp-graph-edge-produces-for)" dashed arrow />
         <span>
-          produces_for{" "}
-          <span style={{ color: "var(--bp-text-3)" }}>· {counts.produces_for}</span>
+          产出 <span style={{ color: "var(--bp-text-3)" }}>· {counts.produces_for}</span>
         </span>
       </span>
     </div>

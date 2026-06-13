@@ -11,9 +11,9 @@ interface Props {
 }
 
 const SCOPE_META: Record<string, { label: string; color: string }> = {
-  lead: { label: "lead", color: "#7b5cea" },
-  support: { label: "support", color: "#0ea5a0" },
-  infra: { label: "infra", color: "#d98b0a" },
+  lead: { label: "主导", color: "#7b5cea" },
+  support: { label: "辅助", color: "#0ea5a0" },
+  infra: { label: "基建", color: "#d98b0a" },
 };
 
 export default function TaskCard({ task, isSelected, isHighlighted, onClick }: Props) {
@@ -59,9 +59,9 @@ export default function TaskCard({ task, isSelected, isHighlighted, onClick }: P
         </span>
       </div>
       <div className="flex items-center gap-2 text-[11px]" style={{ color: "var(--bp-text-2)" }}>
-        <span>{task.skillIds.length} skills</span>
+        <span>{task.skillIds.length} 个技能</span>
         <span>·</span>
-        <span>{task.estimatedSteps} steps</span>
+        <span>{task.estimatedSteps} 步</span>
       </div>
     </button>
   );

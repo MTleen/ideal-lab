@@ -4,10 +4,11 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { GraphNode, CategoryInfo } from "@/lib/types";
+import type { GraphNode, CategoryInfo, PluginSummary } from "@/lib/types";
 import { getAllTasks, getTasksContainingSkill } from "@/lib/tasks";
 import { graphNodes, graphEdges, getNode, getEdgeCountsByRelation } from "@/lib/graph";
 import { getPluginPainPoints } from "@/lib/plugin-pain-points";
+import { getCategory } from "@/lib/utils";
 import TaskPanel from "@/components/tasks/TaskPanel";
 import TaskScriptView from "@/components/tasks/TaskScriptView";
 import GraphLegend from "@/components/graph/GraphLegend";
@@ -28,10 +29,10 @@ const GraphCanvas = dynamic(() => import("@/components/graph/GraphCanvas"), {
 
 interface Props {
   categories: CategoryInfo[];
-  pluginSlugs: string[];
+  plugins: PluginSummary[];
 }
 
-export default function HomeClient({ categories, pluginSlugs }: Props) {
+export default function HomeClient({ categories, plugins }: Props) {
   const tasks = useMemo(() => getAllTasks(), []);
   /* Visible relations = only the three edge types painted on the canvas
    * (prerequisite / calls / produces_for). enhancement / alternative are
@@ -40,6 +41,11 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
     const c = getEdgeCountsByRelation();
     return c.prerequisite + c.calls + c.produces_for;
   }, []);
+  /* 痛点卡：取技能数最多的 4 个插件，顺序稳定（不再依赖目录遍历顺序） */
+  const topPlugins = useMemo(
+    () => [...plugins].sort((a, b) => b.skillCount - a.skillCount).slice(0, 4),
+    [plugins],
+  );
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [hoveredSkillId, setHoveredSkillId] = useState<string | null>(null);
   const [scriptVisible, setScriptVisible] = useState(false);
@@ -108,7 +114,7 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             color: "var(--bp-brand-500)",
           }}
         >
-          Best Practices
+          最佳实践
         </div>
         <h1
           className="font-black leading-[1.05] tracking-[-0.03em] mb-3"
@@ -118,25 +124,25 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             maxWidth: 720,
           }}
         >
-          Plugins that compose into working Claude Code workflows
+          可组合成完整 Claude Code 工作流的插件库
         </h1>
         <p
           className="max-w-2xl leading-relaxed mb-5"
           style={{ fontSize: 17, color: "var(--bp-text-1)" }}
         >
-          Click any skill to see what it does, who uses it, and which problems it solves.
-          Pick a task to highlight the skills that work together.
+          点击任意技能节点，查看它的作用与所解决的问题。
+          选择一个任务，高亮其中协作的技能。
         </p>
         {/* Metadata strip — kept monotone to avoid competing with H1 */}
         <div
           className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] font-mono"
           style={{ color: "var(--bp-text-2)" }}
         >
-          <span>{graphNodes.length} skills</span>
+          <span>{graphNodes.length} 个技能</span>
           <span style={{ color: "var(--bp-text-3)" }}>·</span>
-          <span>{pluginSlugs.length} plugins</span>
+          <span>{plugins.length} 个插件</span>
           <span style={{ color: "var(--bp-text-3)" }}>·</span>
-          <span>{visibleRelations} relations</span>
+          <span>{visibleRelations} 条关系</span>
         </div>
       </section>
 
@@ -214,10 +220,10 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
           className="text-2xl font-bold mb-2"
           style={{ color: "var(--bp-text-0)" }}
         >
-          Common problems
+          解决什么问题
         </h2>
         <p className="text-sm mb-6" style={{ color: "var(--bp-text-2)" }}>
-          Each plugin solves real pain points documented from its SKILL.md capabilities.
+          每个插件都源自其 SKILL.md 记录的真实痛点。
         </p>
         <div
           className="grid gap-4"
@@ -227,15 +233,16 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             gridAutoRows: "minmax(0, auto)",
           }}
         >
-          {pluginSlugs.slice(0, 4).map((slug, i) => {
-            const pp = getPluginPainPoints(slug);
+          {topPlugins.map((p, i) => {
+            const pp = getPluginPainPoints(p.slug);
             if (pp.length === 0) return null;
             const first = pp[0];
             const featured = i === 0;
+            const cat = getCategory(p.category);
             return (
               <Link
-                key={slug}
-                href={`/plugins/${slug}/`}
+                key={p.slug}
+                href={`/plugins/${p.slug}/`}
                 className="block rounded-lg border p-4 transition-all no-underline"
                 style={{
                   background: "var(--bp-surface-1)",
@@ -244,11 +251,23 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
                   gridColumn: featured ? "1 / -1" : "auto",
                 }}
               >
-                <div
-                  className="text-[10px] font-medium tracking-widest uppercase mb-1.5"
-                  style={{ color: "var(--bp-brand-500)" }}
-                >
-                  {slug}
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: cat.color }}
+                  />
+                  <span
+                    className="text-[10px] font-medium tracking-wide"
+                    style={{ color: "var(--bp-text-1)" }}
+                  >
+                    {p.name}
+                  </span>
+                  <span
+                    className="text-[10px] font-mono"
+                    style={{ color: "var(--bp-text-3)" }}
+                  >
+                    {p.skillCount} skills
+                  </span>
                 </div>
                 <h3
                   className="text-sm font-semibold mb-1.5"
@@ -260,7 +279,7 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
                   className="text-xs leading-relaxed"
                   style={{ color: "var(--bp-text-2)" }}
                 >
-                  {first.detail.slice(0, 120)}…
+                  {first.detail.slice(0, featured ? 140 : 100)}…
                 </p>
               </Link>
             );
@@ -275,39 +294,62 @@ export default function HomeClient({ categories, pluginSlugs }: Props) {
             className="text-2xl font-bold"
             style={{ color: "var(--bp-text-0)" }}
           >
-            All plugins
+            全部插件
           </h2>
           <span
             className="text-sm font-mono"
             style={{ color: "var(--bp-text-3)" }}
           >
-            {pluginSlugs.length}
+            {plugins.length}
           </span>
         </div>
         <p className="text-sm mb-6" style={{ color: "var(--bp-text-2)" }}>
-          Browse by category or jump into a specific plugin.
+          按分类浏览，或直接进入某个插件。
         </p>
         <ul
           className="divide-y rounded-lg border overflow-hidden"
           style={{ borderColor: "var(--bp-border-0)" }}
         >
-          {pluginSlugs.map((slug) => (
-            <li key={slug}>
-              <Link
-                href={`/plugins/${slug}/`}
-                className="flex items-center justify-between px-4 py-2.5 text-sm transition-colors no-underline hover:bg-[var(--bp-surface-1)]"
-                style={{ color: "var(--bp-text-0)" }}
-              >
-                <span className="font-medium">{slug}</span>
-                <span
-                  className="text-[11px] font-mono"
-                  style={{ color: "var(--bp-text-3)" }}
+          {plugins.map((p) => {
+            const cat = getCategory(p.category);
+            return (
+              <li key={p.slug}>
+                <Link
+                  href={`/plugins/${p.slug}/`}
+                  className="flex items-center gap-3 px-4 py-3 transition-colors no-underline hover:bg-[var(--bp-surface-1)]"
+                  style={{ color: "var(--bp-text-0)" }}
                 >
-                  →
-                </span>
-              </Link>
-            </li>
-          ))}
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ background: cat.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-medium">{p.name}</span>
+                      <span
+                        className="text-[10px] font-mono"
+                        style={{ color: "var(--bp-text-3)" }}
+                      >
+                        {p.skillCount} skills
+                      </span>
+                    </div>
+                    <p
+                      className="text-xs truncate"
+                      style={{ color: "var(--bp-text-2)" }}
+                    >
+                      {p.description}
+                    </p>
+                  </div>
+                  <span
+                    className="text-[11px] font-mono shrink-0"
+                    style={{ color: "var(--bp-text-3)" }}
+                  >
+                    →
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </div>

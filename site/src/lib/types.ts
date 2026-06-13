@@ -76,6 +76,16 @@ export interface SkillsGraph {
   edges: GraphEdge[];
 }
 
+/* ── Plugin summary (lightweight, client-safe; no SKILL.md content) ── */
+
+export interface PluginSummary {
+  slug: string;
+  name: string;
+  description: string;
+  skillCount: number;
+  category: string;
+}
+
 /* ── Tasks (user-facing task panel) ── */
 
 export type TaskScope = "lead" | "support" | "infra";
