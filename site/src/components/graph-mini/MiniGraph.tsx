@@ -1,4 +1,6 @@
 "use client";
+/* d3-force 的 simulation API 类型较宽泛，fx/fy 需直接挂到节点上。 */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3-force";
@@ -77,6 +79,7 @@ export default function MiniGraph({
     /* Run 80 ticks synchronously (synchronous for predictable layout) */
     for (let i = 0; i < 80; i++) sim.tick();
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 同步算完布局后写入，仅依赖 props
     setPositions(
       simNodes.map((n: any) => ({
         id: n.id,

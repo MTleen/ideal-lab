@@ -1,16 +1,16 @@
 import type { CategoryInfo, PluginData } from "./types";
 
 const CATEGORIES: Record<string, CategoryInfo> = {
-  development: { slug: "development", label: "Development", color: "#7b5cea" },
-  content: { slug: "content", label: "Content", color: "#0ea5a0" },
-  research: { slug: "research", label: "Research", color: "#d98b0a" },
-  knowledge: { slug: "knowledge", label: "Knowledge", color: "#8ba60a" },
-  tooling: { slug: "tooling", label: "Tooling", color: "#9b6cea" },
+  development: { slug: "development", label: "开发", color: "#7b5cea" },
+  content: { slug: "content", label: "内容", color: "#0ea5a0" },
+  research: { slug: "research", label: "研究", color: "#d98b0a" },
+  knowledge: { slug: "knowledge", label: "知识", color: "#8ba60a" },
+  tooling: { slug: "tooling", label: "工具", color: "#9b6cea" },
 };
 
 const CATEGORY_FALLBACK: CategoryInfo = {
   slug: "other",
-  label: "Other",
+  label: "其他",
   color: "#6e6e82",
 };
 
@@ -39,9 +39,9 @@ export function formatDate(iso: string): string {
   const now = new Date();
   const diff = now.getTime() - d.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  if (days === 0) return "今天";
+  if (days === 1) return "昨天";
+  if (days < 7) return `${days} 天前`;
+  if (days < 30) return `${Math.floor(days / 7)} 周前`;
   return d.toLocaleDateString("zh-CN");
 }

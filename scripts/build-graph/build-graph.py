@@ -139,7 +139,7 @@ def infer_edges(nodes):
                 edges.append({
                     'source': orchestrator_id,
                     'target': target['id'],
-                    'relation': 'embeds',
+                    'relation': 'calls',
                     'confidence': 'extracted',
                     'evidence': f"{orchestrator_name} mentions {target['name']}"
                 })

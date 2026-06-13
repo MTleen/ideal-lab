@@ -38,10 +38,10 @@ export default function TaskPanel({
     >
       <div className="px-4 pt-4 pb-2">
         <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--bp-text-0)" }}>
-          Tasks
+          任务
         </h2>
         <p className="text-[11px]" style={{ color: "var(--bp-text-2)" }}>
-          {totalTasks} scenarios · click to highlight involved skills
+          {totalTasks} 个场景 · 点击高亮参与的技能
         </p>
       </div>
 

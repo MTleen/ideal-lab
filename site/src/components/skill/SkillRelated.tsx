@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { GraphNode, GraphEdge } from "@/lib/types";
-import { getNode, getSubgraph, graphEdges } from "@/lib/graph";
+import { getNode, graphEdges } from "@/lib/graph";
 import MiniGraph from "@/components/graph-mini/MiniGraph";
 
 interface Props {
@@ -21,7 +21,6 @@ export default function SkillRelated({ skillId }: Props) {
   const center = getNode(skillId);
   if (!center) return null;
 
-  const upstreamEdges = getSubgraph(skillId, 0); // 0-hop, just for direct neighbors
   // We need direct neighbors by relation type
   const directUpstream: GraphNode[] = [];
   const directDownstream: GraphNode[] = [];

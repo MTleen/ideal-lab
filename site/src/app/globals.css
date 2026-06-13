@@ -59,6 +59,7 @@
 
   /* Nav */
   --bp-nav-height: 56px;
+  --bp-nav-bg: color-mix(in oklch, var(--bp-surface-0) 82%, transparent);
 
   /* Z-index scale (use these instead of hardcoded z-50 / z-10) */
   --bp-z-base: 0;
@@ -84,15 +85,15 @@
   --bp-graph-cat-knowledge: oklch(0.55 0.12 100);
   --bp-graph-cat-tooling: oklch(0.48 0.08 290);
 
-  /* Graph — edge (5 relations) */
+  /* Graph — edge relations (3 painted: prerequisite / calls / produces_for; 2 hidden: enhancement / alternative) */
   --bp-graph-edge-enhancement: oklch(0.72 0.003 270);
   --bp-graph-edge-prerequisite: oklch(0.52 0.14 270);
-  --bp-graph-edge-embeds: oklch(0.55 0.12 180);
+  --bp-graph-edge-calls: oklch(0.62 0.02 250);
   --bp-graph-edge-produces-for: oklch(0.55 0.16 55);
   --bp-graph-edge-alternative: oklch(0.48 0.08 290);
   --bp-graph-edge-enhancement-width: 0.8;
   --bp-graph-edge-prerequisite-width: 1.5;
-  --bp-graph-edge-embeds-width: 1;
+  --bp-graph-edge-calls-width: 1;
   --bp-graph-edge-produces-for-width: 1.5;
   --bp-graph-edge-alternative-width: 1.5;
   --bp-graph-edge-default-opacity: 0.7;
@@ -163,6 +164,9 @@
   --bp-graph-node-hover-glow: oklch(0.62 0.14 270 / 0.45);
   --bp-graph-node-stroke: var(--bp-border-1);
   --bp-graph-edge-enhancement: oklch(0.52 0.008 270);
+  --bp-graph-edge-prerequisite: oklch(0.72 0.14 270);
+  --bp-graph-edge-calls: oklch(0.68 0.02 250);
+  --bp-graph-edge-produces-for: oklch(0.75 0.15 55);
   --bp-graph-plugin-halo: oklch(0.52 0.008 270 / 0.35);
   --bp-graph-task-stroke: var(--bp-surface-0);
 
