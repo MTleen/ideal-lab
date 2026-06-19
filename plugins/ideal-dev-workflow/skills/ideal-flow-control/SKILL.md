@@ -257,6 +257,16 @@ mkdir -p "$REPO_PATH/worktrees"
 git worktree add -b "$BRANCH" "$WORKTREE_PATH"
 ```
 
+### 初始化流程状态.md（P1 开始前，必须）
+
+> 自 ideal-requirement 解耦后，`流程状态.md` 的初始化由 flow-control 负责（requirement 只落盘需求文档）。
+
+创建 worktree 后、调用 ideal-requirement（P1）前，flow-control 必须初始化迭代目录的 `流程状态.md`：
+
+1. 确定迭代目录：`docs/迭代/{YYYY-MM-DD}-{需求名称}/`（或 `docs/项目迭代/`）
+2. 写入初始 `流程状态.md`（YAML frontmatter + 阶段状态表），`worktree` 字段填入刚创建的 worktree 分支与路径，`current_phase: P1`、`status: in_progress`
+3. 随后调用 ideal-requirement 执行 P1 需求澄清与落盘
+
 ### 自动切换（关键）
 
 **创建或识别到 worktree 后，必须立即切换进去**：

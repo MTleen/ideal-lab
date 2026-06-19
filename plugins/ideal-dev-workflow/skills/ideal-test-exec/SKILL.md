@@ -1,15 +1,7 @@
 ---
 name: ideal-test-exec
-description: Use when P10 code review is completed and test execution is needed. Executes test cases and generates test reports with defect tracking.
+description: Use when P10 code review is completed and test execution is needed. Executes test cases (including real-app end-to-end core loops on a live application) and generates test reports with defect tracking.
 agents: [qa, debug]
-io:
-  inputs:
-    - name: test_cases
-      source: ideal-test-case.test_cases
-  outputs:
-    - name: test_report
-      path: "P11-测试报告.md"
-      type: markdown
 ---
 
 # ideal-test-exec（P11 测试执行）
@@ -32,7 +24,7 @@ Phase Skill — **执行协调者**。
 
 | 来源 | 内容 |
 |------|------|
-| P7-测试用例.md | 功能/边界/异常/截图用例 |
+| P7-测试用例.md | 功能/边界/异常/截图/真实应用端到端用例 |
 | 项目代码 | 待测试的代码 |
 
 ## 输出
@@ -96,6 +88,43 @@ Phase Skill — **执行协调者**。
 
 ---
 
+## 真实应用端到端（核心闭环）测试（必须）
+
+> **强制要求**：当 P7 测试用例中包含 TC-E2E 用例时，必须在**真实运行的应用实例**上执行（启动应用 → Playwright MCP / Chrome DevTools MCP 驱动 → 逐步操作 → 断言 → 留证）。严禁把 E2E 用例降级为单元测试、类型检查或 curl 调用——那些是辅助证据，不是 E2E 的通过依据。
+
+### 执行环境
+
+1. 按项目实际方式启动应用（如 `npm run dev`），等待应用就绪（端口可达 / 窗口加载完成）。
+2. 通过 **Playwright MCP**（驱动浏览器或可接入的桌面/Electron 窗口）或 **Chrome DevTools MCP**（驱动浏览器页面）连接到运行中的应用。
+
+### E2E 执行流程
+
+```
+1. 确认 P7 中存在 TC-E2E 用例，读取每条用例的闭环类型、执行环境、步骤、预期结果
+2. 启动真实应用（如 npm run dev）并等待就绪
+3. Agent 通过 Playwright/CDP MCP 连接应用，逐个执行 TC-E2E 用例：
+   - 单轮主流程：输入 → 等待响应 → 断言输出
+   - 连续多轮：连续多轮输入 → 断言模型记住上文
+   - 会话切换：创建/切换会话 → 断言历史保留与可恢复
+   - 工具调用：触发工具 → 断言调用成功、返回被消费、模型据此继续
+   - 审批 gate：触发高风险动作 → 断言审批弹出、放行/拒绝行为正确
+   - 错误恢复：注入异常/失败 → 断言应用可恢复继续使用
+4. 每步留存证据（截图/日志/录屏）到 docs/迭代/{需求名称}/screenshots/ 或 e2e-logs/
+5. 断言失败 → 调用 Task(debug) 根因分析修复 → 重新执行该 E2E 用例（最多 3 次）
+6. 将 E2E 执行结果与证据路径写入测试报告
+```
+
+### E2E 验证规则
+
+| 检查项 | 说明 |
+|--------|------|
+| 真机执行 | E2E 用例必须在真实运行的应用上执行，不得降级为单测 |
+| 闭环完整 | 每个适用闭环（多轮/会话/工具/审批）都有对应 E2E 用例被执行 |
+| 证据留存 | 每条 E2E 用例有截图/日志/录屏证据 |
+| 失败处理 | E2E 失败调 debug 根因修复，不靠"看起来对"放行 |
+
+---
+
 ## 测试结果状态
 
 | 状态 | 说明 |
@@ -132,6 +161,12 @@ Step 3.5: 前端截图测试（仅当 P7 包含截图用例时）
   ├─ 逐个执行截图用例：导航 → 交互 → 截图 → 保存
   ├─ 验证截图文件已保存（文件存在 + 大小 > 10KB）
   └─ 将截图路径写入测试报告
+Step 3.6: 真实应用端到端测试（仅当 P7 包含 TC-E2E 用例时）
+  ├─ 启动真实应用（如 npm run dev）并等待就绪
+  ├─ Agent 通过 Playwright/CDP MCP 连接运行中的应用
+  ├─ 逐个执行 TC-E2E 用例：按闭环类型操作 → 断言预期 → 留证
+  ├─ 失败时 Task(debug) 根因修复后重试（最多 3 次）
+  └─ 将 E2E 结果与证据路径写入测试报告
 Step 4: 发现缺陷时
   └─ Task(debug) → 根因分析，修复后重新验证
 Step 5: 生成测试报告
@@ -173,6 +208,16 @@ Step 6: 更新流程状态
 
 > 截图存放目录：`docs/迭代/{需求名称}/screenshots/`
 
+## 真实应用端到端测试结果
+
+| 用例编号 | 闭环类型 | 状态 | 证据 |
+|----------|----------|------|------|
+| TC-E2E-001 | 连续多轮 | PASS | `screenshots/TC-E2E-001_multi-turn.png` |
+| TC-E2E-002 | 工具调用 | PASS | `e2e-logs/TC-E2E-002_tool-call.log` |
+| TC-E2E-003 | 审批 gate | FAIL | `screenshots/TC-E2E-003_approval.png`（审批未弹出） |
+
+> E2E 证据目录：`docs/迭代/{需求名称}/screenshots/`、`docs/迭代/{需求名称}/e2e-logs/`
+
 ## 缺陷记录
 
 | 缺陷编号 | 严重程度 | 描述 | 状态 |
@@ -195,6 +240,8 @@ Step 6: 更新流程状态
 - [ ] 若 P7 包含前端截图用例：截图已通过 Chrome DevTools MCP 保存到 `docs/迭代/{需求名称}/screenshots/`
 - [ ] 截图文件 > 10KB（非空白页）
 - [ ] 测试报告中已包含截图结果表格和路径引用
+- [ ] **若 P7 含 TC-E2E 用例：已在真实运行应用上执行（未降级单测），覆盖多轮/会话/工具调用/审批（适用项）**
+- [ ] **每条 E2E 用例有证据（截图/日志/录屏），失败项已 debug 根因修复**
 
 ---
 
@@ -210,6 +257,10 @@ Step 6: 更新流程状态
 ### 前端截图统计
 - 截图用例数：{N}，截图成功：{N}，截图失败：{N}
 - 截图目录：`docs/迭代/{需求名称}/screenshots/`
+
+### 真实应用端到端统计
+- E2E 用例数：{N}，通过：{N}，失败：{N}
+- 证据目录：`docs/迭代/{需求名称}/screenshots/`、`docs/迭代/{需求名称}/e2e-logs/`
 
 ### 缺陷统计
 - 致命：{N}，严重：{N}，一般：{N}，轻微：{N}

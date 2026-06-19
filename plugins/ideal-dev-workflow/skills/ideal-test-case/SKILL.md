@@ -1,17 +1,7 @@
 ---
 name: ideal-test-case
-description: Use when P6 plan review is completed and test case generation is needed. Extracts acceptance criteria and generates functional, boundary, and exception test cases.
+description: Use when P6 plan review is completed and test case generation is needed. Extracts acceptance criteria and generates functional, boundary, exception, frontend screenshot, and real-app end-to-end (core loop) test cases.
 agents: [qa]
-io:
-  inputs:
-    - name: requirement_doc
-      source: ideal-requirement.requirement_doc
-    - name: dev_plan
-      source: ideal-dev-plan.dev_plan
-  outputs:
-    - name: test_cases
-      path: "P7-测试用例.md"
-      type: markdown
 ---
 
 # ideal-test-case（P7 测试用例生成）
@@ -128,6 +118,43 @@ Phase Skill — **执行协调者**。
 | 页面 | 完整视口截图（自动使用当前屏幕分辨率）|
 | API 组件 | 调用前、调用中（流式）、调用完成 |
 
+### 真实应用端到端（核心闭环）测试（必须）
+
+> **强制要求**：任何涉及可运行应用（桌面端 / Web 服务 / CLI 等）的迭代，P7 必须生成「真实应用核心闭环」用例，P11 必须在**真实运行的应用实例**上通过 Playwright MCP 或 Chrome DevTools MCP 驱动执行验证。单元测试、类型检查、curl 级验证是必要但**不充分**的——最终通过依据必须是用户能在真实应用中无障碍完成核心闭环。
+
+**触发条件**：P5 编码计划涉及可运行应用（产生用户可感知行为的产物，如桌面应用、Web 服务、CLI 工具）。
+
+**执行环境**：按项目实际方式启动应用（如 `npm run dev`），由 Agent 通过 Playwright MCP / Chrome DevTools MCP 控制窗口或页面、触发交互、断言结果、留存证据（截图 / 日志 / 录屏）。
+
+**核心闭环覆盖（适用项必须全部覆盖）**：
+
+| 闭环场景 | 验证点 |
+|----------|--------|
+| 单轮主流程 | 输入 → 应用响应 → 正确输出 |
+| 连续多轮 | 模型记住上文，上下文连贯不丢失 |
+| 会话切换与历史 | 切换会话后历史保留，切回仍在 |
+| 工具调用端到端 | 调用 → 返回 → 模型基于返回继续 |
+| 审批 / 风险 gate | 高风险动作触发审批，放行 / 拒绝正确生效 |
+| 错误与恢复 | 异常输入或失败后应用可继续使用 |
+
+**E2E 用例格式**：
+
+```markdown
+### TC-E2E-{id}: {闭环名称}
+
+| 项目 | 值 |
+|------|-----|
+| 用例编号 | TC-E2E-{id} |
+| 优先级 | P0 / P1 / P2 |
+| 闭环类型 | 单轮主流程 / 连续多轮 / 会话切换 / 工具调用 / 审批 gate / 错误恢复 |
+| 关联故事 | Story {id} |
+| 执行环境 | 启动命令（如 npm run dev）+ 驱动工具（Playwright / CDP） |
+| 前置条件 | 应用已启动并就绪 |
+| 测试步骤 | {Agent 在真实应用上执行的操作序列} |
+| 预期结果 | {可断言的应用行为 / 状态} |
+| 证据 | 截图 / 日志 / 录屏保存路径 |
+```
+
 ---
 
 ## 执行流程
@@ -161,6 +188,11 @@ Step 6: 前端截图用例生成（仅当 P5 包含前端任务时）
   ├─ 生成 CDP 截图测试用例
   └─ 确定截图覆盖项（空状态、交互后、完整页面）
 
+Step 6.5: 真实应用端到端用例生成（仅当 P5 涉及可运行应用时）
+  ├─ 识别核心闭环场景（单轮 / 多轮 / 会话切换 / 工具调用 / 审批 gate / 错误恢复）
+  ├─ 为每个适用闭环生成 TC-E2E 用例
+  └─ 注明启动命令、驱动工具（Playwright / CDP）、证据保存路径
+
 Step 7: 覆盖率统计
   └─ 统计各类型用例数量，计算覆盖率
 
@@ -180,6 +212,7 @@ Step 9: 返回摘要
 | 功能测试 (F) | 50-60% | 验证正常功能流程 |
 | 边界测试 (B) | 20-30% | 验证输入/状态边界 |
 | 异常测试 (E) | 15-20% | 验证错误处理 |
+| 真实应用端到端 (E2E) | 适用场景必含 | 真实运行应用的核心闭环验证（多轮/会话/工具/审批） |
 
 ---
 
@@ -196,6 +229,7 @@ Step 9: 返回摘要
 - [ ] P0 用例全部为正向功能用例
 - [ ] **若 P5 包含前端任务：必须包含截图测试用例**
 - [ ] **截图测试覆盖：空状态、完整页面、关键交互**
+- [ ] **若 P5 涉及可运行应用：必须包含 TC-E2E 用例，覆盖连续多轮 / 会话切换 / 工具调用 / 审批 gate（适用项全含）**
 
 ---
 
@@ -213,6 +247,7 @@ Step 9: 返回摘要
 | 功能测试 (F) | {N} | {X}% |
 | 边界测试 (B) | {N} | {X}% |
 | 异常测试 (E) | {N} | {X}% |
+| 真实应用端到端 (E2E) | {N} | 适用必含 |
 | **总计** | {N} | 100% |
 
 ### 优先级分布

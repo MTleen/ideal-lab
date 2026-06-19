@@ -2,17 +2,13 @@
 name: ideal-requirement
 description: "Use when: (1) starting a new feature, bug fix, or refactoring task, (2) user mentions '需求', '需求文档', 'PRD', 'requirement', '需求编写', '需求收集', 'bug修复', '重构需求'."
 agents: [pm, analyst]
-io:
-  inputs: []
-  outputs:
-    - name: requirement_doc
-      path: "P1-需求文档.md"
-      type: markdown
 ---
 
 # Ideal Requirement
 
 通过交互式对话引导用户完善需求，生成符合正式学术风格的标准化需求文档。复杂需求通过 P5 编码计划阶段的 story 机制拆分。
+
+> **职责边界**：本 skill 只负责「需求澄清 + 需求文档落盘」。不创建/检查 Git Worktree、不维护 `流程状态.md`、不推进阶段评审——这些由调用方（如 `ideal-flow-control`）负责。可独立用于编写需求文档，也可作为开发流程的 P1 被编排器调用；调用方负责 worktree、流程状态与阶段推进。
 
 ## Agents
 
@@ -34,8 +30,7 @@ Task(
 ```
 进度：
 - [ ] Step 0:   项目背景          ⚠️ REQUIRED
-- [ ] Step 0.5: 迭代类型          ⚠️ REQUIRED
-- [ ] Step 0.6: Worktree 检查      ⚠️ REQUIRED
+- [ ] Step 0.5: 迭代类型（落盘位置）⚠️ REQUIRED
 - [ ] Step 1:   类型识别
 - [ ] Step 2:   模板处理
 - [ ] Step 3:   需求收集（苏格拉底式对话）
@@ -43,22 +38,6 @@ Task(
 - [ ] Step 5:   生成文档
 - [ ] Step 6:   完成
 ```
-
----
-
-## 0.6 Worktree 检查（必须）
-
-**整个迭代必须在 Git Worktree 中执行**，P1 开始前就要完成 worktree 创建。
-
-检查并切换到 worktree：
-```
-1. 读取 流程状态.md → worktree.path
-2. 检查 worktree 路径是否存在：ls {worktree.path}
-3. 存在 → cd {worktree.path}
-4. 不存在 → 终止，报告"worktree 未创建，请先通过 flow-control 初始化迭代"
-```
-
-Worktree 的创建和管理由 `ideal-flow-control` 统一负责，详见其「Git Worktree 协议」章节。
 
 ---
 
@@ -189,24 +168,8 @@ docs/迭代/YYYY-MM-DD-{需求名称}/
 | 文件 | 说明 |
 |------|------|
 | `P1-需求文档.md` | 填充模板 + 学术风格 |
-| `流程状态.md` | current_phase: P1, status: in_progress, worktree 字段 |
 
-**流程状态.md 必须包含 worktree 信息**：
-
-```yaml
----
-requirement_name: {需求名称}
-current_phase: P1
-status: in_progress
-yolo_mode: false
-worktree:
-  branch: feature/{short-name}
-  path: {repoRoot}/worktrees/feature-{short-name}
-  created_at: {YYYY-MM-DD}
-created_at: {创建时间}
-updated_at: {更新时间}
----
-```
+> **不生成 `流程状态.md`**：流程状态、worktree 字段、阶段推进由调用方（`ideal-flow-control`）维护。本 skill 只落盘需求文档。
 
 ### 生成流程
 
@@ -219,7 +182,7 @@ updated_at: {更新时间}
 
 ## 6. 完成
 
-输出文件位置和下一步提示（进入 P2 需求评审）。
+输出需求文档位置。后续阶段（评审/方案等）由调用方编排；独立使用时需求文档已落盘可用，本 skill 不推进任何后续阶段。
 
 ---
 
@@ -245,7 +208,7 @@ updated_at: {更新时间}
 |--------|------|
 | `scripts/validate-requirements.py` | 验证需求文档完整性 |
 | `scripts/calculate-risk.py` | 计算风险等级 |
-| `scripts/generate-flow-status.py` | 生成流程状态文件 |
+| `scripts/generate-flow-status.py` | ⚠️ 已移交：流程状态文件现由 `ideal-flow-control` 维护（P1 前初始化），本 skill 不再调用 |
 
 ---
 

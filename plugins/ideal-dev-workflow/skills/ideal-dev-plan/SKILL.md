@@ -2,14 +2,6 @@
 name: ideal-dev-plan
 description: Use when P4 solution review is completed and coding plan generation is needed. Breaks down technical solution into atomic tasks with TDD organization.
 agents: [architect, pm]
-io:
-  inputs:
-    - name: solution_doc
-      source: ideal-dev-solution.solution_doc
-  outputs:
-    - name: dev_plan
-      path: "P5-编码计划.md"
-      type: markdown
 ---
 
 # ideal-dev-plan（P5 编码计划生成）
