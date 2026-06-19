@@ -1,5 +1,13 @@
 # ideal-dev-workflow
 
+## 2.1.0
+
+### Minor Changes
+
+- Remove io frontmatter declarations from phase skills (decouple inter-skill data flow).
+- Add real-app end-to-end (core loop) test case type to ideal-test-case and execution section to ideal-test-exec.
+- Decouple ideal-requirement to clarification+persist only (drop worktree check, flow-state init, P2 handoff); ideal-flow-control now initializes 流程状态.md before P1.
+
 ## 2.0.0
 
 ### Major Changes

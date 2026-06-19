@@ -2,14 +2,6 @@
 name: ideal-code-review
 description: Use for two-stage code review after batch execution. Reviews spec compliance first, then code quality. Called by ideal-dev-exec automatically.
 agents: [check]
-io:
-  inputs:
-    - name: source_code
-      source: any
-  outputs:
-    - name: review_report
-      path: "P9.1-代码审查.md"
-      type: markdown
 ---
 
 # ideal-code-review（代码审查）
