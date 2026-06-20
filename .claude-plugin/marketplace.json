@@ -72,6 +72,13 @@
       "keywords": ["agent-loop", "iteration", "verification", "socratic", "loop"]
     },
     {
+      "name": "ideal-backlog",
+      "source": "./plugins/ideal-backlog",
+      "description": "需求池构建与管理：入队（调 ideal-requirement）、状态流转、优先级+FIFO 排序。作为 ideal-agent-loop 出队契约源。",
+      "category": "development",
+      "keywords": ["backlog", "requirement", "queue", "prioritization"]
+    },
+    {
       "name": "skill-builder",
       "source": "./plugins/skill-builder",
       "description": "Skill 全生命周期引擎：从零创建新 skill 或持续优化已有 SKILL.md。双重评估（7 维度结构评分 + checklist 实测），爬山优化 + 棘轮机制（退步自动回滚），独立 agent 判卷消除偏差",
