@@ -1,6 +1,6 @@
-# Ralph 合约模板
+# Agent Loop 合约模板
 
-本文档是 `.ralph/{task-name}/contract.json` 的完整模板。每个字段附有填写说明和示例。
+本文档是 `.agent-loop/{task-name}/contract.json` 的完整模板。每个字段附有填写说明和示例。
 
 合约以 JSON 为事实源（contract.json），同时生成人类可读的 Markdown 版本（contract.md）。当两者不一致时，以 JSON 为准。
 
@@ -47,7 +47,7 @@
 contract.md 由 contract.json 自动渲染，格式如下：
 
 ```markdown
-# Ralph Task Contract
+# Agent Loop Task Contract
 
 ## Task Description
 {用户原始任务描述}
@@ -236,7 +236,7 @@ contract.md 由 contract.json 自动渲染，格式如下：
 
 ## 合约确认检查
 
-生成合约后，Ralph 应自行检查以下项目：
+生成合约后，Agent Loop 应自行检查以下项目：
 
 | 检查项 | 要求 |
 |--------|------|

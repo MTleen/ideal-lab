@@ -1,27 +1,38 @@
 ---
-name: ideal-ralph
-description: 苏格拉底式任务澄清 + 持久小步迭代验证循环。适用于需要保证完成质量的独立任务。
+name: ideal-agent-loop
+description: Goal-driven Agent Loop（loop engineering 实现）。给定目标→规划最小闭环→持久迭代 plan/act/observe/validate/terminate 直到目标完成。支持单目标验证循环（inner loop）与需求池 goal 接力（outer loop，只读消费 ideal-backlog 维护的需求池）。
 ---
 
 > **agents**: 独立编排器 — 不隶属 ideal-dev-workflow，可调用任何 skill（包括 ideal-dev-workflow 的各 phase skill）完成工作。
 
-# ideal-ralph（Ralph 持久任务执行器）
+# ideal-agent-loop（Goal-driven Agent Loop）
+
+> **loop engineering 实现**：本 skill 是 [loop engineering](https://addyosmani.com/blog/loop-engineering) 的落地——把"递归目标（recursive goal）"工程化为持久迭代系统：给定目标 → 规划最小闭环 → plan/act/observe/validate → 满足终止条件（goal 完成 / 错误 / 预算耗尽）。区别于 prompt engineering（只管输入），它管整个反馈环。
 
 ## 角色定位
 
-**任务守护者** — 通过苏格拉底式对话明确任务边界，然后以持久迭代循环确保每个验收标准都被满足。
+**目标驱动循环器** — 给定一个目标，拆解为最小闭环（task/criterion），持久迭代直到每个验收标准被满足、目标完成。
+
+两种循环粒度：
+
+| 粒度 | 范围 | 机制 |
+|------|------|------|
+| **inner loop** | 单个 goal/任务 | CLARIFY 澄清目标生成合约 → LOOP 逐 criterion 最小闭环迭代验证（本 skill 核心） |
+| **outer loop** | 需求池 goal 接力 | 只读消费 `docs/dev/需求池.md`（由 `ideal-backlog` 构建）→ 按优先级+FIFO 出队 goal → inner loop 跑完 → 出队下一个 |
 
 职责：
-1. 澄清任务（输入、输出、验证、实施方式）
-2. 生成任务合约（contract.json + contract.md）
+1. 澄清目标（输入、输出、验证、实施方式）→ 生成合约
+2. 规划最小闭环（goal 拆 task / criterion）
 3. 持久迭代，小步推进
-4. 验证每个标准，记录证据
-5. 全部通过后生成完成报告
+4. 验证每个标准，记录证据（不空承诺）
+5. 全部通过 + 全局审计 → 生成完成报告
+6. outer loop 模式下：goal 完成后自动接力需求池下一个 goal
 
 **不负责**：
 - 替用户决定验收标准（只引导，不替代）
 - 在验收标准不通过时擅自标记通过
 - 跳过任何标准
+- 构建需求池（归 `ideal-backlog`；本 skill 只读消费）
 
 ---
 
@@ -43,17 +54,17 @@ CLARIFY（澄清）        LOOP（迭代循环）
 
 ## Script Directory（硬约束层）
 
-本插件包含三个 Python 脚本，作为 SKILL.md 软约束的硬约束补充。脚本路径均相对于插件根目录 `plugins/ideal-ralph/`。
+本插件包含三个 Python 脚本，作为 SKILL.md 软约束的硬约束补充。脚本路径均相对于插件根目录 `plugins/ideal-agent-loop/`。
 
 | 脚本 | 路径 | 用途 |
 |------|------|------|
-| **ralph_state.py** | `scripts/ralph_state.py` | JSON 状态管理器。管理 `state.json` 和 `contract.json` 的读写、初始化、查询。 |
-| **ralph_stop_hook.py** | `scripts/ralph_stop_hook.py` | Claude Code Stop Hook。阻止停止时使用 continuation-template.md 生成结构化 prompt，引导 Agent 继续工作。模板不存在时回退到纯文本。 |
-| **ralph_verify.py** | `scripts/ralph_verify.py` | 验证执行器。根据 `verify_type` 执行 script / llm_judgment / hybrid 验证并更新状态。 |
+| **agent_loop_state.py** | `scripts/agent_loop_state.py` | JSON 状态管理器。管理 `state.json` 和 `contract.json` 的读写、初始化、查询。 |
+| **agent_loop_stop_hook.py** | `scripts/agent_loop_stop_hook.py` | Claude Code Stop Hook。阻止停止时使用 continuation-template.md 生成结构化 prompt，引导 Agent 继续工作。模板不存在时回退到纯文本。 |
+| **agent_loop_verify.py** | `scripts/agent_loop_verify.py` | 验证执行器。根据 `verify_type` 执行 script / llm_judgment / hybrid 验证并更新状态。 |
 
 ### Hook 注册方式
 
-将 `ralph_stop_hook.py` 注册到项目的 `.claude/settings.json` 或全局 `~/.claude/settings.json` 中：
+将 `agent_loop_stop_hook.py` 注册到项目的 `.claude/settings.json` 或全局 `~/.claude/settings.json` 中：
 
 ```json
 {
@@ -64,7 +75,7 @@ CLARIFY（澄清）        LOOP（迭代循环）
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /path/to/plugins/ideal-ralph/scripts/ralph_stop_hook.py"
+            "command": "python3 /path/to/plugins/ideal-agent-loop/scripts/agent_loop_stop_hook.py"
           }
         ]
       }
@@ -77,18 +88,18 @@ CLARIFY（澄清）        LOOP（迭代循环）
 
 - 所有脚本使用 `#!/usr/bin/env python3`
 - 所有脚本支持 `--help` 参数
-- 状态文件路径使用 `.ralph/{task-name}/` 前缀
+- 状态文件路径使用 `.agent-loop/{task-name}/` 前缀
 - 使用 `pathlib.Path` 处理所有路径
 - 命令超时默认 120 秒
 - 输出截断默认 500 字符
 
-### mark-modified 子命令（ralph_state.py）
+### mark-modified 子命令（agent_loop_state.py）
 
 当 LOOP 中修改了文件，需要将受影响的已通过标准重置为 pending：
 
 ```bash
-python3 scripts/ralph_state.py mark-modified \
-    --state .ralph/{task-name}/state.json \
+python3 scripts/agent_loop_state.py mark-modified \
+    --state .agent-loop/{task-name}/state.json \
     --files src/auth/oauth.ts src/routes/auth.ts
 ```
 
@@ -102,18 +113,18 @@ python3 scripts/ralph_state.py mark-modified \
 
 ## Phase 0: PREFLIGHT（前置检查）
 
-在开始 CLARIFY 之前，**必须**执行以下检查。如果检查不通过， Ralph LOOP 的铁律"不停止"无法执行。
+在开始 CLARIFY 之前，**必须**执行以下检查。如果检查不通过， Agent Loop LOOP 的铁律"不停止"无法执行。
 
 ### Step 1: 检查 Stop Hook 注册
 
-读取项目级 `.claude/settings.json`，检查 `hooks.Stop` 中是否包含 `ralph_stop_hook.py`：
+读取项目级 `.claude/settings.json`，检查 `hooks.Stop` 中是否包含 `agent_loop_stop_hook.py`：
 
 ```bash
 cat {project_root}/.claude/settings.json | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
 hooks = data.get('hooks', {}).get('Stop', [])
-found = any('ralph_stop_hook' in h.get('command','') for group in hooks for h in group.get('hooks', []))
+found = any('agent_loop_stop_hook' in h.get('command','') for group in hooks for h in group.get('hooks', []))
 print('registered' if found else 'not_registered')
 "
 ```
@@ -125,12 +136,12 @@ print('registered' if found else 'not_registered')
 先检测插件安装路径：
 
 ```bash
-find ~/.claude/plugins -name "ralph_stop_hook.py" -path "*/ideal-ralph/*" 2>/dev/null | head -1
+find ~/.claude/plugins -name "agent_loop_stop_hook.py" -path "*/ideal-agent-loop/*" 2>/dev/null | head -1
 ```
 
 然后向用户说明：
 
-> Ralph 需要 Stop Hook 来阻止 Agent 在验收标准未全部通过时停止。检测到项目级 `.claude/settings.json` 中未注册该 Hook，是否添加？
+> Agent Loop 需要 Stop Hook 来阻止 Agent 在验收标准未全部通过时停止。检测到项目级 `.claude/settings.json` 中未注册该 Hook，是否添加？
 
 用户确认后，读取现有 `{project_root}/.claude/settings.json`（不存在则创建空对象），合并以下配置（不覆盖已有的其他 hooks）：
 
@@ -160,7 +171,7 @@ find ~/.claude/plugins -name "ralph_stop_hook.py" -path "*/ideal-ralph/*" 2>/dev
 echo '{"cwd":"{project_root}"}' | python3 {脚本路径}
 ```
 
-应输出 `{"decision": "block", ...}` 或无输出（取决于是否有活跃 Ralph 任务），不应报错。
+应输出 `{"decision": "block", ...}` 或无输出（取决于是否有活跃 Agent Loop 任务），不应报错。
 
 验证通过后继续到 Phase 1: CLARIFY。
 
@@ -232,8 +243,8 @@ echo '{"cwd":"{project_root}"}' | python3 {脚本路径}
 四个维度澄清完成后：
 
 1. 生成合约文件：
-   - `.ralph/{task-name}/contract.json`（机器可读，事实源）
-   - `.ralph/{task-name}/contract.md`（人类可读，从 JSON 渲染）
+   - `.agent-loop/{task-name}/contract.json`（机器可读，事实源）
+   - `.agent-loop/{task-name}/contract.md`（人类可读，从 JSON 渲染）
 2. 完整展示合约内容给用户
 3. 等待用户确认：
    - "确认 / ok" -> 更新 contract.json 中 meta.phase 为 "loop"，进入 LOOP 阶段
@@ -252,7 +263,7 @@ echo '{"cwd":"{project_root}"}' | python3 {脚本路径}
 Iteration N:
 
   Step 1: 读取状态
-    ├─ 读取 .ralph/{task-name}/state.json
+    ├─ 读取 .agent-loop/{task-name}/state.json
     ├─ 检查是否有已通过标准因文件修改需重新验证
     └─ 找到第一个状态不为 passed/manual_accept 的验收标准
 
@@ -269,7 +280,7 @@ Iteration N:
 
   Step 4: 运行验证
     ├─ IDENTIFY — 确定验证方式（script / llm_judgment / hybrid）
-    ├─ EXECUTE — 执行验证（可调用 ralph_verify.py）
+    ├─ EXECUTE — 执行验证（可调用 agent_loop_verify.py）
     ├─ READ — 读取验证结果
     └─ JUDGE — 判定通过/失败
 
@@ -355,6 +366,34 @@ JUDGE:    两部分都通过 -> 通过；任一失败 -> 失败
 
 ---
 
+## 场景：需求池 goal 循环（outer loop）
+
+当目标来自需求池（`docs/dev/需求池.md`，由 `ideal-backlog` 构建），agent-loop 进入 outer loop 模式。本 skill **只读消费**需求池，不构建。
+
+```
+loop（outer，跨 goal 接力）:
+  1. 读 docs/dev/需求池.md → 按优先级降序 + 同级 FIFO 取第一个 status=todo 的 goal
+     没有 todo goal → 结束（池空）
+  2. 标该 goal status=doing
+  3. 规划最小闭环（goal 级）：
+     ├─ ideal-requirement 澄清 → 需求.md
+     └─ 方案 → 计划 → task-boundary-matrix（每个 task：In Scope / Out Scope / 前置依赖 / RED-GREEN 验收 / 验证命令）
+  4. loop（inner over tasks）:
+     ├─ 取下一个未 passed 的 task
+     ├─ 委托 ideal-dev-workflow 跑该 task 的完整闭环（task 子目录：需求/方案/计划/测试/实现/验证/调试/提交）
+     ├─ verification gate 通过 → task passed → 下一个 task
+     └─ 同一 gate 连续 3 次失败 → task blocked → goal blocked → 停 outer loop，报告
+  5. goal 的所有 task passed → goal status=done → 回 step 1（出队下一个 goal）
+```
+
+**终止条件**：需求池空 / goal blocked（连续 3 次 verification 失败）/ 用户停止。
+
+**与 inner loop 的关系**：outer loop 的 step 4 内部，每个 task 的 ideal-dev-workflow 闭环本身就是一次完整的 inner loop（P1-P15）。一个 goal 触发**多次** dev-workflow 调用（每 task 一次），不是一次。
+
+**需求池格式**：由 `ideal-backlog` 定义并维护（goal 条目含 ID/标题/优先级/创建时间/状态/验收标准）。本 skill 只读取、更新 goal 状态（todo→doing→done/blocked）。
+
+---
+
 ## 铁律（IRON LAW）
 
 | # | 铁律 | 说明 |
@@ -370,10 +409,10 @@ JUDGE:    两部分都通过 -> 通过；任一失败 -> 失败
 
 ## 任务目录结构
 
-以任务名隔离，所有状态文件放在 `.ralph/` 目录下：
+以任务名隔离，所有状态文件放在 `.agent-loop/` 目录下：
 
 ```
-.ralph/
+.agent-loop/
 ├── {task-name-1}/
 │   ├── contract.json       # 任务合约 - 机器可读（事实源）
 │   ├── contract.md         # 任务合约 - 人类可读（从 JSON 渲染）
@@ -567,28 +606,28 @@ JUDGE:    两部分都通过 -> 通过；任一失败 -> 失败
     4. [终止任务] — 生成当前进度报告并结束
 ```
 
-**注意**：选项 3 "标记为人工验收" 不等于"跳过标准"。该标准在最终报告中被明确标记为"人工验收通过"，而非"Ralph 验证通过"。
+**注意**：选项 3 "标记为人工验收" 不等于"跳过标准"。该标准在最终报告中被明确标记为"人工验收通过"，而非"Agent Loop 验证通过"。
 
 ---
 
 ## 完成报告格式 (report.md)
 
 ```markdown
-# Ralph 完成报告
+# Agent Loop 完成报告
 
 ## 任务
 {任务描述}
 
 ## 执行统计
 - 总迭代：{N}
-- 验收结果：{Ralph通过数} Ralph 通过 / {人工验收数} 人工验收 / 0 失败
+- 验收结果：{Agent Loop通过数} Agent Loop 通过 / {人工验收数} 人工验收 / 0 失败
 - 耗时：从 {开始时间} 到 {结束时间}
 
 ## 验收结果
 | # | 标准 | 验证方式 | 结果 | 证据 |
 |---|------|----------|------|------|
-| 1 | {标准描述} | script | Ralph 通过 | {命令输出摘要} |
-| 2 | {标准描述} | llm_judgment | Ralph 通过 | {证据摘要} |
+| 1 | {标准描述} | script | Agent Loop 通过 | {命令输出摘要} |
+| 2 | {标准描述} | llm_judgment | Agent Loop 通过 | {证据摘要} |
 | 3 | {标准描述} | llm_judgment | 人工验收 | 用户确认 |
 
 ## 变更文件
@@ -604,16 +643,17 @@ JUDGE:    两部分都通过 -> 通过；任一失败 -> 失败
 
 ## 与其他 skill 的关系
 
-ideal-ralph 是上层编排器，可委托执行：
+ideal-agent-loop 是上层目标驱动编排器（loop engineering），可委托执行：
 
 | 场景 | 委托目标 | 说明 |
 |------|----------|------|
-| 复杂编码任务 | `ideal-dev-workflow` 的 phase skill | 需求->方案->编码->测试全流程 |
+| task 最小闭环（编码） | `ideal-dev-workflow` | 一个 task 的完整闭环：需求→方案→计划→测试→实现→验证→调试→提交。outer loop 下每 task 调一次 |
+| 需求池构建/入队 | `ideal-backlog` | 维护需求池.md；本 skill 只读消费，不构建 |
 | 调研任务 | `ideal-deep-research` | 技术调研、竞品分析 |
 | 文档编写 | 直接写 / `ideal-wiki` | 根据复杂度选择 |
 | 简单任务 | 直接写代码 | 不需要调度其他 skill |
 
-**调用方式**：在 LOOP 的 Step 3（执行步骤）中，根据合约中约定的实施方式决定是否委托。
+**调用方式**：inner loop 的 LOOP Step 3 根据合约实施方式委托；outer loop 的 step 4 对每个 task 委托 ideal-dev-workflow 跑完整闭环。
 
 ---
 
@@ -625,9 +665,9 @@ ideal-ralph 是上层编排器，可委托执行：
 | `references/verification-guide.md` | 三种验证方式的详细指南 |
 | `references/continuation-template.md` | Stop Hook continuation prompt 模板 |
 | `references/global-audit-guide.md` | 全局审计详细指南 |
-| `../../scripts/ralph_state.py` | JSON 状态管理器（硬约束） |
-| `../../scripts/ralph_stop_hook.py` | Stop Hook 脚本（硬约束） |
-| `../../scripts/ralph_verify.py` | 验证执行器（硬约束） |
+| `../../scripts/agent_loop_state.py` | JSON 状态管理器（硬约束） |
+| `../../scripts/agent_loop_stop_hook.py` | Stop Hook 脚本（硬约束） |
+| `../../scripts/agent_loop_verify.py` | 验证执行器（硬约束） |
 
 ---
 
@@ -640,13 +680,13 @@ ideal-ralph 是上层编排器，可委托执行：
 
 ### CLARIFY 阶段
 - [ ] 4 个维度逐一确认（输入、输出、验证、实施）
-- [ ] 合约文件已写入 `.ralph/{task-name}/contract.json` + `.ralph/{task-name}/contract.md`
+- [ ] 合约文件已写入 `.agent-loop/{task-name}/contract.json` + `.agent-loop/{task-name}/contract.md`
 - [ ] 未确认的维度标记为 `inferred: true`
 - [ ] 合约内容已完整展示给用户
 - [ ] 用户已确认合约
 
 ### LOOP 阶段
-- [ ] 状态文件已写入 `.ralph/{task-name}/state.json` + `.ralph/{task-name}/state.md`
+- [ ] 状态文件已写入 `.agent-loop/{task-name}/state.json` + `.agent-loop/{task-name}/state.md`
 - [ ] 每次迭代只做一个最小可验证步骤
 - [ ] 每个标准通过时有新鲜证据（非空承诺）
 - [ ] 修改已通过标准相关文件时，标准状态重置为 pending

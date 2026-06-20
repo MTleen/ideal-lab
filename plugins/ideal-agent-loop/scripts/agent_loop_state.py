@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Ralph State Manager - JSON state file management for Ralph persistent loop.
+Agent Loop State Manager - JSON state file management for Agent Loop persistent loop.
 
 Manages task state (iteration count, criteria tracking, evidence) stored as
-JSON in .ralph/{task-name}/state.json.  Also handles contract.json I/O.
+JSON in .agent-loop/{task-name}/state.json.  Also handles contract.json I/O.
 
 Usage:
-    python3 ralph_state.py --help
-    python3 ralph_state.py init --task my-task --contract .ralph/my-task/contract.json
-    python3 ralph_state.py report --state .ralph/my-task/state.json
+    python3 agent_loop_state.py --help
+    python3 agent_loop_state.py init --task my-task --contract .agent-loop/my-task/contract.json
+    python3 agent_loop_state.py report --state .agent-loop/my-task/state.json
 """
 
 from __future__ import annotations
@@ -49,8 +49,8 @@ class CriterionState:
 
 
 @dataclass
-class RalphState:
-    """Top-level state for a Ralph task."""
+class AgentLoopState:
+    """Top-level state for a Agent Loop task."""
     task: str
     iteration: int = 0
     max_iterations: int = 20
@@ -88,10 +88,10 @@ def _criterion_from_dict(data: Dict[str, Any]) -> CriterionState:
     )
 
 
-def _state_from_dict(data: Dict[str, Any]) -> RalphState:
-    """Build a RalphState from a plain dict (loaded from JSON)."""
+def _state_from_dict(data: Dict[str, Any]) -> AgentLoopState:
+    """Build a AgentLoopState from a plain dict (loaded from JSON)."""
     criteria = [_criterion_from_dict(c) for c in data.get("criteria", [])]
-    return RalphState(
+    return AgentLoopState(
         task=data["task"],
         iteration=data.get("iteration", 0),
         max_iterations=data.get("max_iterations", 20),
@@ -108,14 +108,14 @@ def _state_from_dict(data: Dict[str, Any]) -> RalphState:
 
 def find_active_task(project_dir: Path) -> Optional[Path]:
     """
-    Scan .ralph/*/state.json for tasks whose status is not 'completed'.
+    Scan .agent-loop/*/state.json for tasks whose status is not 'completed'.
     Returns the first active state.json path, or None.
     """
-    ralph_dir = project_dir / ".ralph"
-    if not ralph_dir.is_dir():
+    agent_loop_dir = project_dir / ".agent-loop"
+    if not agent_loop_dir.is_dir():
         return None
 
-    for task_dir in sorted(ralph_dir.iterdir()):
+    for task_dir in sorted(agent_loop_dir.iterdir()):
         if not task_dir.is_dir():
             continue
         state_file = task_dir / "state.json"
@@ -130,15 +130,15 @@ def find_active_task(project_dir: Path) -> Optional[Path]:
     return None
 
 
-def load_state(state_path: Path) -> RalphState:
-    """Read a state.json and return a RalphState."""
+def load_state(state_path: Path) -> AgentLoopState:
+    """Read a state.json and return a AgentLoopState."""
     raw = json.loads(state_path.read_text(encoding="utf-8"))
     return _state_from_dict(raw)
 
 
-def save_state(state: RalphState, state_path: Path) -> None:
+def save_state(state: AgentLoopState, state_path: Path) -> None:
     """
-    Write a RalphState to state.json using atomic write (temp file + os.replace).
+    Write a AgentLoopState to state.json using atomic write (temp file + os.replace).
 
     P1-5: Atomic write prevents corruption from concurrent or interrupted writes.
     新-2: Uses random suffix to avoid concurrent write collisions.
@@ -150,7 +150,7 @@ def save_state(state: RalphState, state_path: Path) -> None:
     os.replace(str(tmp), str(state_path))
 
 
-def get_next_pending(state: RalphState) -> Optional[CriterionState]:
+def get_next_pending(state: AgentLoopState) -> Optional[CriterionState]:
     """Return the first criterion with status pending or failed."""
     for c in state.criteria:
         if c.status in ("pending", "failed"):
@@ -159,12 +159,12 @@ def get_next_pending(state: RalphState) -> Optional[CriterionState]:
 
 
 def update_criterion(
-    state: RalphState,
+    state: AgentLoopState,
     criterion_id: int,
     status: str,
     evidence: Optional[str] = None,
     error: Optional[str] = None,
-) -> RalphState:
+) -> AgentLoopState:
     """Update a single criterion's status (and optional evidence/error)."""
     now = datetime.now().isoformat()
     for c in state.criteria:
@@ -185,7 +185,7 @@ def update_criterion(
     return state
 
 
-def all_passed(state: RalphState) -> bool:
+def all_passed(state: AgentLoopState) -> bool:
     """
     P1-7: True only if there is at least one criterion AND every criterion is
     passed or manual_accept.  An empty criteria list is NOT considered "all passed".
@@ -195,12 +195,12 @@ def all_passed(state: RalphState) -> bool:
     )
 
 
-def has_blocked(state: RalphState) -> bool:
+def has_blocked(state: AgentLoopState) -> bool:
     """True if any criterion is blocked."""
     return any(c.status == "blocked" for c in state.criteria)
 
 
-def increment_iteration(state: RalphState) -> RalphState:
+def increment_iteration(state: AgentLoopState) -> AgentLoopState:
     """Increment the iteration counter."""
     state.iteration += 1
     return state
@@ -210,9 +210,9 @@ def init_state(
     task_name: str,
     contract: Dict[str, Any],
     max_iterations: Optional[int] = None,
-) -> RalphState:
+) -> AgentLoopState:
     """
-    Build an initial RalphState from a contract dict.
+    Build an initial AgentLoopState from a contract dict.
     The contract should have a 'criteria' list of dicts with keys:
         id, desc, verify_type, command (optional)
 
@@ -230,14 +230,14 @@ def init_state(
             command=item.get("command"),
             affected_files=item.get("affected_files", []),
         ))
-    return RalphState(
+    return AgentLoopState(
         task=task_name,
         max_iterations=max_iterations,
         criteria=criteria,
     )
 
 
-def is_active(state: RalphState) -> bool:
+def is_active(state: AgentLoopState) -> bool:
     """True if the task is still active (not completed / not failed-over-limit)."""
     if state.status == "completed":
         return False
@@ -246,7 +246,7 @@ def is_active(state: RalphState) -> bool:
     return True
 
 
-def mark_files_modified(state: RalphState, files: List[str]) -> RalphState:
+def mark_files_modified(state: AgentLoopState, files: List[str]) -> AgentLoopState:
     """
     P1-10: When files are modified, check affected_files and reset related criteria.
 
@@ -263,10 +263,10 @@ def mark_files_modified(state: RalphState, files: List[str]) -> RalphState:
     return state
 
 
-def to_markdown_report(state: RalphState) -> str:
+def to_markdown_report(state: AgentLoopState) -> str:
     """Render state as a Markdown report (for human consumption)."""
     lines: List[str] = []
-    lines.append(f"# Ralph State: {state.task}")
+    lines.append(f"# Agent Loop State: {state.task}")
     lines.append("")
     lines.append(f"- Iteration: **{state.iteration} / {state.max_iterations}**")
     lines.append(f"- Status: **{state.status}**")
@@ -322,7 +322,7 @@ def save_contract(contract: Dict[str, Any], contract_path: Path) -> None:
 def _contract_to_markdown(contract: Dict[str, Any]) -> str:
     """Convert a contract dict to a Markdown string."""
     lines: List[str] = []
-    lines.append(f"# Ralph Task Contract")
+    lines.append(f"# Agent Loop Task Contract")
     lines.append("")
     lines.append(f"## Task Description")
     lines.append(contract.get("description", ""))
@@ -375,17 +375,17 @@ def _contract_to_markdown(contract: Dict[str, Any]) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ralph State Manager - manage .ralph state.json files",
+        description="Agent Loop State Manager - manage .agent-loop state.json files",
     )
     sub = parser.add_subparsers(dest="command")
 
     # init
     p_init = sub.add_parser("init", help="Initialise state.json from a contract.json")
-    p_init.add_argument("--task", required=True, help="Task name (directory under .ralph/)")
+    p_init.add_argument("--task", required=True, help="Task name (directory under .agent-loop/)")
     p_init.add_argument("--contract", required=True, help="Path to contract.json")
     p_init.add_argument("--max-iterations", type=int, default=None,
                         help="Override max iterations (default: read from contract, or 20)")
-    p_init.add_argument("--output", help="Output state.json path (default: .ralph/{task}/state.json)")
+    p_init.add_argument("--output", help="Output state.json path (default: .agent-loop/{task}/state.json)")
 
     # report
     p_report = sub.add_parser("report", help="Print Markdown report of a state file")
@@ -419,7 +419,7 @@ def main():
         max_iterations = args.max_iterations if args.max_iterations is not None else contract_max
 
         state = init_state(args.task, contract, max_iterations=max_iterations)
-        out_path = Path(args.output) if args.output else Path(f".ralph/{args.task}/state.json")
+        out_path = Path(args.output) if args.output else Path(f".agent-loop/{args.task}/state.json")
         save_state(state, out_path)
         print(f"State initialised at {out_path}")
 

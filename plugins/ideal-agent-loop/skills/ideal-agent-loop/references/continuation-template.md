@@ -1,4 +1,4 @@
-## Ralph Loop: iteration {{ iteration }}/{{ max_iterations }}
+## Agent Loop: iteration {{ iteration }}/{{ max_iterations }}
 
 You are in a persistent task loop. Do NOT stop until all criteria pass.
 

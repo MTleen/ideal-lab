@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Ralph Verification Executor - run acceptance-criterion verification commands.
+Agent Loop Verification Executor - run acceptance-criterion verification commands.
 
 Usage:
-    python3 ralph_verify.py --state .ralph/{task}/state.json --criterion 1
-    python3 ralph_verify.py --state .ralph/{task}/state.json --all
-    python3 ralph_verify.py --state .ralph/{task}/state.json --status
-    python3 ralph_verify.py --state .ralph/{task}/state.json --judge 2 --status-passed --evidence "证据"
-    python3 ralph_verify.py --state .ralph/{task}/state.json --judge 2 --status-failed --error "错误原因"
+    python3 agent_loop_verify.py --state .agent-loop/{task}/state.json --criterion 1
+    python3 agent_loop_verify.py --state .agent-loop/{task}/state.json --all
+    python3 agent_loop_verify.py --state .agent-loop/{task}/state.json --status
+    python3 agent_loop_verify.py --state .agent-loop/{task}/state.json --judge 2 --status-passed --evidence "证据"
+    python3 agent_loop_verify.py --state .agent-loop/{task}/state.json --judge 2 --status-failed --error "错误原因"
 
 Core logic:
 1. Read state.json.
@@ -32,9 +32,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
-# Reuse ralph_state when imported alongside; but keep self-contained for CLI
+# Reuse agent_loop_state when imported alongside; but keep self-contained for CLI
 try:
-    from ralph_state import load_state, save_state, update_criterion, RalphState, CriterionState  # type: ignore
+    from agent_loop_state import load_state, save_state, update_criterion, AgentLoopState, CriterionState  # type: ignore
 except ImportError:
     # Fallback: inline minimal helpers
     _CAN_IMPORT_STATE = False
@@ -175,7 +175,7 @@ def verify_hybrid(
 
 
 # ---------------------------------------------------------------------------
-# State-aware helpers (used when ralph_state is importable)
+# State-aware helpers (used when agent_loop_state is importable)
 # ---------------------------------------------------------------------------
 
 def _run_single_criterion(
@@ -209,7 +209,7 @@ def _run_single_criterion(
     command = criterion.get("command")
     desc = criterion["desc"]
     affected_files = criterion.get("affected_files", [])
-    cwd = state_path.parent.parent.parent  # project root (2 levels up from .ralph/{task}/state.json)
+    cwd = state_path.parent.parent.parent  # project root (2 levels up from .agent-loop/{task}/state.json)
 
     if verify_type == "script":
         result = verify_script(command, cwd=cwd)
@@ -395,7 +395,7 @@ def _print_status(state_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Minimal JSON I/O (fallback when ralph_state not importable)
+# Minimal JSON I/O (fallback when agent_loop_state not importable)
 # ---------------------------------------------------------------------------
 
 def _load_state(path: Path) -> Optional[Dict[str, Any]]:
@@ -433,11 +433,11 @@ def _truncate(text: str, limit: int = MAX_OUTPUT_LENGTH) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ralph Verification Executor - run criterion verifications",
+        description="Agent Loop Verification Executor - run criterion verifications",
     )
     parser.add_argument(
         "--state", required=True,
-        help="Path to state.json (e.g. .ralph/{task}/state.json)",
+        help="Path to state.json (e.g. .agent-loop/{task}/state.json)",
     )
 
     group = parser.add_mutually_exclusive_group(required=True)

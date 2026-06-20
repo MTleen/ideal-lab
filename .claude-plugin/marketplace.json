@@ -65,11 +65,11 @@
       "keywords": ["maintainer", "tooling", "automation"]
     },
     {
-      "name": "ideal-ralph",
-      "source": "./plugins/ideal-ralph",
-      "description": "苏格拉底式任务澄清 + 持久小步迭代验证循环",
+      "name": "ideal-agent-loop",
+      "source": "./plugins/ideal-agent-loop",
+      "description": "Goal-driven Agent Loop（loop engineering 实现）：给定目标→规划最小闭环→持久迭代到完成。支持需求池 goal 接力（outer loop）",
       "category": "development",
-      "keywords": ["ralph", "iteration", "verification", "socratic", "loop"]
+      "keywords": ["agent-loop", "iteration", "verification", "socratic", "loop"]
     },
     {
       "name": "skill-builder",

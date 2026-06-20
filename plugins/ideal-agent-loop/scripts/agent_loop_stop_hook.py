@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Claude Code Hook: ralph_stop_hook.py
-Ralph persistent loop - intercepts main Agent stop attempts to enforce criteria.
+Claude Code Hook: agent_loop_stop_hook.py
+Agent Loop persistent loop - intercepts main Agent stop attempts to enforce criteria.
 
 Trigger: Stop (main Agent finishes a response).
 
@@ -10,7 +10,7 @@ Core logic:
 2. If stop_hook_active == true, check for state progress since last block
    (P0-1: no longer unconditionally allows stop; uses hash comparison to
    detect progress and prevent infinite loops).
-3. Scan .ralph/ for an active task.
+3. Scan .agent-loop/ for an active task.
 4. No active task -> allow stop.
 5. Active task found -> read state.json
    - All passed -> allow stop.
@@ -39,7 +39,7 @@ from typing import Dict, Any, List, Optional, Tuple
 # Constants
 # ---------------------------------------------------------------------------
 
-RALPH_DIR_NAME = ".ralph"
+AGENT_LOOP_DIR_NAME = ".agent-loop"
 STATE_FILENAME = "state.json"
 CONTRACT_FILENAME = "contract.json"
 BLOCK_HASH_FILENAME = ".last-block-hash"
@@ -47,7 +47,7 @@ TEMPLATE_FILENAME = "continuation-template.md"
 MAX_OUTPUT_LENGTH = 500
 
 # ---------------------------------------------------------------------------
-# Helpers (duplicated from ralph_state to keep this script self-contained)
+# Helpers (duplicated from agent_loop_state to keep this script self-contained)
 # ---------------------------------------------------------------------------
 
 
@@ -64,7 +64,7 @@ def _load_state_raw(path: Path) -> Optional[Dict[str, Any]]:
     """
     Load state.json as raw dict (preserves all fields).
     新-3: Hook does not need full deserialization. Raw dict preserves
-    any fields added by ralph_verify.py (e.g. consecutive_failures,
+    any fields added by agent_loop_verify.py (e.g. consecutive_failures,
     command_executed) that the hook does not know about.
     """
     try:
@@ -77,7 +77,7 @@ def _load_state_raw(path: Path) -> Optional[Dict[str, Any]]:
 def _save_state_raw(state: Dict[str, Any], path: Path) -> None:
     """
     Write state back to state.json using atomic write (temp file + os.replace).
-    P1-5: Consistent with ralph_state.py and ralph_verify.py atomic writes.
+    P1-5: Consistent with agent_loop_state.py and agent_loop_verify.py atomic writes.
     新-2: Uses random suffix to avoid concurrent write collisions.
     """
     tmp = path.with_suffix(f".tmp.{os.getpid()}.{random.randint(0, 99999)}")
@@ -116,7 +116,7 @@ def _save_last_block_hash(state_path: Path, hash_val: str) -> None:
 
 def _find_active_or_corrupt_task(project_dir: Path) -> Tuple[Optional[Path], bool]:
     """
-    Scan .ralph/*/state.json for an active (non-completed) task.
+    Scan .agent-loop/*/state.json for an active (non-completed) task.
     P1-6: Also detects corrupt state files (exist but cannot be parsed).
 
     Returns (state_path, is_corrupt).
@@ -124,10 +124,10 @@ def _find_active_or_corrupt_task(project_dir: Path) -> Tuple[Optional[Path], boo
     - (path, False) if an active task was found.
     - (path, True) if a corrupt state file was found.
     """
-    ralph_dir = project_dir / RALPH_DIR_NAME
-    if not ralph_dir.is_dir():
+    agent_loop_dir = project_dir / AGENT_LOOP_DIR_NAME
+    if not agent_loop_dir.is_dir():
         return None, False
-    for task_dir in sorted(ralph_dir.iterdir()):
+    for task_dir in sorted(agent_loop_dir.iterdir()):
         if not task_dir.is_dir():
             continue
         state_file = task_dir / STATE_FILENAME
@@ -166,10 +166,10 @@ def _find_template(state_path: Path) -> Optional[str]:
     Search order: plugin references dir -> script dir -> fallback None.
     """
     candidates = [
-        # From .ralph/{task}/state.json -> plugins/ideal-ralph/skills/ideal-ralph/references/
-        state_path.parent.parent.parent / "plugins" / "ideal-ralph" / "skills" / "ideal-ralph" / "references" / TEMPLATE_FILENAME,
+        # From .agent-loop/{task}/state.json -> plugins/ideal-agent-loop/skills/ideal-agent-loop/references/
+        state_path.parent.parent.parent / "plugins" / "ideal-agent-loop" / "skills" / "ideal-agent-loop" / "references" / TEMPLATE_FILENAME,
         # From script dir (if run from plugin root)
-        Path(__file__).resolve().parent.parent / "skills" / "ideal-ralph" / "references" / TEMPLATE_FILENAME,
+        Path(__file__).resolve().parent.parent / "skills" / "ideal-agent-loop" / "references" / TEMPLATE_FILENAME,
     ]
     for candidate in candidates:
         if candidate.exists():
@@ -252,7 +252,7 @@ def _build_fallback_reason(state: Dict[str, Any], next_criterion: Optional[Dict[
     iteration = state.get("iteration", 0)
     max_iterations = state.get("max_iterations", 20)
 
-    lines.append(f"## Ralph Loop: iteration {iteration}/{max_iterations}")
+    lines.append(f"## Agent Loop: iteration {iteration}/{max_iterations}")
     lines.append("")
 
     passed = [c for c in criteria if c.get("status") in ("passed", "manual_accept")]
@@ -298,7 +298,7 @@ def process_hook(input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     # P1-11: Use cwd from input_data, fallback to Path.cwd()
     project_dir = Path(input_data.get("cwd")) if input_data.get("cwd") else Path.cwd()
 
-    # P1-6: Find an active or corrupt Ralph task
+    # P1-6: Find an active or corrupt Agent Loop task
     state_path, is_corrupt = _find_active_or_corrupt_task(project_dir)
     if state_path is None:
         return None  # no active task -> allow stop
@@ -307,7 +307,7 @@ def process_hook(input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         # P1-6: Corrupt state -> block (not allow). State needs repair.
         return {
             "decision": "block",
-            "reason": f"Ralph state file corrupt: {state_path}. Fix or delete it before continuing.",
+            "reason": f"Agent Loop state file corrupt: {state_path}. Fix or delete it before continuing.",
         }
 
     state = _load_state_raw(state_path)
@@ -315,7 +315,7 @@ def process_hook(input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         # Should not happen since is_corrupt was False, but handle defensively
         return {
             "decision": "block",
-            "reason": f"Ralph state file could not be loaded: {state_path}",
+            "reason": f"Agent Loop state file could not be loaded: {state_path}",
         }
 
     criteria = state.get("criteria", [])
