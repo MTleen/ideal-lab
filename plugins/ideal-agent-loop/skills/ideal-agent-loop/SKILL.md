@@ -368,11 +368,13 @@ JUDGE:    两部分都通过 -> 通过；任一失败 -> 失败
 
 ## 场景：需求池 goal 循环（outer loop）
 
-当目标来自需求池（`docs/dev/需求池.md`，由 `ideal-backlog` 构建），agent-loop 进入 outer loop 模式。本 skill **只读消费**需求池，不构建。
+当目标来自需求池（由 `ideal-backlog` 构建），agent-loop 进入 outer loop 模式。本 skill **只读消费**需求池，不构建。
+
+**需求池路径**：与 ideal-backlog 遵循同一解析规则——先读项目 `AGENTS.md` 的 `需求池路径：X` 声明，否则默认 `docs/dev/需求池.md`。
 
 ```
 loop（outer，跨 goal 接力）:
-  1. 读 docs/dev/需求池.md → 按优先级降序 + 同级 FIFO 取第一个 status=todo 的 goal
+  1. 按路径解析读需求池.md → 按优先级降序 + 同级 FIFO 取第一个 status=todo 的 goal
      没有 todo goal → 结束（池空）
   2. 标该 goal status=doing
   3. 规划最小闭环（goal 级）：

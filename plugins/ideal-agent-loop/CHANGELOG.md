@@ -1,5 +1,11 @@
 # ideal-agent-loop
 
+## 1.0.1
+
+### Patch Changes
+
+- outer loop 消费需求池时遵循 ideal-backlog 的路径解析规则（读 AGENTS.md 的「需求池路径」声明 → 默认 docs/dev/需求池.md）。
+
 ## 1.0.0
 
 ### Major Changes

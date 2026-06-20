@@ -22,9 +22,19 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
   → ideal-agent-loop outer loop 读 需求池.md → 出队 → 跑 → 标 done
 ```
 
+## 需求池.md 定位（路径解析）
+
+需求池路径**可配置**，ideal-backlog 按以下顺序定位（ideal-agent-loop 消费时遵循同一规则）：
+
+1. 读项目 `AGENTS.md` 的 `需求池路径：X` 声明（相对项目根）→ 用 X
+2. 否则默认 `docs/dev/需求池.md`
+3. 父目录不存在 → `mkdir -p` 创建
+
+> 跨项目零改 skill：想换位置就在该项目 `AGENTS.md` 写一行 `需求池路径：path/to/需求池.md`（相对项目根），如纯代码项目可用 `.ideal/需求池.md` 或项目根 `需求池.md`。
+
 ## 需求池.md 格式（契约）
 
-路径：`docs/dev/需求池.md`（项目级，git 跟踪）。
+默认路径：`docs/dev/需求池.md`（项目级，git 跟踪；可被 AGENTS.md 声明覆盖，见上）。
 
 ```markdown
 # 需求池
@@ -113,7 +123,7 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 
 | 场景 | 处理 |
 |------|------|
-| `需求池.md` 不存在 | 创建带头部说明的空池（保留排序规则注释） |
+| `需求池.md` 不存在 | 按路径解析规则定位 → `mkdir -p` 父目录 → 创建带头部说明的空池 |
 | ID 冲突 | 扫描现有最大编号 +1，不回收已用 ID |
 | 需求文档落盘失败 | 不入队，报告 `ideal-requirement` 失败原因 |
 | 优先级未指定 | 默认 P2，提示用户确认 |

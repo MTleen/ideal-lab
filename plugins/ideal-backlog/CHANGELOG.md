@@ -1,5 +1,11 @@
 # ideal-backlog
 
+## 1.0.1
+
+### Patch Changes
+
+- 需求池路径改为可配置：先读项目 AGENTS.md 的「需求池路径：X」声明，否则默认 docs/dev/需求池.md，父目录不存在则 mkdir -p 创建。跨项目零改 skill。
+
 ## 1.0.0
 
 ### Major Changes
