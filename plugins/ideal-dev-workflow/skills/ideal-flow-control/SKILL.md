@@ -243,6 +243,19 @@ P1 需求编写 → P2 需求评审 → P3 技术方案 → P4 方案评审 → 
 
 **注意**：Worktree 在 **P1 开始前创建**，整个迭代生命周期（包含调研、文档编写、编码、测试）都在 worktree 中进行。
 
+### 前置检测：已在 worktree 则复用（不新建）
+
+创建 worktree 前，先检测当前是否已在 worktree 中（典型场景：被 `ideal-agent-loop` outer loop 在 goal worktree 内调用，或迭代中断后恢复）：
+
+```bash
+pwd | grep -q worktrees && git branch --show-current | grep -qE '^(feature|fix|refactor)/'
+```
+
+- **命中（已在 worktree）** → 跳过创建，复用当前 worktree，`流程状态.md` 的 `worktree` 字段填当前分支与路径。不重复 `git worktree add`，不建孤儿 worktree。
+- **未命中（不在 worktree）** → 继续下方「创建 Worktree」。
+
+> 此 guard 让 flow-control 能在被 ideal-agent-loop goal worktree 复用时正确识别并复用，也支持迭代中断后在已有 worktree 内续跑，避免重复创建。
+
 ### 创建 Worktree
 
 ```bash

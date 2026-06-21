@@ -1,6 +1,6 @@
 {
   "name": "ideal-agent-loop",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Goal-driven Agent Loop（loop engineering 实现）：给定目标→规划最小闭环→持久迭代到完成。支持单目标验证循环与需求池 goal 接力（outer loop）。",
   "author": {
     "name": "MTleen"

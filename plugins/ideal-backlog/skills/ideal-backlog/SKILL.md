@@ -106,7 +106,7 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 | skill | 关系 |
 |-------|------|
 | `ideal-requirement` | 上游：backlog 入队时调它澄清 + 落盘 `需求.md` |
-| `ideal-agent-loop` | 下游：它只读消费 `需求池.md`（outer loop 出队），并直接更新 goal 状态（doing/done/blocked） |
+| `ideal-agent-loop` | 下游：它只读消费 `需求池.md`（outer loop 出队），并直接更新 goal 状态（doing/done/blocked）。**goal 执行环境（worktree 策略、合并 gate）由 ideal-agent-loop 的 loop 配置管理，本 skill 不过问** |
 | `ideal-dev-workflow` | 不直接交互（agent-loop 在 task 粒度调它） |
 
 ## 质量检查清单

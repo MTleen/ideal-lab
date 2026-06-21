@@ -1,5 +1,15 @@
 # ideal-dev-workflow
 
+## 2.1.1
+
+### Patch Changes
+
+- worktree-per-goal + configurable merge gate for ideal-agent-loop outer loop.
+
+  - ideal-agent-loop (minor): each goal runs in an isolated worktree (pulled from base_branch), merged per merge_gate (auto/confirm/pr), then worktree + branch cleaned up. New project-level loop config (loop.yaml, path overridable via AGENTS.md `loop 配置：X`) controls worktree strategy + merge gate. New references: loop-config, worktree-goal-guide, merge-gate.
+  - ideal-dev-workflow (patch): ideal-flow-control adds a guard to reuse the existing worktree when already inside one (no orphan task worktree when ideal-agent-loop goal worktree is active).
+  - ideal-backlog (patch): note that goal exec env (worktree/merge gate) is owned by ideal-agent-loop; backlog only manages the queue.
+
 ## 2.1.0
 
 ### Minor Changes
