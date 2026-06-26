@@ -13,7 +13,8 @@ Core logic:
 3. Scan .agent-loop/ for an active task.
 4. No active task -> allow stop.
 5. Active task found -> read state.json
-   - All passed -> allow stop.
+   - All passed + no quality gate -> allow stop.
+   - All passed + quality gate not accepted -> block at awaiting_acceptance.
    - Has blocked criteria -> allow stop (await user decision).
    - Exceeded max iterations -> allow stop.
    - Has un-passed criteria -> block stop; reason includes next criterion + summary.
@@ -88,9 +89,14 @@ def _save_state_raw(state: Dict[str, Any], path: Path) -> None:
 def _compute_state_hash(state: Dict[str, Any]) -> str:
     """
     Compute a hash of the state to detect progress between blocks.
-    The hash captures: iteration, and each criterion's status and attempts.
+    The hash captures: status, quality status, iteration, and each criterion's
+    status and attempts.
     """
-    parts = [str(state.get("iteration", 0))]
+    parts = [
+        str(state.get("status", "active")),
+        str(_quality_status(state)),
+        str(state.get("iteration", 0)),
+    ]
     for c in state.get("criteria", []):
         parts.append(f"{c.get('id')}:{c.get('status', 'pending')}:{c.get('attempts', 0)}")
     content = "|".join(parts)
@@ -114,9 +120,41 @@ def _save_last_block_hash(state_path: Path, hash_val: str) -> None:
     hash_path.write_text(hash_val, encoding="utf-8")
 
 
+def _quality_status(state: Dict[str, Any]) -> str:
+    quality = state.get("quality")
+    nested_status = quality.get("status") if isinstance(quality, dict) else None
+    return str(state.get("quality_status", nested_status or "unverified"))
+
+
+def _quality_required(state: Dict[str, Any]) -> bool:
+    quality = state.get("quality")
+    nested_required = isinstance(quality, dict) and quality.get("required") is True
+    return bool(state.get("quality_required") or nested_required)
+
+
+def _quality_accepted(state: Dict[str, Any]) -> bool:
+    if _quality_status(state) == "accepted":
+        return True
+    acceptance = state.get("acceptance")
+    return isinstance(acceptance, dict) and bool(acceptance.get("accepted_at"))
+
+
+def _is_terminal(state: Dict[str, Any]) -> bool:
+    if state.get("iteration", 0) >= state.get("max_iterations", 20):
+        return True
+    if state.get("status") in ("failed", "blocked", "cancelled"):
+        return True
+    if state.get("status") == "completed":
+        return (not _quality_required(state)) or _quality_accepted(state)
+    if state.get("status") == "awaiting_acceptance":
+        return _quality_accepted(state)
+    return False
+
+
 def _find_active_or_corrupt_task(project_dir: Path) -> Tuple[Optional[Path], bool]:
     """
-    Scan .agent-loop/*/state.json for an active (non-completed) task.
+    Scan .agent-loop/*/state.json for an active task, including quality-gated
+    tasks waiting for acceptance.
     P1-6: Also detects corrupt state files (exist but cannot be parsed).
 
     Returns (state_path, is_corrupt).
@@ -137,8 +175,7 @@ def _find_active_or_corrupt_task(project_dir: Path) -> Tuple[Optional[Path], boo
         if state is None:
             # File exists but cannot be parsed -> corrupt
             return state_file, True
-        if (state.get("status") != "completed"
-                and state.get("iteration", 0) < state.get("max_iterations", 20)):
+        if not _is_terminal(state):
             return state_file, False
     return None, False
 
@@ -191,6 +228,28 @@ def _build_block_reason(state: Dict[str, Any], next_criterion: Optional[Dict[str
     if template and contract:
         return _fill_template(template, state, next_criterion, contract)
     return _build_fallback_reason(state, next_criterion)
+
+
+def _build_acceptance_block_reason(state: Dict[str, Any]) -> str:
+    task = state.get("task", "unknown")
+    evidence = state.get("quality_evidence") or []
+    lines = [
+        "## Agent Loop: awaiting quality acceptance",
+        "",
+        f"Task: `{task}`",
+        f"Quality status: `{_quality_status(state)}`",
+        "",
+        "All acceptance criteria have passed, but this backlog-backed loop cannot terminate until a user/controller accepts the result.",
+        "Record acceptance explicitly, or reopen the backlog item with the missing-test reason and required regression if the result is insufficient.",
+    ]
+    if evidence:
+        lines.append("")
+        lines.append("### Recorded quality evidence")
+        for item in evidence:
+            kind = item.get("kind", "evidence")
+            summary = item.get("summary") or item.get("evidence") or ""
+            lines.append(f"- **{kind}**: {_truncate(str(summary))}")
+    return "\n".join(lines)
 
 
 def _fill_template(template: str, state: Dict[str, Any], next_criterion: Optional[Dict[str, Any]], contract: Dict[str, Any]) -> str:
@@ -320,8 +379,25 @@ def process_hook(input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     criteria = state.get("criteria", [])
 
-    # All passed -> allow stop (P1-7: requires at least one criterion)
+    # All passed -> ordinary loops may stop; quality-gated loops wait for
+    # explicit user/controller acceptance (P1-7: requires at least one criterion).
     if len(criteria) > 0 and all(c.get("status") in ("passed", "manual_accept") for c in criteria):
+        if _quality_required(state) and not _quality_accepted(state):
+            state["status"] = "awaiting_acceptance"
+            state["quality_required"] = True
+            state["quality_status"] = "awaiting_acceptance"
+            acceptance = state.setdefault("acceptance", {})
+            acceptance["requested"] = True
+            acceptance.setdefault("accepted_by", None)
+            acceptance.setdefault("accepted_at", None)
+            acceptance.setdefault("evidence", None)
+            _save_state_raw(state, state_path)
+            block_hash = _compute_state_hash(state)
+            _save_last_block_hash(state_path, block_hash)
+            return {
+                "decision": "block",
+                "reason": _build_acceptance_block_reason(state),
+            }
         return None
 
     # Has blocked criteria -> allow stop (user must decide)

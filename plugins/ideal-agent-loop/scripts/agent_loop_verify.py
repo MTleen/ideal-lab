@@ -292,7 +292,9 @@ def _run_all_criteria(state_path: Path) -> List[VerifyResult]:
 def _check_completion(state: Dict[str, Any], state_path: Path) -> None:
     """
     P1-9: After verification, check if all criteria have passed.
-    If so, set state.status = "completed" and save.
+    If so, set state.status = "completed" for ordinary loops.  For
+    quality-gated loops, stop at awaiting_acceptance until a user/controller
+    explicitly accepts the backlog item.
     Also increment iteration on each verification cycle.
     """
     criteria = state.get("criteria", [])
@@ -305,8 +307,35 @@ def _check_completion(state: Dict[str, Any], state_path: Path) -> None:
         for c in criteria
     )
     if all_done:
-        state["status"] = "completed"
+        if _quality_required(state) and not _quality_accepted(state):
+            state["status"] = "awaiting_acceptance"
+            state["quality_required"] = True
+            state["quality_status"] = "awaiting_acceptance"
+            acceptance = state.setdefault("acceptance", {})
+            acceptance["requested"] = True
+            acceptance.setdefault("accepted_by", None)
+            acceptance.setdefault("accepted_at", None)
+            acceptance.setdefault("evidence", None)
+        else:
+            state["status"] = "completed"
         _save_state(state, state_path)
+
+
+def _quality_required(state: Dict[str, Any]) -> bool:
+    """Return true when the state or nested quality object requires acceptance."""
+    quality = state.get("quality")
+    nested_required = isinstance(quality, dict) and quality.get("required") is True
+    return bool(state.get("quality_required") or nested_required)
+
+
+def _quality_accepted(state: Dict[str, Any]) -> bool:
+    """Return true when the quality gate has explicit acceptance evidence."""
+    quality = state.get("quality")
+    nested_status = quality.get("status") if isinstance(quality, dict) else None
+    if state.get("quality_status", nested_status) == "accepted":
+        return True
+    acceptance = state.get("acceptance")
+    return isinstance(acceptance, dict) and bool(acceptance.get("accepted_at"))
 
 
 def _judge_criterion(
@@ -386,6 +415,8 @@ def _print_status(state_path: Path) -> None:
     print(f"Task: {state['task']}")
     print(f"Iteration: {state['iteration']} / {state.get('max_iterations', 20)}")
     print(f"Status: {state.get('status', 'active')}")
+    print(f"Quality required: {_quality_required(state)}")
+    print(f"Quality status: {state.get('quality_status', state.get('quality', {}).get('status', 'unverified') if isinstance(state.get('quality'), dict) else 'unverified')}")
     print()
     print(f"{'#':>3}  {'Status':<14}  {'Type':<15}  {'Attempts':>8}  {'ConsFail':>8}  Description")
     print("-" * 95)

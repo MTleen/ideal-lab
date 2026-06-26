@@ -19,7 +19,8 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
   → ideal-requirement 澄清 + 落盘 需求.md
   → ideal-backlog 登记 goal 条目入 需求池.md（ID/优先级/状态/验收标准）
   → （待执行）
-  → ideal-agent-loop outer loop 读 需求池.md → 出队 → 跑 → 标 done
+  → ideal-agent-loop outer loop 读 需求池.md → 出队 → 实现/验证 → 等待验收
+  → 用户/控制者 accepted 后才标最终完成；失败则 reopen 原需求
 ```
 
 ## 需求池.md 定位（路径解析）
@@ -47,11 +48,20 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ### [REQ-001] 标题
 - 优先级：P0
 - 创建时间：2026-06-20
-- 状态：todo  <!-- todo | doing | done | blocked -->
+- 状态：todo  <!-- todo | doing | verifying | merge_pending | done | blocked | cancelled -->
+- 质量状态：unverified  <!-- unverified | implemented | verified | awaiting_acceptance | accepted | reopened -->
 - 需求文档：docs/迭代/2026-06-20-{slug}/需求.md
 - 验收标准：
   - [ ] 标准 1
   - [ ] 标准 2
+- 质量证据：
+  - 自动验证：
+  - Product-Core E2E：
+  - 对抗性审查：
+  - 用户/控制者验收：
+- Reopen 记录：
+  - 漏测原因：
+  - 必补回归：
 - 备注：
 ```
 
@@ -62,9 +72,27 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 | ID | `REQ-{三位递增}`，全局唯一，不回收 |
 | 优先级 | P0（紧急）/ P1（高）/ P2（常规） |
 | 创建时间 | YYYY-MM-DD（入队日期，FIFO 依据） |
-| 状态 | todo / doing / done / blocked |
+| 状态 | 执行态：todo / doing / verifying / merge_pending / done / blocked / cancelled |
+| 质量状态 | unverified / implemented / verified / awaiting_acceptance / accepted / reopened |
 | 需求文档 | `ideal-requirement` 落盘的 `需求.md` 路径 |
 | 验收标准 | 可判定的完成条件（agent-loop 全 task passed 的目标） |
+| 质量证据 | 自动验证、Product-Core E2E、对抗性审查、用户/控制者验收的摘要与证据路径 |
+| Reopen 记录 | 后续 bug / 审查失败 / E2E 失败关联原需求时，必须记录漏测原因和必补回归 |
+
+### 质量态语义
+
+执行态 `状态` 只描述调度进度；`质量状态` 才描述闭环是否真正收口。
+
+| 质量状态 | 含义 |
+|----------|------|
+| unverified | 未进入质量验证 |
+| implemented | 已有实现提交，但未完成自动验证 |
+| verified | 自动验证通过，尚未完成最终验收 |
+| awaiting_acceptance | 等待用户/控制者验收 |
+| accepted | 自动证据 + 对抗性审查 + 用户/控制者验收都通过 |
+| reopened | 后续问题证明闭环未收口，需回到 loop |
+
+旧条目如果只有 `状态：done` 且没有 `质量状态`，可兼容读取为 `legacy accepted`，但 UI/报告必须标注“历史完成，未按新质量闭环验收”。新条目不得只靠 `done` 收口。
 
 ### 排序规则
 
@@ -89,11 +117,15 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 |------|------|--------|
 | → todo | 入队 | ideal-backlog |
 | todo → doing | 出队（agent-loop 取走） | ideal-agent-loop |
-| doing → done | goal 全 task passed | ideal-agent-loop |
+| doing/verifying → done | goal 已 accepted 且 merge gate 完成 | ideal-agent-loop |
 | doing → blocked | 连续 3 次 verification 失败 | ideal-agent-loop |
+| verified → awaiting_acceptance | 自动验证通过但未验收 | ideal-agent-loop |
+| awaiting_acceptance → accepted | 用户/控制者验收通过 | 用户/控制者 + ideal-agent-loop |
+| accepted → reopened | 用户反馈 bug / 审查失败 / E2E 失败 | ideal-agent-loop / 模型工具 |
+| reopened → doing | 重新进入实现闭环 | ideal-agent-loop |
 | * → 调整 | 用户改优先级 / 取消 | ideal-backlog（用户指令） |
 
-> ideal-backlog 默认只管 todo（入队）+ 用户指令的调整。doing/done/blocked 由 ideal-agent-loop 在执行时更新。状态流转的**事实源是 需求池.md**（agent-loop 直接改文件，backlog 不维护运行时状态）。
+> ideal-backlog 默认只管 todo（入队）+ 用户指令的调整。执行态和质量态由 ideal-agent-loop 在执行、验证、验收、reopen 时更新。状态流转的**事实源是 需求池.md**（agent-loop 直接改文件，backlog 不维护运行时状态）。
 
 ### 查询 / 重排
 
@@ -106,7 +138,7 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 | skill | 关系 |
 |-------|------|
 | `ideal-requirement` | 上游：backlog 入队时调它澄清 + 落盘 `需求.md` |
-| `ideal-agent-loop` | 下游：它只读消费 `需求池.md`（outer loop 出队），并直接更新 goal 状态（doing/done/blocked）。**goal 执行环境（worktree 策略、合并 gate）由 ideal-agent-loop 的 loop 配置管理，本 skill 不过问** |
+| `ideal-agent-loop` | 下游：它只读消费 `需求池.md`（outer loop 出队），并直接更新 goal 执行态和质量态（doing/verifying/awaiting_acceptance/accepted/reopened/blocked）。**goal 执行环境（worktree 策略、合并 gate）由 ideal-agent-loop 的 loop 配置管理，本 skill 不过问** |
 | `ideal-dev-workflow` | 不直接交互（agent-loop 在 task 粒度调它） |
 
 ## 质量检查清单
@@ -116,6 +148,8 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 - [ ] 分配唯一 REQ-ID（扫描现有最大 +1）
 - [ ] 优先级已确认（P0/P1/P2）
 - [ ] 验收标准可判定（非"做好"这类模糊表述）
+- [ ] 初始质量状态为 `unverified`
+- [ ] 如果是 reopen，已关联原 REQ、记录漏测原因和必补 regression
 - [ ] `需求池.md` 按优先级 + FIFO 排序
 - [ ] 需求文档路径正确指向落盘的 `需求.md`
 

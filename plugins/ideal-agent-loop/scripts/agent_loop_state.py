@@ -55,7 +55,17 @@ class AgentLoopState:
     iteration: int = 0
     max_iterations: int = 20
     started_at: str = ""
-    status: str = "active"  # active | completed | failed
+    status: str = "active"  # active | awaiting_acceptance | completed | failed
+    quality_required: bool = False
+    quality_status: str = "unverified"  # unverified | implemented | verified | awaiting_acceptance | accepted | reopened
+    quality_evidence: List[Dict[str, Any]] = field(default_factory=list)
+    reopen_records: List[Dict[str, Any]] = field(default_factory=list)
+    acceptance: Dict[str, Any] = field(default_factory=lambda: {
+        "requested": False,
+        "accepted_by": None,
+        "accepted_at": None,
+        "evidence": None,
+    })
     criteria: List[CriterionState] = field(default_factory=list)
     modified_files: List[str] = field(default_factory=list)  # files touched in this task
 
@@ -91,12 +101,28 @@ def _criterion_from_dict(data: Dict[str, Any]) -> CriterionState:
 def _state_from_dict(data: Dict[str, Any]) -> AgentLoopState:
     """Build a AgentLoopState from a plain dict (loaded from JSON)."""
     criteria = [_criterion_from_dict(c) for c in data.get("criteria", [])]
+    quality = data.get("quality", {})
+    if not isinstance(quality, dict):
+        quality = {}
+    acceptance = data.get("acceptance") or quality.get("acceptance") or {}
+    if not isinstance(acceptance, dict):
+        acceptance = {}
     return AgentLoopState(
         task=data["task"],
         iteration=data.get("iteration", 0),
         max_iterations=data.get("max_iterations", 20),
         started_at=data.get("started_at", ""),
         status=data.get("status", "active"),
+        quality_required=bool(data.get("quality_required", quality.get("required", False))),
+        quality_status=data.get("quality_status", quality.get("status", "unverified")),
+        quality_evidence=data.get("quality_evidence", quality.get("evidence", [])),
+        reopen_records=data.get("reopen_records", quality.get("reopen_records", [])),
+        acceptance={
+            "requested": bool(acceptance.get("requested", False)),
+            "accepted_by": acceptance.get("accepted_by"),
+            "accepted_at": acceptance.get("accepted_at"),
+            "evidence": acceptance.get("evidence"),
+        },
         criteria=criteria,
         modified_files=data.get("modified_files", []),
     )
@@ -108,7 +134,7 @@ def _state_from_dict(data: Dict[str, Any]) -> AgentLoopState:
 
 def find_active_task(project_dir: Path) -> Optional[Path]:
     """
-    Scan .agent-loop/*/state.json for tasks whose status is not 'completed'.
+    Scan .agent-loop/*/state.json for tasks that still require work or quality acceptance.
     Returns the first active state.json path, or None.
     """
     agent_loop_dir = project_dir / ".agent-loop"
@@ -221,6 +247,9 @@ def init_state(
     """
     if max_iterations is None:
         max_iterations = contract.get("constraints", {}).get("max_iterations", 20)
+    quality = contract.get("quality", {})
+    if not isinstance(quality, dict):
+        quality = {}
     criteria = []
     for item in contract.get("criteria", []):
         criteria.append(CriterionState(
@@ -233,14 +262,18 @@ def init_state(
     return AgentLoopState(
         task=task_name,
         max_iterations=max_iterations,
+        quality_required=bool(quality.get("required", False)),
+        quality_status=quality.get("status", "unverified"),
         criteria=criteria,
     )
 
 
 def is_active(state: AgentLoopState) -> bool:
-    """True if the task is still active (not completed / not failed-over-limit)."""
+    """True if the task is still active or waiting for required acceptance."""
     if state.status == "completed":
-        return False
+        return state.quality_required and state.quality_status != "accepted"
+    if state.status == "awaiting_acceptance":
+        return not (state.quality_required and state.quality_status == "accepted")
     if state.iteration >= state.max_iterations:
         return False
     return True
@@ -271,7 +304,30 @@ def to_markdown_report(state: AgentLoopState) -> str:
     lines.append(f"- Iteration: **{state.iteration} / {state.max_iterations}**")
     lines.append(f"- Status: **{state.status}**")
     lines.append(f"- Started: {state.started_at}")
+    lines.append(f"- Quality required: **{state.quality_required}**")
+    lines.append(f"- Quality status: **{state.quality_status}**")
+    if state.acceptance.get("requested"):
+        accepted = state.acceptance.get("accepted_at") or "not accepted yet"
+        lines.append(f"- Acceptance: requested; {accepted}")
     lines.append("")
+
+    if state.quality_evidence or state.reopen_records:
+        lines.append("## Quality Gate")
+        lines.append("")
+        if state.quality_evidence:
+            lines.append("### Evidence")
+            for item in state.quality_evidence:
+                kind = item.get("kind", "evidence")
+                summary = item.get("summary") or item.get("evidence") or ""
+                lines.append(f"- **{kind}**: {summary}")
+        if state.reopen_records:
+            lines.append("### Reopen Records")
+            for item in state.reopen_records:
+                reason = item.get("reason", "")
+                missing = item.get("missingTestReason", item.get("missing_test_reason", ""))
+                regression = item.get("requiredRegression", item.get("required_regression", ""))
+                lines.append(f"- Reason: {reason}; missing test: {missing}; regression: {regression}")
+        lines.append("")
 
     # Criteria table
     lines.append("## Criteria")
@@ -359,6 +415,16 @@ def _contract_to_markdown(contract: Dict[str, Any]) -> str:
     lines.append("## Constraints")
     lines.append(f"- Max iterations: {contract.get('constraints', {}).get('max_iterations', 20)}")
     lines.append("")
+
+    quality = contract.get("quality", {})
+    if quality:
+        lines.append("## Quality Gate")
+        lines.append(f"- Required: {quality.get('required', False)}")
+        lines.append(f"- Status: {quality.get('status', 'unverified')}")
+        profile = quality.get("profile")
+        if profile:
+            lines.append(f"- Profile: {profile}")
+        lines.append("")
 
     meta = contract.get("meta", {})
     lines.append("## Meta")

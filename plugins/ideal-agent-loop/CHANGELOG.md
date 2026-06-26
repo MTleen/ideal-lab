@@ -1,5 +1,11 @@
 # ideal-agent-loop
 
+## 1.2.0
+
+### Minor Changes
+
+- Add quality closure semantics for backlog-backed loops: verified, awaiting_acceptance, accepted, and reopened states; acceptance-gated termination; quality evidence; and reopen metadata.
+
 ## 1.1.0
 
 ### Minor Changes

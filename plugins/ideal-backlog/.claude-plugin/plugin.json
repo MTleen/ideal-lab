@@ -1,6 +1,6 @@
 {
   "name": "ideal-backlog",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "需求池构建与管理：入队（调 ideal-requirement 澄清落盘→登记 goal）、状态流转、优先级+FIFO 排序。维护 docs/dev/需求池.md 作为 ideal-agent-loop outer loop 出队契约源。",
   "author": {
     "name": "MTleen"
