@@ -1,8 +1,16 @@
 {
   "name": "ideal-dev-workflow",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "15 阶段开发流程工作流：需求→方案→计划→编码→测试→评审→交付",
-  "author": { "name": "MTleen" },
+  "author": {
+    "name": "MTleen"
+  },
   "skills": "./skills",
-  "keywords": ["workflow", "development", "requirement", "testing", "review"]
+  "keywords": [
+    "workflow",
+    "development",
+    "requirement",
+    "testing",
+    "review"
+  ]
 }

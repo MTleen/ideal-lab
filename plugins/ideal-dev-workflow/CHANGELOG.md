@@ -1,5 +1,11 @@
 # ideal-dev-workflow
 
+## 2.2.0
+
+### Minor Changes
+
+- feat(dev-workflow): add Context7 and DeepWiki research guidance
+
 ## 2.1.0
 
 ### Minor Changes
