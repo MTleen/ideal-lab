@@ -1,5 +1,11 @@
 # ideal-document-workflow
 
+## 1.0.2
+
+### Patch Changes
+
+- Sync released plugin versions in README
+
 ## 1.0.1
 
 ### Patch Changes
