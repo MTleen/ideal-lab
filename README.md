@@ -26,8 +26,8 @@ ideal-lab 通过 Claude Code 官方 Plugin Marketplace 分发，每个插件自�
 | 插件 | 版本 | 说明 | Skills |
 |------|------|------|--------|
 | [ideal-dev-workflow](./plugins/ideal-dev-workflow) | 2.2.0 | 15 阶段开发流程：需求 → 方案 → 计划 → 编码 → 测试 → 评审 → 交付 | 14 |
-| [ideal-ppt-suite](./plugins/ideal-ppt-suite) | 2.1.1 | PPT 全链路生成：调研 → 策略 → 大纲 → 提示词 → 生成 → 配图 → 导出 | 11 |
-| [ideal-document-workflow](./plugins/ideal-document-workflow) | 1.0.2 | 结构化文档写作：需求分析 → 大纲 → 写作 → 配图 → 渲染 | 8 |
+| [ideal-ppt-suite](./plugins/ideal-ppt-suite) | 1.1.0 | PPT 全链路生成：调研 → 策略 → 大纲 → 提示词 → 生成 → 配图 → 导出 | 11 |
+| [ideal-document-workflow](./plugins/ideal-document-workflow) | 1.0.0 | 结构化文档写作：需求分析 → 大纲 → 写作 → 配图 → 渲染 | 8 |
 | [ideal-knowledge-base](./plugins/ideal-knowledge-base) | 1.0.0 | 知识库构建编排：材料分析 → 文档规划 → 并行生成 → 汇总评审 | 6 |
 
 ### 独立工具
