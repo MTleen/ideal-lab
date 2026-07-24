@@ -1,11 +1,5 @@
 # ideal-ppt-suite
 
-## 2.1.1
-
-### Patch Changes
-
-- Require cleanup of temporary PPT delivery artifacts
-
 ## 2.1.0
 
 ### Minor Changes
@@ -21,7 +15,6 @@
 - **docs**: 更新 SKILL.md 主入口 + eight-confirmations.md 总则 + strategy-template.md 第 VIII 节（按渲染模式分 8A/8B）
 
 ## 2.0.0
-
 - **Breaking**: 归档 `ideal-ppt-generator`（单体版），统一使用 `ideal-ppt-workflow`（14 阶段模块化流水线）
 - 删除 `skills/ideal-ppt-generator/` 目录（SKILL.md + 17 references + 2 scripts）
 
