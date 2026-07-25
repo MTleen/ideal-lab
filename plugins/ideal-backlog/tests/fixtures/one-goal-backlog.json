@@ -1,0 +1,35 @@
+{
+  "schema": "ideal-backlog/backlog-v2",
+  "goals": [
+    {
+      "id": "REQ-001",
+      "profile": "development",
+      "project_path": ".",
+      "source_binding": "fixed",
+      "priority": "P1",
+      "dependencies": [],
+      "execution": {
+        "status": "todo"
+      },
+      "quality": {
+        "status": "unverified"
+      },
+      "phase": {
+        "current": "requirement",
+        "next_gate": "requirement-approved"
+      },
+      "revision": "",
+      "lease": null,
+      "evidence_refs": [],
+      "history_refs": [],
+      "acceptance": {
+        "allowed_authorities": [
+          "human"
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "applied_operations": {}
+  }
+}

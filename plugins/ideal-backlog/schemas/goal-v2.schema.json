@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ideal-backlog/goal-v2",
+  "title": "ideal-backlog GoalRecord v2",
+  "type": "object",
+  "required": [
+    "id",
+    "profile",
+    "project_path",
+    "source_binding",
+    "priority",
+    "dependencies",
+    "execution",
+    "quality",
+    "phase",
+    "revision",
+    "lease",
+    "evidence_refs",
+    "history_refs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_path": {
+      "type": "string"
+    },
+    "source_binding": {
+      "enum": [
+        "fixed",
+        "dynamic"
+      ]
+    },
+    "priority": {
+      "type": "string"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "required": [
+        "current",
+        "next_gate"
+      ]
+    },
+    "revision": {
+      "type": "string"
+    },
+    "lease": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array"
+    },
+    "history_refs": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,5 +1,11 @@
 # ideal-backlog
 
+## 2.0.0
+
+### Major Changes
+
+- Add an immutable v2 goal store and migration contract
+
 ## 1.1.0
 
 ### Minor Changes

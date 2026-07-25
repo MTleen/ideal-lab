@@ -1,164 +1,210 @@
 ---
 name: ideal-backlog
-description: 需求池构建与管理。入队（调 ideal-requirement 澄清落盘→登记 goal）、状态流转、优先级+FIFO 排序。维护 docs/dev/需求池.md 作为 ideal-agent-loop outer loop 出队契约源。
+description: "管理 ideal-backlog v2 Goal Store：创建和查询 Goal、按 fixed/dynamic 绑定选择、通过 revision/lease 并发控制执行原子流转、迁移 v1 Markdown 并生成只读镜像。"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
-# ideal-backlog（需求池构建与管理）
+# ideal-backlog
 
-> **职责边界**：本 skill 只负责需求池的**构建与管理**（入队 / 状态 / 排序 / 格式）。不澄清需求（归 `ideal-requirement`）、不执行 goal（归 `ideal-agent-loop`）。它是 `ideal-requirement`（产出需求）↔ `ideal-agent-loop`（消费需求）之间的队列层。
+`ideal-backlog` owns the single machine source of truth for Goal state. The
+machine store lives under `.ideal/backlog/`; a Markdown backlog is only a
+generated view. `ideal-agent-loop` consumes this contract but never writes raw
+Goal files.
 
-## 角色定位
+## Responsibility
 
-**需求池管家** — 维护 `docs/dev/需求池.md`，把 `ideal-requirement` 澄清落盘的需求登记为 goal 条目，按优先级 + FIFO 排序，供 `ideal-agent-loop` 的 outer loop 出队消费。
+This Skill may:
 
-## 数据流
+- initialize and inspect the immutable Goal Store;
+- create revisions through guarded CLI operations;
+- bind one Goal with `fixed` selection or select ready work with `dynamic`
+  ordering;
+- claim and release a Goal lease;
+- record legal execution, quality, blocking, acceptance, and reopen
+  transitions;
+- migrate a v1 Markdown backlog and render its generated mirror.
 
-```
-用户"加需求"
-  → ideal-requirement 澄清 + 落盘 需求.md
-  → ideal-backlog 登记 goal 条目入 需求池.md（ID/优先级/状态/验收标准）
-  → （待执行）
-  → ideal-agent-loop outer loop 读 需求池.md → 出队 → 实现/验证 → 等待验收
-  → 用户/控制者 accepted 后才标最终完成；失败则 reopen 原需求
-```
+It does not execute Goal work, choose a domain Worker, validate an artifact, or
+grant acceptance authority.
 
-## 需求池.md 定位（路径解析）
+## Storage contract
 
-需求池路径**可配置**，ideal-backlog 按以下顺序定位（ideal-agent-loop 消费时遵循同一规则）：
-
-1. 读项目 `AGENTS.md` 的 `需求池路径：X` 声明（相对项目根）→ 用 X
-2. 否则默认 `docs/dev/需求池.md`
-3. 父目录不存在 → `mkdir -p` 创建
-
-> 跨项目零改 skill：想换位置就在该项目 `AGENTS.md` 写一行 `需求池路径：path/to/需求池.md`（相对项目根），如纯代码项目可用 `.ideal/需求池.md` 或项目根 `需求池.md`。
-
-## 需求池.md 格式（契约）
-
-默认路径：`docs/dev/需求池.md`（项目级，git 跟踪；可被 AGENTS.md 声明覆盖，见上）。
-
-```markdown
-# 需求池
-
-> 由 ideal-backlog 维护；ideal-agent-loop 只读消费（outer loop 出队）。
-> 排序：优先级降序（P0 > P1 > P2）+ 同优先级 FIFO（最早创建优先）。
-
-## 待办 / 进行中
-
-### [REQ-001] 标题
-- 优先级：P0
-- 创建时间：2026-06-20
-- 状态：todo  <!-- todo | doing | verifying | merge_pending | done | blocked | cancelled -->
-- 质量状态：unverified  <!-- unverified | implemented | verified | awaiting_acceptance | accepted | reopened -->
-- 需求文档：docs/迭代/2026-06-20-{slug}/需求.md
-- 验收标准：
-  - [ ] 标准 1
-  - [ ] 标准 2
-- 质量证据：
-  - 自动验证：
-  - Product-Core E2E：
-  - 对抗性审查：
-  - 用户/控制者验收：
-- Reopen 记录：
-  - 漏测原因：
-  - 必补回归：
-- 备注：
+```text
+.ideal/backlog/
+├── CURRENT
+├── LOCK
+├── revisions/<sha256>/backlog.json
+└── migrations/<source-sha256>/source.md
 ```
 
-### 字段约定
+- `CURRENT` names an immutable, content-addressed revision.
+- Each Goal mutation creates a new revision; old revisions are never edited.
+- A global writer lock prevents concurrent commits and has no automatic TTL.
+- An operation ID makes retries idempotent.
+- Each Goal claim creates a lease token bound to the current revision.
+- `docs/dev/需求池.md` is a generated Markdown mirror and is never a write
+  surface.
 
-| 字段 | 说明 |
-|------|------|
-| ID | `REQ-{三位递增}`，全局唯一，不回收 |
-| 优先级 | P0（紧急）/ P1（高）/ P2（常规） |
-| 创建时间 | YYYY-MM-DD（入队日期，FIFO 依据） |
-| 状态 | 执行态：todo / doing / verifying / merge_pending / done / blocked / cancelled |
-| 质量状态 | unverified / implemented / verified / awaiting_acceptance / accepted / reopened |
-| 需求文档 | `ideal-requirement` 落盘的 `需求.md` 路径 |
-| 验收标准 | 可判定的完成条件（agent-loop 全 task passed 的目标） |
-| 质量证据 | 自动验证、Product-Core E2E、对抗性审查、用户/控制者验收的摘要与证据路径 |
-| Reopen 记录 | 后续 bug / 审查失败 / E2E 失败关联原需求时，必须记录漏测原因和必补回归 |
+See [references/goal-store-v2.md](references/goal-store-v2.md) for the record
+shape and transition rules.
 
-### 质量态语义
+## Required write preconditions
 
-执行态 `状态` 只描述调度进度；`质量状态` 才描述闭环是否真正收口。
+Every write command must:
 
-| 质量状态 | 含义 |
-|----------|------|
-| unverified | 未进入质量验证 |
-| implemented | 已有实现提交，但未完成自动验证 |
-| verified | 自动验证通过，尚未完成最终验收 |
-| awaiting_acceptance | 等待用户/控制者验收 |
-| accepted | 自动证据 + 对抗性审查 + 用户/控制者验收都通过 |
-| reopened | 后续问题证明闭环未收口，需回到 loop |
+1. pass `--apply`;
+2. provide a unique operation ID;
+3. provide the expected revision when modifying an existing store;
+4. provide the current lease token for a leased Goal;
+5. state a transition reason and attach evidence when the operation requires
+   it.
 
-旧条目如果只有 `状态：done` 且没有 `质量状态`，可兼容读取为 `legacy accepted`，但 UI/报告必须标注“历史完成，未按新质量闭环验收”。新条目不得只靠 `done` 收口。
+On stale revision, lock conflict, or lease conflict, stop the write, inspect
+again, and decide from the new record. Never overwrite the newer revision.
 
-### 排序规则
+## Workflow
 
-需求池.md 中 goal 条目按**优先级降序**排列；同优先级内按**创建时间升序**（FIFO）。入队 / 重排时维持此序。
+### 1. Inspect
 
-## 操作
-
-### 入队（enqueue）
-
-```
-1. 用户描述需求（一句话或多句）
-2. 调 ideal-requirement：澄清（背景/目标/范围/验收标准）→ 落盘 需求.md 到 docs/迭代/{date}-{slug}/
-3. 扫描现有最大 REQ 编号，分配 ID（+1）
-4. 询问 / 确认优先级（P0/P1/P2）
-5. 在 需求池.md 按排序规则插入 goal 条目（状态 todo）
-6. 确认登记成功，输出 REQ-ID
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" inspect
 ```
 
-### 状态流转
+Read the current revision on every scheduling round. Do not retain a long-lived
+Goal snapshot.
 
-| 转换 | 触发 | 执行者 |
-|------|------|--------|
-| → todo | 入队 | ideal-backlog |
-| todo → doing | 出队（agent-loop 取走） | ideal-agent-loop |
-| doing/verifying → done | goal 已 accepted 且 merge gate 完成 | ideal-agent-loop |
-| doing → blocked | 连续 3 次 verification 失败 | ideal-agent-loop |
-| verified → awaiting_acceptance | 自动验证通过但未验收 | ideal-agent-loop |
-| awaiting_acceptance → accepted | 用户/控制者验收通过 | 用户/控制者 + ideal-agent-loop |
-| accepted → reopened | 用户反馈 bug / 审查失败 / E2E 失败 | ideal-agent-loop / 模型工具 |
-| reopened → doing | 重新进入实现闭环 | ideal-agent-loop |
-| * → 调整 | 用户改优先级 / 取消 | ideal-backlog（用户指令） |
+### 2. Bind the Goal
 
-> ideal-backlog 默认只管 todo（入队）+ 用户指令的调整。执行态和质量态由 ideal-agent-loop 在执行、验证、验收、reopen 时更新。状态流转的**事实源是 需求池.md**（agent-loop 直接改文件，backlog 不维护运行时状态）。
+- `fixed`: operate only on the specified Goal ID. Queue reordering never
+  switches the bound Goal.
+- `dynamic`: select an unfinished dependency-satisfied Goal by priority,
+  deadline, FIFO creation time, then stable ID.
 
-### 查询 / 重排
+The binding choice is part of the Goal contract; a runner must not silently
+change it.
 
-- **列出待办**：按优先级 + FIFO 显示所有 todo goal
-- **改优先级**：调整 goal 的优先级字段 + 重排条目顺序
-- **取消 / 归档**：状态改 done（备注"已取消"）或移到归档区
+### 3. Claim
 
-## 与其他 skill 的关系
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" claim \
+  --goal-id REQ-001 \
+  --expected-revision "$REVISION" \
+  --operation-id "$OPERATION_ID" \
+  --apply
+```
 
-| skill | 关系 |
-|-------|------|
-| `ideal-requirement` | 上游：backlog 入队时调它澄清 + 落盘 `需求.md` |
-| `ideal-agent-loop` | 下游：它只读消费 `需求池.md`（outer loop 出队），并直接更新 goal 执行态和质量态（doing/verifying/awaiting_acceptance/accepted/reopened/blocked）。**goal 执行环境（worktree 策略、合并 gate）由 ideal-agent-loop 的 loop 配置管理，本 skill 不过问** |
-| `ideal-dev-workflow` | 不直接交互（agent-loop 在 task 粒度调它） |
+Record the returned revision and lease token. Only the holder may transition or
+release that Goal.
 
-## 质量检查清单
+### 4. Transition atomically
 
-入队时：
-- [ ] 调 `ideal-requirement` 完成澄清并落盘 `需求.md`
-- [ ] 分配唯一 REQ-ID（扫描现有最大 +1）
-- [ ] 优先级已确认（P0/P1/P2）
-- [ ] 验收标准可判定（非"做好"这类模糊表述）
-- [ ] 初始质量状态为 `unverified`
-- [ ] 如果是 reopen，已关联原 REQ、记录漏测原因和必补 regression
-- [ ] `需求池.md` 按优先级 + FIFO 排序
-- [ ] 需求文档路径正确指向落盘的 `需求.md`
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" transition \
+  --goal-id REQ-001 \
+  --expected-revision "$REVISION" \
+  --lease-token "$LEASE_TOKEN" \
+  --operation-id "$OPERATION_ID" \
+  --reason "focused validation completed" \
+  --patch '{"execution":{"status":"verifying"},"quality":{"status":"verified"}}' \
+  --evidence evidence://run/validation-001 \
+  --apply
+```
 
-## 错误处理
+Execution and quality states are separate. `accepted` requires an authority
+listed in the Goal and an explicit acceptance evidence reference. An ordinary
+runner cannot accept its own output.
 
-| 场景 | 处理 |
-|------|------|
-| `需求池.md` 不存在 | 按路径解析规则定位 → `mkdir -p` 父目录 → 创建带头部说明的空池 |
-| ID 冲突 | 扫描现有最大编号 +1，不回收已用 ID |
-| 需求文档落盘失败 | 不入队，报告 `ideal-requirement` 失败原因 |
-| 优先级未指定 | 默认 P2，提示用户确认 |
-| 验收标准模糊 | 追问至可判定，或标记 `[待澄清]` 并提示 |
+### 5. Release execution capacity
+
+`blocked`, `waiting`, `human_gate`, `cancelled`, and completed terminal states
+release the Goal lease. Record the reason and an actionable release condition
+for non-terminal states. No ready work is a legitimate no-op; it is not a
+reason to retain a slot.
+
+Use explicit release when abandoning an otherwise runnable claim:
+
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" release \
+  --goal-id REQ-001 \
+  --expected-revision "$REVISION" \
+  --lease-token "$LEASE_TOKEN" \
+  --operation-id "$OPERATION_ID" \
+  --apply
+```
+
+### 6. Reopen
+
+A reopen transition must preserve historical evidence and include:
+
+- `reason`;
+- `missing_test_reason`;
+- `required_regression`.
+
+Reopen the original Goal. Do not create a review-of-review or a separate Goal
+whose only purpose is to validate the validator.
+
+## v1 migration
+
+Preview first:
+
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" migrate-v1 \
+  --source docs/dev/需求池.md \
+  --dry-run
+```
+
+The dry-run must not create `.ideal/backlog`. Resolve every reported unknown
+controlled field before applying.
+
+Apply with an auditable source snapshot:
+
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" migrate-v1 \
+  --source docs/dev/需求池.md \
+  --operation-id "$OPERATION_ID" \
+  --apply
+```
+
+Historical `done` entries without v2 quality evidence are marked
+`legacy_accepted`; they are not represented as newly accepted v2 Goals.
+
+## Mirror and integrity verification
+
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" verify
+
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" verify-mirror \
+  --path docs/dev/需求池.md
+```
+
+If the mirror diverges, regenerate it through `render --apply`. Never reconcile
+the machine store by copying edited Markdown back into a revision.
+
+## Failure outcomes
+
+| Failure | Required outcome |
+|---|---|
+| stale expected revision | reload; do not overwrite |
+| global lock held | no-op; do not steal by age |
+| wrong lease token | reject the mutation |
+| unknown v1 controlled field | block migration with a report |
+| `blocked` | release lease and record release condition |
+| `waiting` | release lease and record awaited event |
+| `human_gate` | produce a handoff and release lease |
+| unauthorized `accepted` | reject the transition |
+| incomplete reopen metadata | reject the transition |
+
+## Completion evidence
+
+Report the final current revision, Goal execution/quality state, operation IDs,
+lease disposition, evidence references, and mirror verification result.
+Passing a command alone is not evidence that the intended Goal revision was
+created.
