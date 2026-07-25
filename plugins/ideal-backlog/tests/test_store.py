@@ -89,7 +89,7 @@ class RevisionStoreTests(unittest.TestCase):
             replay = ideal_backlog.write_revision(
                 root,
                 first_snapshot,
-                expected_revision=second["revision"],
+                expected_revision=initial["revision"],
                 operation_id="op-first",
             )
 
@@ -98,6 +98,55 @@ class RevisionStoreTests(unittest.TestCase):
             self.assertEqual(
                 ideal_backlog.read_current(root)["revision"],
                 second["revision"],
+            )
+
+    def test_reused_operation_id_rejects_a_different_request(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            initial = ideal_backlog.init_store(root)
+            snapshot = empty_snapshot()
+            snapshot["metadata"]["label"] = "first"
+            first = ideal_backlog.write_revision(
+                root,
+                snapshot,
+                expected_revision=initial["revision"],
+                operation_id="op-shared",
+            )
+            conflicting = copy.deepcopy(snapshot)
+            conflicting["metadata"]["label"] = "different"
+
+            with self.assertRaises(ideal_backlog.IdempotencyConflict):
+                ideal_backlog.write_revision(
+                    root,
+                    conflicting,
+                    expected_revision=first["revision"],
+                    operation_id="op-shared",
+                )
+
+    def test_current_reads_inject_the_observed_store_revision(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            initial = ideal_backlog.init_store(root)
+            snapshot = empty_snapshot()
+            snapshot["goals"] = [
+                {
+                    "id": "OBSERVED",
+                    "revision": "",
+                }
+            ]
+            written = ideal_backlog.write_revision(
+                root,
+                snapshot,
+                expected_revision=initial["revision"],
+                operation_id="observe-write",
+            )
+
+            current = ideal_backlog.read_current(root)
+
+            self.assertEqual(current["revision"], written["revision"])
+            self.assertEqual(
+                current["snapshot"]["goals"][0]["revision"],
+                current["revision"],
             )
 
     def test_later_writes_never_modify_existing_revision_files(self):

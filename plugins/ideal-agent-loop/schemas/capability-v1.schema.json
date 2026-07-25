@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ideal-agent-loop/capability-v1",
+  "title": "Capability Record v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "locator",
+    "version",
+    "inputs",
+    "outputs",
+    "permissions",
+    "verified"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ideal-agent-loop/capability-v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locator": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verified": {
+      "type": "boolean"
+    },
+    "preference": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

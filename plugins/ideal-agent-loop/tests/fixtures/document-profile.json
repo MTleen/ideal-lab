@@ -1,0 +1,88 @@
+{
+  "schema": "ideal-agent-loop/profile-v1",
+  "id": "document",
+  "phases": [
+    {
+      "id": "draft",
+      "planner": "declared",
+      "requires": [
+        "draft-artifact",
+        "review-evidence"
+      ],
+      "gate": "draft-verified",
+      "tasks": [
+        {
+          "id": "compose",
+          "role": "execution",
+          "capability": "content-composition",
+          "depends_on": [],
+          "produces": [
+            "draft-artifact"
+          ]
+        },
+        {
+          "id": "validate",
+          "role": "validation",
+          "capability": "content-validation",
+          "depends_on": [
+            "compose"
+          ],
+          "produces": [
+            "review-evidence"
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "content-composition": {
+      "inputs": [
+        "task-assignment",
+        "source-material"
+      ],
+      "outputs": [
+        "draft-artifact"
+      ],
+      "permissions": [
+        "workspace-read",
+        "workspace-write"
+      ]
+    },
+    "content-validation": {
+      "inputs": [
+        "task-assignment",
+        "draft-artifact",
+        "criteria"
+      ],
+      "outputs": [
+        "review-evidence"
+      ],
+      "permissions": [
+        "workspace-read"
+      ]
+    }
+  },
+  "policies": {
+    "retry": {
+      "max_same_root_cause": 3
+    },
+    "review": {
+      "terminal_budget": 1,
+      "reuse_unchanged_candidate": true,
+      "validation_infrastructure_budget": 0
+    },
+    "permissions": {
+      "allowed": [
+        "workspace-read",
+        "workspace-write"
+      ],
+      "external_side_effects": "human_only"
+    },
+    "acceptance": {
+      "allowed_authorities": [
+        "human",
+        "controller"
+      ]
+    }
+  }
+}

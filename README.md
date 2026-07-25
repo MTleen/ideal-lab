@@ -43,7 +43,7 @@ ideal-lab 通过 Claude Code 官方 Plugin Marketplace 分发，每个插件自�
 
 | 插件 | 版本 | 说明 |
 |------|------|------|
-| [ideal-agent-loop](./plugins/ideal-agent-loop) | 1.2.0 | 目标驱动 Agent Loop（loop engineering）：规划最小闭环 → 持久迭代到完成，支持需求池 goal 接力 |
+| [ideal-agent-loop](./plugins/ideal-agent-loop) | 2.0.0 | Profile 驱动的有界 Loop Kernel：单一 Goal truth、阶段 Task Plan、能力路由、执行/验证 Run 分离与协作式停止 |
 | [ideal-backlog](./plugins/ideal-backlog) | 2.0.0 | 通用 Goal Store 控制面：不可变 revision、租约与原子状态流转、v1 迁移及生成式 Markdown 镜像 |
 | [ideal-graph-orchestrator](./plugins/ideal-graph-orchestrator) | 1.0.0 | 通用 Skill Graph 编排器：自然语言 → 匹配已有 skill → 自动 scaffold 缺口 → 编译执行跨 plugin 路径 |
 | [ideal-lab-maintainer](./plugins/ideal-lab-maintainer) | 1.1.1 | 仓库维护工具（commit / add-skill / release / validate） |

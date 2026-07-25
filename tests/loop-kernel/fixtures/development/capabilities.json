@@ -1,0 +1,42 @@
+{
+  "capabilities": [
+    {
+      "schema": "ideal-agent-loop/capability-v1",
+      "id": "code-implementation",
+      "locator": "mock:development-execution",
+      "version": "1.0.0",
+      "inputs": [
+        "task-assignment",
+        "project-context"
+      ],
+      "outputs": [
+        "implementation-artifact"
+      ],
+      "permissions": [
+        "workspace-read",
+        "workspace-write",
+        "process-exec"
+      ],
+      "verified": true
+    },
+    {
+      "schema": "ideal-agent-loop/capability-v1",
+      "id": "focused-validation",
+      "locator": "mock:development-validation",
+      "version": "1.0.0",
+      "inputs": [
+        "task-assignment",
+        "implementation-artifact",
+        "criteria"
+      ],
+      "outputs": [
+        "focused-test-evidence"
+      ],
+      "permissions": [
+        "workspace-read",
+        "process-exec"
+      ],
+      "verified": true
+    }
+  ]
+}

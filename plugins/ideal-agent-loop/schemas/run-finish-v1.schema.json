@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ideal-agent-loop/run-finish-v1",
+  "title": "Immutable Run Finish v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "role",
+    "finished_at",
+    "outcome",
+    "artifact_refs",
+    "evidence_refs",
+    "root_cause",
+    "validation_conclusion"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ideal-agent-loop/run-finish-v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "execution",
+        "validation"
+      ]
+    },
+    "finished_at": {
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "completed",
+        "blocked",
+        "waiting",
+        "human_gate",
+        "no_op",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "root_cause": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "validation_conclusion": {
+      "enum": [
+        null,
+        "pass",
+        "fail"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

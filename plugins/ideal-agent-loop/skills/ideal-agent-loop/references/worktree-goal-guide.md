@@ -1,10 +1,18 @@
-# Goal 级 Worktree 协议
+# development Profile：可选 Worktree Adapter
 
-ideal-agent-loop outer loop 在 `worktree: per-goal` 时，为每个 goal 创建独立 worktree。本协议**复用 `ideal-dev-workflow/ideal-flow-control` 的 worktree 规范**（路径/命名/创建/删除，见 `ideal-flow-control/SKILL.md`「Git Worktree 协议」），下沉到 goal 粒度。
+Worktree 不是 Kernel 原语。只有 Profile 声明
+`adapters.workspace=git-worktree-optional` 且项目启用该 adapter 时，才按本
+文创建 goal 级 worktree。未配置时继续在调用方提供的 workspace 中运行；
+非开发 Profile 不需要理解本协议。
+
+启用时，本 adapter 可复用开发 Worker 的 worktree 规范（路径、命名、创建
+和删除），但 Worker locator 由 Capability Registry 决定，Kernel 不硬编码。
 
 ## 基本原则
 
-每个出队的 goal 在独立 worktree 中执行完整生命周期（规划 → 各 task 闭环 → 合并），禁止在 `base_branch` 上直接跑 goal。同时只 1 个 active goal worktree（outer loop 串行出队）。
+启用 adapter 后，每个出队 goal 在独立 worktree 中执行阶段任务；未启用
+时不创建或删除 worktree。无论是否启用，同一 Goal revision 的 lease 和 Run
+记录都由公共协议管理。
 
 ## 路径与命名（复用 flow-control）
 
@@ -42,7 +50,8 @@ goal worktree 内委托 `ideal-dev-workflow` 跑各 task 时，`ideal-flow-contr
 
 ## 状态记录
 
-goal worktree 信息记录在 `.agent-loop/{goal}/state.json` 的 `meta.worktree`（`branch` / `path` / `created_at`），**不污染需求池.md**（需求池只管队列状态）。
+兼容层可以把 worktree 信息记录为 Run artifact；不得写入 Markdown 需求池，
+也不得把 `.agent-loop/` 兼容状态提升为第二个 Goal 事实源。
 
 ## 删除（goal 合并后）
 

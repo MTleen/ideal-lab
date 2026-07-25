@@ -67,14 +67,14 @@
     {
       "name": "ideal-agent-loop",
       "source": "./plugins/ideal-agent-loop",
-      "description": "Goal-driven Agent Loop（loop engineering 实现）：给定目标→规划最小闭环→持久迭代到完成。支持需求池 goal 接力（outer loop）",
+      "description": "Profile 驱动的有界 Loop Kernel：消费单一 Goal Store，分离执行/验证 Run，提供能力路由、证据复用、Checkpoint、Gate 与协作式停止。",
       "category": "development",
       "keywords": ["agent-loop", "iteration", "verification", "socratic", "loop"]
     },
     {
       "name": "ideal-backlog",
       "source": "./plugins/ideal-backlog",
-      "description": "需求池构建与管理：入队（调 ideal-requirement）、状态流转、优先级+FIFO 排序。作为 ideal-agent-loop 出队契约源。",
+      "description": "通用 Goal Store 控制面：不可变 revision、租约与原子状态流转、v1 迁移及生成式 Markdown 镜像。",
       "category": "development",
       "keywords": ["backlog", "requirement", "queue", "prioritization"]
     },

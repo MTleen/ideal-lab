@@ -13,7 +13,7 @@ Every v2 Goal contains:
   `dependencies`;
 - independent `execution.status` and `quality.status`;
 - current phase and next gate;
-- the prior Goal revision and current lease;
+- the observed current store revision and current lease;
 - evidence and history references;
 - acceptance authorities.
 
@@ -27,8 +27,8 @@ A mutation is valid only when:
 1. its expected revision equals `CURRENT`;
 2. the global writer lock is held by the operation;
 3. a Goal-scoped mutation presents the exact lease token;
-4. the operation ID has not already produced another result, or is an
-   idempotent retry of that result;
+4. the operation ID has not already produced another result, or its canonical
+   kind, target, parent revision, and payload hash exactly match the retry;
 5. the requested state edge is legal.
 
 Old revision files are never modified or deleted.
@@ -43,7 +43,7 @@ todo → claimed → planning → executing → verifying
 ```
 
 `blocked`, `waiting`, `human_gate`, and `cancelled` are explicit outcomes.
-They release the execution lease.
+They release the execution lease. `awaiting_acceptance` also releases it.
 
 Quality states describe evidence maturity:
 
@@ -51,12 +51,16 @@ Quality states describe evidence maturity:
 unverified → implemented → verified → awaiting_acceptance → accepted
 ```
 
-`accepted` needs an allowed acceptance authority and explicit evidence.
-`reopened` preserves prior evidence and records the missed test plus required
-regression.
+`accepted` uses a separate authority operation with explicit evidence; it
+never reuses an execution lease. `reopened` is also a separate authority
+operation that preserves prior evidence and records the missed test plus
+required regression. `transition` cannot modify identity, revision, lease,
+history, or acceptance policy.
 
 ## v1 audit trail
 
-Migration records the original path, source SHA-256, and a byte-preserving
-source snapshot. Unknown controlled fields block apply. A legacy `done` item
-without v2 evidence is labeled `legacy_accepted`.
+Migration records the original path, source SHA-256, previous revision, and a
+byte-preserving source snapshot. Unknown controlled fields or a non-empty v2
+store block apply. A legacy `done` item without v2 evidence is labeled
+`legacy_accepted` and can use the authorized reopen path. Restore writes a new
+auditable revision from a verified historical target.

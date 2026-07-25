@@ -47,6 +47,15 @@ def quality_transition(
     reopen=None,
 ):
     patch = {"quality": {"status": status}}
+    execution_for_quality = {
+        "implemented": "executing",
+        "verified": "verifying",
+        "awaiting_acceptance": "awaiting_acceptance",
+    }
+    if status in execution_for_quality:
+        patch["execution"] = {
+            "status": execution_for_quality[status]
+        }
     if reopen is not None:
         patch["reopen"] = reopen
     return ideal_backlog.transition_goal(
@@ -88,9 +97,35 @@ class TransitionPolicyTests(unittest.TestCase):
                 "verified",
                 "awaiting_acceptance",
                 "accepted",
+                "legacy_accepted",
                 "reopened",
             },
         )
+
+    def test_transition_rejects_protected_goal_fields(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state, lease = claim_one_goal(root, "protected")
+
+            for protected_patch in (
+                {"id": "TAKEOVER"},
+                {"lease": None},
+                {"revision": "forged"},
+                {"history_refs": []},
+                {"acceptance": {"allowed_authorities": ["runner"]}},
+            ):
+                with self.subTest(patch=protected_patch):
+                    with self.assertRaises(ideal_backlog.InvalidTransition):
+                        ideal_backlog.transition_goal(
+                            root,
+                            "REQ-001",
+                            expected_revision=state["revision"],
+                            lease_token=lease,
+                            operation_id="protected-{0}".format(
+                                next(iter(protected_patch))
+                            ),
+                            patch=protected_patch,
+                        )
 
     def test_acceptance_requires_allowed_authority_and_evidence(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -111,31 +146,29 @@ class TransitionPolicyTests(unittest.TestCase):
             )
 
             with self.assertRaises(ideal_backlog.InvalidTransition):
-                quality_transition(
+                ideal_backlog.accept_goal(
                     root,
-                    state,
-                    lease,
+                    "REQ-001",
+                    state["revision"],
                     "accept-runner",
-                    "accepted",
-                    authority="runner",
+                    "runner",
                     evidence_refs=["evidence://acceptance"],
                 )
             with self.assertRaises(ideal_backlog.InvalidTransition):
-                quality_transition(
+                ideal_backlog.accept_goal(
                     root,
-                    state,
-                    lease,
+                    "REQ-001",
+                    state["revision"],
                     "accept-no-evidence",
-                    "accepted",
-                    authority="human",
+                    "human",
+                    evidence_refs=[],
                 )
-            accepted = quality_transition(
+            accepted = ideal_backlog.accept_goal(
                 root,
-                state,
-                lease,
+                "REQ-001",
+                state["revision"],
                 "accept-human",
-                "accepted",
-                authority="human",
+                "human",
                 evidence_refs=["evidence://acceptance"],
             )
 
@@ -143,6 +176,41 @@ class TransitionPolicyTests(unittest.TestCase):
                 accepted["snapshot"]["goals"][0]["quality"]["status"],
                 "accepted",
             )
+
+    def test_legacy_accepted_can_be_reopened_without_execution_lease(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            initial = ideal_backlog.init_store(root)
+            snapshot = json.loads(
+                ONE_GOAL_FIXTURE.read_text(encoding="utf-8")
+            )
+            goal = snapshot["goals"][0]
+            goal["execution"]["status"] = "done"
+            goal["quality"]["status"] = "legacy_accepted"
+            goal["quality"]["legacy"] = True
+            seeded = ideal_backlog.write_revision(
+                root,
+                snapshot,
+                expected_revision=initial["revision"],
+                operation_id="legacy-seed",
+            )
+
+            reopened = ideal_backlog.reopen_goal(
+                root,
+                "REQ-001",
+                expected_revision=seeded["revision"],
+                operation_id="legacy-reopen",
+                authority="human",
+                reopen={
+                    "reason": "regression",
+                    "missing_test_reason": "legacy gap",
+                    "required_regression": "cover migrated behavior",
+                },
+            )
+
+            goal = reopened["snapshot"]["goals"][0]
+            self.assertEqual(goal["execution"]["status"], "todo")
+            self.assertEqual(goal["quality"]["status"], "reopened")
 
     def test_verified_cannot_skip_awaiting_acceptance(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -178,31 +246,30 @@ class TransitionPolicyTests(unittest.TestCase):
                 state = quality_transition(
                     root, state, lease, operation_id, status
                 )
-            state = quality_transition(
+            state = ideal_backlog.accept_goal(
                 root,
-                state,
-                lease,
+                "REQ-001",
+                state["revision"],
                 "reopen-accepted",
-                "accepted",
-                authority="human",
+                "human",
                 evidence_refs=["evidence://acceptance"],
             )
 
             with self.assertRaises(ideal_backlog.InvalidTransition):
-                quality_transition(
+                ideal_backlog.reopen_goal(
                     root,
-                    state,
-                    lease,
+                    "REQ-001",
+                    state["revision"],
                     "reopen-incomplete",
-                    "reopened",
+                    "human",
                     reopen={"reason": "regression"},
                 )
-            reopened = quality_transition(
+            reopened = ideal_backlog.reopen_goal(
                 root,
-                state,
-                lease,
+                "REQ-001",
+                state["revision"],
                 "reopen-complete",
-                "reopened",
+                "human",
                 reopen={
                     "reason": "regression",
                     "missing_test_reason": "boundary was not covered",
@@ -215,7 +282,9 @@ class TransitionPolicyTests(unittest.TestCase):
                 "reopened",
             )
             self.assertEqual(
-                reopened["snapshot"]["goals"][0]["reopen"]["reason"],
+                reopened["snapshot"]["goals"][0][
+                    "reopen_history"
+                ][-1]["reason"],
                 "regression",
             )
 

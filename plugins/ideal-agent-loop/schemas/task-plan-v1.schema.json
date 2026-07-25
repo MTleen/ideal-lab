@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ideal-agent-loop/task-plan-v1",
+  "title": "Stage Task Plan v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "plan_id",
+    "goal_id",
+    "goal_revision",
+    "phase",
+    "tasks",
+    "artifact_refs",
+    "checkpoints"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ideal-agent-loop/task-plan-v1"
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "goal_id": {
+      "type": "string"
+    },
+    "goal_revision": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string"
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "capability",
+          "depends_on",
+          "status",
+          "produces"
+        ]
+      }
+    },
+    "artifact_refs": {
+      "type": "array"
+    },
+    "checkpoints": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,40 @@
+{
+  "capabilities": [
+    {
+      "schema": "ideal-agent-loop/capability-v1",
+      "id": "content-composition",
+      "locator": "mock:document-execution",
+      "version": "1.0.0",
+      "inputs": [
+        "task-assignment",
+        "source-material"
+      ],
+      "outputs": [
+        "draft-artifact"
+      ],
+      "permissions": [
+        "workspace-read",
+        "workspace-write"
+      ],
+      "verified": true
+    },
+    {
+      "schema": "ideal-agent-loop/capability-v1",
+      "id": "content-validation",
+      "locator": "mock:document-validation",
+      "version": "1.0.0",
+      "inputs": [
+        "task-assignment",
+        "draft-artifact",
+        "criteria"
+      ],
+      "outputs": [
+        "review-evidence"
+      ],
+      "permissions": [
+        "workspace-read"
+      ],
+      "verified": true
+    }
+  ]
+}

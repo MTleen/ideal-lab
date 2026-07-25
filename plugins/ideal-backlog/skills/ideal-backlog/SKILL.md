@@ -40,7 +40,8 @@ grant acceptance authority.
 - `CURRENT` names an immutable, content-addressed revision.
 - Each Goal mutation creates a new revision; old revisions are never edited.
 - A global writer lock prevents concurrent commits and has no automatic TTL.
-- An operation ID makes retries idempotent.
+- An operation ID makes only the same canonical request idempotent; reuse with
+  a different kind, target, parent, or payload is a conflict.
 - Each Goal claim creates a lease token bound to the current revision.
 - `docs/dev/需求池.md` is a generated Markdown mirror and is never a write
   surface.
@@ -113,16 +114,17 @@ python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
   --apply
 ```
 
-Execution and quality states are separate. `accepted` requires an authority
-listed in the Goal and an explicit acceptance evidence reference. An ordinary
-runner cannot accept its own output.
+Execution and quality states are separate. `transition` accepts only its
+documented state, phase, blocker, and reopen fields; identity, lease, history,
+revision, and acceptance policy are protected. Use the separate `accept` and
+`reopen` authority operations for terminal quality changes.
 
 ### 5. Release execution capacity
 
-`blocked`, `waiting`, `human_gate`, `cancelled`, and completed terminal states
-release the Goal lease. Record the reason and an actionable release condition
-for non-terminal states. No ready work is a legitimate no-op; it is not a
-reason to retain a slot.
+`blocked`, `waiting`, `human_gate`, `cancelled`,
+`awaiting_acceptance`, and completed terminal states release the Goal lease.
+Record the reason and an actionable release condition for non-terminal states.
+No ready work is a legitimate no-op; it is not a reason to retain a slot.
 
 Use explicit release when abandoning an otherwise runnable claim:
 
@@ -136,9 +138,22 @@ python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
   --apply
 ```
 
-### 6. Reopen
+### 6. Accept or reopen
 
-A reopen transition must preserve historical evidence and include:
+Acceptance never reuses the execution lease:
+
+```bash
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" accept \
+  --goal-id REQ-001 \
+  --expected-revision "$REVISION" \
+  --operation-id "$OPERATION_ID" \
+  --authority human \
+  --evidence evidence://acceptance/decision \
+  --apply
+```
+
+A `reopen` authority operation preserves historical evidence and includes:
 
 - `reason`;
 - `missing_test_reason`;
@@ -159,7 +174,8 @@ python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
 ```
 
 The dry-run must not create `.ideal/backlog`. Resolve every reported unknown
-controlled field before applying.
+controlled field before applying. Apply is genesis-only and refuses to replace
+a non-empty v2 store.
 
 Apply with an auditable source snapshot:
 
@@ -172,7 +188,10 @@ python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
 ```
 
 Historical `done` entries without v2 quality evidence are marked
-`legacy_accepted`; they are not represented as newly accepted v2 Goals.
+`legacy_accepted`; they are not represented as newly accepted v2 Goals and may
+only move through the authorized `reopen` operation. Migration records the
+previous revision; `restore --target-revision ... --apply` creates an auditable
+restoration revision.
 
 ## Mirror and integrity verification
 
@@ -196,10 +215,12 @@ the machine store by copying edited Markdown back into a revision.
 | global lock held | no-op; do not steal by age |
 | wrong lease token | reject the mutation |
 | unknown v1 controlled field | block migration with a report |
+| non-empty v2 store | block v1 apply; do not replace CURRENT |
+| reused operation ID with another request | idempotency conflict |
 | `blocked` | release lease and record release condition |
 | `waiting` | release lease and record awaited event |
 | `human_gate` | produce a handoff and release lease |
-| unauthorized `accepted` | reject the transition |
+| unauthorized `accepted` | reject the authority operation |
 | incomplete reopen metadata | reject the transition |
 
 ## Completion evidence

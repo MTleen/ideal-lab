@@ -25,6 +25,7 @@ import argparse
 import json
 import os
 import random
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -62,6 +63,30 @@ class VerifyResult:
     message: str
     evidence: Optional[str] = None
     error: Optional[str] = None
+
+
+def project_validation_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Project a legacy verifier result into a validation-only Run result."""
+    criterion_id = result.get("criterion_id")
+    evidence = str(
+        result.get("evidence")
+        or result.get("error")
+        or result.get("status")
+        or "result"
+    )
+    slug = re.sub(r"[^a-z0-9]+", "-", evidence.lower()).strip("-")
+    return {
+        "role": "validation",
+        "artifact_refs": [],
+        "evidence_refs": [
+            "criterion://{0}/{1}".format(
+                criterion_id, slug or "result"
+            )
+        ],
+        "validation_conclusion": (
+            "pass" if result.get("status") == "passed" else "fail"
+        ),
+    }
 
 
 # ---------------------------------------------------------------------------

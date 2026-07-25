@@ -111,7 +111,7 @@ class LockAndLeaseTests(unittest.TestCase):
             replay = ideal_backlog.release_goal(
                 root,
                 "REQ-001",
-                expected_revision=released["revision"],
+                expected_revision=claimed["revision"],
                 lease_token=lease_token,
                 operation_id="release-right",
             )

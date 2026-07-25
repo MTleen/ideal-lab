@@ -90,6 +90,9 @@ class BacklogCliTests(unittest.TestCase):
                 "claim",
                 "transition",
                 "release",
+                "accept",
+                "restore",
+                "reopen",
             },
         )
 

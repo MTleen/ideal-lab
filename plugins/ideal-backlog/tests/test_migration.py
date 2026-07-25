@@ -91,6 +91,58 @@ class MigrationTests(unittest.TestCase):
             self.assertIn("神秘状态", str(raised.exception))
             self.assertFalse((root / ".ideal" / "backlog").exists())
 
+    def test_apply_refuses_to_replace_a_nonempty_v2_store(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            initial = ideal_backlog.init_store(root)
+            seeded_snapshot = {
+                "schema": ideal_backlog.BACKLOG_SCHEMA,
+                "goals": [{"id": "EXISTING", "revision": ""}],
+                "metadata": {"applied_operations": {}},
+            }
+            seeded = ideal_backlog.write_revision(
+                root,
+                seeded_snapshot,
+                expected_revision=initial["revision"],
+                operation_id="seed-existing",
+            )
+
+            with self.assertRaises(ideal_backlog.MigrationError):
+                ideal_backlog.migrate_v1(
+                    root,
+                    FIXTURES / "v1-backlog.md",
+                    apply=True,
+                    operation_id="replace-existing",
+                )
+
+            self.assertEqual(
+                ideal_backlog.read_current(root)["revision"],
+                seeded["revision"],
+            )
+
+    def test_migration_records_previous_revision_and_can_restore_it(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            initial = ideal_backlog.init_store(root)
+            migrated = ideal_backlog.migrate_v1(
+                root,
+                FIXTURES / "v1-backlog.md",
+                apply=True,
+                operation_id="migrate-for-restore",
+            )
+            previous = migrated["snapshot"]["metadata"]["migration"][
+                "previous_revision"
+            ]
+
+            restored = ideal_backlog.restore_revision(
+                root,
+                target_revision=previous,
+                expected_revision=migrated["revision"],
+                operation_id="restore-migration",
+            )
+
+            self.assertEqual(restored["snapshot"]["goals"], [])
+
 
 if __name__ == "__main__":
     unittest.main()

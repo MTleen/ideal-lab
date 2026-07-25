@@ -71,10 +71,12 @@ QUALITY_TRANSITIONS = {
     "verified": {"awaiting_acceptance", "reopened"},
     "awaiting_acceptance": {"accepted", "reopened"},
     "accepted": {"reopened"},
+    "legacy_accepted": {"reopened"},
     "reopened": {"implemented"},
 }
 
 LEASE_RELEASING_STATES = {
+    "awaiting_acceptance",
     "blocked",
     "waiting",
     "human_gate",
@@ -105,6 +107,10 @@ class LeaseConflict(BacklogError):
 
 class InvalidTransition(BacklogError):
     """A requested Goal operation is not valid for the current record."""
+
+
+class IdempotencyConflict(BacklogError):
+    """An operation ID was reused for a different canonical request."""
 
 
 class MigrationError(BacklogError):
@@ -148,6 +154,22 @@ def _empty_snapshot() -> Dict[str, Any]:
     }
 
 
+def _persistable_snapshot(snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    persisted = copy.deepcopy(snapshot)
+    for goal in persisted.get("goals", []):
+        goal["revision"] = ""
+    return persisted
+
+
+def _with_observed_revision(
+    snapshot: Dict[str, Any], revision: str
+) -> Dict[str, Any]:
+    observed = copy.deepcopy(snapshot)
+    for goal in observed.get("goals", []):
+        goal["revision"] = revision
+    return observed
+
+
 def _read_revision(store: Path, revision: str) -> Dict[str, Any]:
     revision_file = store / "revisions" / revision / "backlog.json"
     if not revision_file.is_file():
@@ -172,13 +194,16 @@ def _write_current(store: Path, revision: str) -> None:
 def _persist_revision(
     store: Path, snapshot: Dict[str, Any]
 ) -> Dict[str, Any]:
-    revision = revision_hash(snapshot)
+    persisted_snapshot = _persistable_snapshot(snapshot)
+    revision = revision_hash(persisted_snapshot)
     revisions = store / "revisions"
     revisions.mkdir(parents=True, exist_ok=True)
     destination = revisions / revision
     if destination.exists():
         persisted = _read_revision(store, revision)
-        if canonical_json(persisted) != canonical_json(snapshot):
+        if canonical_json(persisted) != canonical_json(
+            persisted_snapshot
+        ):
             raise IntegrityError("revision collision: {0}".format(revision))
     else:
         temp_dir = Path(
@@ -186,7 +211,7 @@ def _persist_revision(
         )
         try:
             (temp_dir / "backlog.json").write_bytes(
-                canonical_json(snapshot) + b"\n"
+                canonical_json(persisted_snapshot) + b"\n"
             )
             os.replace(str(temp_dir), str(destination))
         finally:
@@ -195,7 +220,9 @@ def _persist_revision(
     _write_current(store, revision)
     return {
         "revision": revision,
-        "snapshot": copy.deepcopy(snapshot),
+        "snapshot": _with_observed_revision(
+            persisted_snapshot, revision
+        ),
         "replayed": False,
     }
 
@@ -223,9 +250,10 @@ def read_current(root: Path) -> Dict[str, Any]:
     revision = current_file.read_text(encoding="utf-8").strip()
     if not revision:
         raise IntegrityError("CURRENT revision is empty")
+    snapshot = _read_revision(store, revision)
     return {
         "revision": revision,
-        "snapshot": _read_revision(store, revision),
+        "snapshot": _with_observed_revision(snapshot, revision),
         "replayed": False,
     }
 
@@ -241,7 +269,9 @@ def _operation_ids(snapshot: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _find_operation(
-    store: Path, operation_id: str
+    store: Path,
+    operation_id: str,
+    expected_request: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, Any]]:
     revisions = store / "revisions"
     if not revisions.is_dir():
@@ -265,19 +295,59 @@ def _find_operation(
             origins.append((revision, snapshot))
     if origins:
         revision, snapshot = sorted(origins, key=lambda item: item[0])[0]
+        if (
+            expected_request is not None
+            and _operation_ids(snapshot)[operation_id]
+            != expected_request
+        ):
+            raise IdempotencyConflict(
+                "operation ID was reused for a different request"
+            )
         return {
             "revision": revision,
-            "snapshot": snapshot,
+            "snapshot": _with_observed_revision(snapshot, revision),
             "replayed": True,
         }
     for revision, snapshot in sorted(snapshots.items()):
         if operation_id in _operation_ids(snapshot):
+            if (
+                expected_request is not None
+                and _operation_ids(snapshot)[operation_id]
+                != expected_request
+            ):
+                raise IdempotencyConflict(
+                    "operation ID was reused for a different request"
+                )
             return {
                 "revision": revision,
-                "snapshot": snapshot,
+                "snapshot": _with_observed_revision(
+                    snapshot, revision
+                ),
                 "replayed": True,
             }
     return None
+
+
+def _operation_request(
+    kind: str,
+    target: str,
+    expected_revision: str,
+    payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    request = {
+        "kind": kind,
+        "target": target,
+        "expected_revision": expected_revision,
+        "payload": payload,
+    }
+    return {
+        "kind": kind,
+        "target": target,
+        "expected_revision": expected_revision,
+        "request_hash": hashlib.sha256(
+            canonical_json(request)
+        ).hexdigest(),
+    }
 
 
 def acquire_lock(
@@ -326,10 +396,12 @@ def _write_revision_unlocked(
     snapshot: Dict[str, Any],
     expected_revision: str,
     operation_id: str,
-    operation_kind: str,
+    operation_request: Dict[str, Any],
 ) -> Dict[str, Any]:
     store = _store_path(Path(root))
-    replay = _find_operation(store, operation_id)
+    replay = _find_operation(
+        store, operation_id, operation_request
+    )
     if replay is not None:
         return replay
     current = read_current(root)
@@ -342,7 +414,7 @@ def _write_revision_unlocked(
     candidate = copy.deepcopy(snapshot)
     candidate.setdefault("metadata", {})
     operations = dict(_operation_ids(candidate))
-    operations[operation_id] = {"kind": operation_kind}
+    operations[operation_id] = operation_request
     candidate["metadata"]["applied_operations"] = operations
     candidate["metadata"]["parent_revision"] = current["revision"]
     return _persist_revision(store, candidate)
@@ -357,7 +429,15 @@ def write_revision(
     if not operation_id:
         raise ValueError("operation_id is required")
     store = _store_path(Path(root))
-    replay = _find_operation(store, operation_id)
+    operation_request = _operation_request(
+        "write_revision",
+        "backlog",
+        expected_revision,
+        _persistable_snapshot(snapshot),
+    )
+    replay = _find_operation(
+        store, operation_id, operation_request
+    )
     if replay is not None:
         return replay
     lock_token = acquire_lock(root, "write_revision", operation_id)
@@ -367,7 +447,7 @@ def write_revision(
             snapshot,
             expected_revision,
             operation_id,
-            "write_revision",
+            operation_request,
         )
     finally:
         release_lock(root, lock_token)
@@ -390,15 +470,26 @@ def _mutate_goal(
     expected_revision: str,
     operation_id: str,
     operation_kind: str,
+    request_payload: Dict[str, Any],
     mutate: Callable[[Dict[str, Any]], None],
 ) -> Dict[str, Any]:
     store = _store_path(Path(root))
-    replay = _find_operation(store, operation_id)
+    operation_request = _operation_request(
+        operation_kind,
+        goal_id,
+        expected_revision,
+        request_payload,
+    )
+    replay = _find_operation(
+        store, operation_id, operation_request
+    )
     if replay is not None:
         return replay
     lock_token = acquire_lock(root, operation_kind, operation_id)
     try:
-        replay = _find_operation(store, operation_id)
+        replay = _find_operation(
+            store, operation_id, operation_request
+        )
         if replay is not None:
             return replay
         current = read_current(root)
@@ -411,13 +502,12 @@ def _mutate_goal(
         snapshot = copy.deepcopy(current["snapshot"])
         goal = _goal_by_id(snapshot, goal_id)
         mutate(goal)
-        goal["revision"] = current["revision"]
         return _write_revision_unlocked(
             root,
             snapshot,
             current["revision"],
             operation_id,
-            operation_kind,
+            operation_request,
         )
     finally:
         release_lock(root, lock_token)
@@ -433,17 +523,21 @@ def claim_goal(
         if goal.get("lease") is not None:
             raise LeaseConflict("Goal is already leased")
         current_status = goal.get("execution", {}).get("status")
-        _validate_transition(
-            EXECUTION_TRANSITIONS,
-            current_status,
+        if current_status == "todo":
+            goal.setdefault("execution", {})["status"] = "claimed"
+        elif current_status not in {
             "claimed",
-            "execution",
-        )
+            "planning",
+            "executing",
+            "verifying",
+        }:
+            raise InvalidTransition(
+                "Goal is not in a claimable execution state"
+            )
         goal["lease"] = {
             "token": secrets.token_hex(16),
             "claimed_at": _utc_now(),
         }
-        goal.setdefault("execution", {})["status"] = "claimed"
 
     return _mutate_goal(
         root,
@@ -451,6 +545,7 @@ def claim_goal(
         expected_revision,
         operation_id,
         "claim_goal",
+        {},
         claim,
     )
 
@@ -501,6 +596,38 @@ def _validate_reopen(patch: Dict[str, Any]) -> None:
         raise InvalidTransition("reopen metadata values must be non-empty")
 
 
+TRANSITION_PATCH_FIELDS = {
+    "execution": {"status"},
+    "quality": {"status"},
+    "phase": {"current", "next_gate"},
+    "blocker": {"reason", "release_condition"},
+}
+
+
+def _validate_transition_patch(patch: Dict[str, Any]) -> None:
+    if not isinstance(patch, dict):
+        raise InvalidTransition("transition patch must be an object")
+    for field, value in patch.items():
+        allowed = TRANSITION_PATCH_FIELDS.get(field)
+        if allowed is None:
+            raise InvalidTransition(
+                "transition cannot modify protected field: {0}".format(
+                    field
+                )
+            )
+        if not isinstance(value, dict):
+            raise InvalidTransition(
+                "transition field {0} must be an object".format(field)
+            )
+        unexpected = set(value).difference(allowed)
+        if unexpected:
+            raise InvalidTransition(
+                "transition field {0} contains protected keys: {1}".format(
+                    field, ", ".join(sorted(unexpected))
+                )
+            )
+
+
 def transition_goal(
     root: Path,
     goal_id: str,
@@ -512,6 +639,8 @@ def transition_goal(
     transition_reason: Optional[str] = None,
     evidence_refs: Optional[list] = None,
 ) -> Dict[str, Any]:
+    _validate_transition_patch(patch)
+
     def transition(goal: Dict[str, Any]) -> None:
         _require_lease(goal, lease_token)
         current_execution = goal.get("execution", {}).get("status")
@@ -535,20 +664,13 @@ def transition_goal(
             "quality",
         )
         explicit_evidence = list(evidence_refs or [])
-        if requested_quality == "accepted" and current_quality != "accepted":
-            allowed = goal.get("acceptance", {}).get(
-                "allowed_authorities", []
+        if (
+            requested_quality in {"accepted", "reopened"}
+            and requested_quality != current_quality
+        ):
+            raise InvalidTransition(
+                "accepted and reopened require their authority operations"
             )
-            if authority not in allowed:
-                raise InvalidTransition(
-                    "authority is not allowed to accept this Goal"
-                )
-            if not explicit_evidence:
-                raise InvalidTransition(
-                    "acceptance requires an explicit evidence reference"
-                )
-        if requested_quality == "reopened" and current_quality != "reopened":
-            _validate_reopen(patch)
         _merge_patch(goal, patch)
         if requested_execution in LEASE_RELEASING_STATES:
             goal["lease"] = None
@@ -571,7 +693,134 @@ def transition_goal(
         expected_revision,
         operation_id,
         "transition_goal",
+        {
+            "lease_token_hash": hashlib.sha256(
+                str(lease_token).encode("utf-8")
+            ).hexdigest(),
+            "patch": patch,
+            "authority": authority,
+            "transition_reason": transition_reason,
+            "evidence_refs": list(evidence_refs or []),
+        },
         transition,
+    )
+
+
+def accept_goal(
+    root: Path,
+    goal_id: str,
+    expected_revision: str,
+    operation_id: str,
+    authority: str,
+    evidence_refs: list,
+) -> Dict[str, Any]:
+    explicit_evidence = list(evidence_refs)
+    if not explicit_evidence:
+        raise InvalidTransition(
+            "acceptance requires an explicit evidence reference"
+        )
+
+    def accept_record(goal: Dict[str, Any]) -> None:
+        allowed = goal.get("acceptance", {}).get(
+            "allowed_authorities", []
+        )
+        if authority not in allowed:
+            raise InvalidTransition(
+                "authority is not allowed to accept this Goal"
+            )
+        if (
+            goal.get("execution", {}).get("status")
+            != "awaiting_acceptance"
+            or goal.get("quality", {}).get("status")
+            != "awaiting_acceptance"
+        ):
+            raise InvalidTransition(
+                "Goal must be awaiting acceptance"
+            )
+        goal["execution"]["status"] = "done"
+        goal["quality"]["status"] = "accepted"
+        goal["lease"] = None
+        goal.setdefault("evidence_refs", []).extend(explicit_evidence)
+        acceptance = goal.setdefault("acceptance", {})
+        acceptance.update(
+            {
+                "accepted_by": authority,
+                "accepted_at": _utc_now(),
+                "evidence_refs": explicit_evidence,
+            }
+        )
+        goal.setdefault("history_refs", []).append(
+            "operation://{0}".format(operation_id)
+        )
+        goal["last_transition"] = {
+            "operation_id": operation_id,
+            "reason": "accepted",
+            "authority": authority,
+        }
+
+    return _mutate_goal(
+        root,
+        goal_id,
+        expected_revision,
+        operation_id,
+        "accept_goal",
+        {
+            "authority": authority,
+            "evidence_refs": explicit_evidence,
+        },
+        accept_record,
+    )
+
+
+def reopen_goal(
+    root: Path,
+    goal_id: str,
+    expected_revision: str,
+    operation_id: str,
+    authority: str,
+    reopen: Dict[str, Any],
+) -> Dict[str, Any]:
+    patch = {"reopen": reopen}
+    _validate_reopen(patch)
+
+    def reopen_record(goal: Dict[str, Any]) -> None:
+        allowed = goal.get("acceptance", {}).get(
+            "allowed_authorities", []
+        )
+        if authority not in allowed:
+            raise InvalidTransition(
+                "authority is not allowed to reopen this Goal"
+            )
+        current_quality = goal.get("quality", {}).get("status")
+        _validate_transition(
+            QUALITY_TRANSITIONS,
+            current_quality,
+            "reopened",
+            "quality",
+        )
+        goal.setdefault("quality", {})["status"] = "reopened"
+        goal.setdefault("execution", {})["status"] = "todo"
+        goal["lease"] = None
+        goal.setdefault("reopen_history", []).append(
+            copy.deepcopy(reopen)
+        )
+        goal.setdefault("history_refs", []).append(
+            "operation://{0}".format(operation_id)
+        )
+        goal["last_transition"] = {
+            "operation_id": operation_id,
+            "reason": reopen["reason"],
+            "authority": authority,
+        }
+
+    return _mutate_goal(
+        root,
+        goal_id,
+        expected_revision,
+        operation_id,
+        "reopen_goal",
+        {"authority": authority, "reopen": reopen},
+        reopen_record,
     )
 
 
@@ -595,6 +844,11 @@ def release_goal(
         expected_revision,
         operation_id,
         "release_goal",
+        {
+            "lease_token_hash": hashlib.sha256(
+                str(lease_token).encode("utf-8")
+            ).hexdigest()
+        },
         release,
     )
 
@@ -825,6 +1079,14 @@ def migrate_v1(
         return report
     if not operation_id:
         raise ValueError("operation_id is required when apply=True")
+    initial = init_store(root)
+    if initial["snapshot"].get("goals"):
+        raise MigrationError(
+            "v1 migration requires an empty v2 Goal Store"
+        )
+    snapshot["metadata"]["migration"][
+        "previous_revision"
+    ] = initial["revision"]
     archive = root / source_snapshot_ref
     archive.parent.mkdir(parents=True, exist_ok=True)
     if archive.exists():
@@ -836,7 +1098,6 @@ def migrate_v1(
             )
     else:
         archive.write_bytes(source_bytes)
-    initial = init_store(root)
     result = write_revision(
         root,
         snapshot,
@@ -845,6 +1106,22 @@ def migrate_v1(
     )
     render_current(root, root / "docs" / "dev" / "需求池.md")
     return result
+
+
+def restore_revision(
+    root: Path,
+    target_revision: str,
+    expected_revision: str,
+    operation_id: str,
+) -> Dict[str, Any]:
+    store = _store_path(Path(root))
+    target = _read_revision(store, target_revision)
+    return write_revision(
+        root,
+        target,
+        expected_revision=expected_revision,
+        operation_id=operation_id,
+    )
 
 
 def _goal_sort_key(goal: Dict[str, Any]) -> tuple:
@@ -1032,6 +1309,30 @@ def build_parser() -> argparse.ArgumentParser:
     release_parser.add_argument("--operation-id", required=True)
     _require_apply(release_parser)
 
+    accept_parser = commands.add_parser("accept")
+    accept_parser.add_argument("--goal-id", required=True)
+    accept_parser.add_argument("--expected-revision", required=True)
+    accept_parser.add_argument("--operation-id", required=True)
+    accept_parser.add_argument("--authority", required=True)
+    accept_parser.add_argument("--evidence", action="append", required=True)
+    _require_apply(accept_parser)
+
+    restore_parser = commands.add_parser("restore")
+    restore_parser.add_argument("--target-revision", required=True)
+    restore_parser.add_argument("--expected-revision", required=True)
+    restore_parser.add_argument("--operation-id", required=True)
+    _require_apply(restore_parser)
+
+    reopen_parser = commands.add_parser("reopen")
+    reopen_parser.add_argument("--goal-id", required=True)
+    reopen_parser.add_argument("--expected-revision", required=True)
+    reopen_parser.add_argument("--operation-id", required=True)
+    reopen_parser.add_argument("--authority", required=True)
+    reopen_parser.add_argument("--reason", required=True)
+    reopen_parser.add_argument("--missing-test-reason", required=True)
+    reopen_parser.add_argument("--required-regression", required=True)
+    _require_apply(reopen_parser)
+
     return parser
 
 
@@ -1105,6 +1406,35 @@ def main(argv: Optional[list] = None) -> int:
             args.expected_revision,
             args.lease_token,
             args.operation_id,
+        )
+    elif args.command == "accept":
+        result = accept_goal(
+            root,
+            args.goal_id,
+            args.expected_revision,
+            args.operation_id,
+            args.authority,
+            args.evidence,
+        )
+    elif args.command == "restore":
+        result = restore_revision(
+            root,
+            args.target_revision,
+            args.expected_revision,
+            args.operation_id,
+        )
+    elif args.command == "reopen":
+        result = reopen_goal(
+            root,
+            args.goal_id,
+            args.expected_revision,
+            args.operation_id,
+            args.authority,
+            {
+                "reason": args.reason,
+                "missing_test_reason": args.missing_test_reason,
+                "required_regression": args.required_regression,
+            },
         )
     else:
         parser.error("unknown command")

@@ -1,5 +1,11 @@
 # ideal-agent-loop
 
+## 2.0.0
+
+### Major Changes
+
+- Add the profile-driven bounded Loop Kernel
+
 ## 1.2.0
 
 ### Minor Changes

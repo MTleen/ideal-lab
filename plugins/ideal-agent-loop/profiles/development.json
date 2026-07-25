@@ -1,0 +1,135 @@
+{
+  "schema": "ideal-agent-loop/profile-v1",
+  "id": "development",
+  "phases": [
+    {
+      "id": "requirement",
+      "planner": "declared",
+      "requires": [
+        "requirement-baseline"
+      ],
+      "gate": "requirement-approved",
+      "tasks": [
+        {
+          "id": "requirement-baseline",
+          "role": "execution",
+          "capability": "requirement-definition",
+          "depends_on": [],
+          "produces": [
+            "requirement-baseline"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implementation",
+      "planner": "dynamic",
+      "requires": [
+        "implementation-artifact",
+        "focused-test-evidence"
+      ],
+      "gate": "implementation-verified",
+      "tasks": [
+        {
+          "id": "implement",
+          "role": "execution",
+          "capability": "code-implementation",
+          "depends_on": [],
+          "produces": [
+            "implementation-artifact"
+          ]
+        },
+        {
+          "id": "validate",
+          "role": "validation",
+          "capability": "focused-validation",
+          "depends_on": [
+            "implement"
+          ],
+          "produces": [
+            "focused-test-evidence"
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "requirement-definition": {
+      "inputs": [
+        "goal-record",
+        "project-context"
+      ],
+      "outputs": [
+        "requirement-baseline"
+      ],
+      "permissions": [
+        "workspace-read",
+        "workspace-write"
+      ]
+    },
+    "code-implementation": {
+      "inputs": [
+        "task-assignment",
+        "project-context"
+      ],
+      "outputs": [
+        "implementation-artifact"
+      ],
+      "permissions": [
+        "workspace-read",
+        "workspace-write",
+        "process-exec"
+      ]
+    },
+    "focused-validation": {
+      "inputs": [
+        "task-assignment",
+        "implementation-artifact",
+        "criteria"
+      ],
+      "outputs": [
+        "focused-test-evidence"
+      ],
+      "permissions": [
+        "workspace-read",
+        "process-exec"
+      ]
+    }
+  },
+  "policies": {
+    "retry": {
+      "max_same_root_cause": 3
+    },
+    "review": {
+      "terminal_budget": 1,
+      "reuse_unchanged_candidate": true,
+      "validation_infrastructure_budget": 0
+    },
+    "permissions": {
+      "allowed": [
+        "workspace-read",
+        "workspace-write",
+        "process-exec"
+      ],
+      "external_side_effects": "human_only"
+    },
+    "acceptance": {
+      "allowed_authorities": [
+        "human",
+        "controller"
+      ]
+    }
+  },
+  "adapters": {
+    "workspace": "git-worktree-optional",
+    "integration_gate": "merge-gate"
+  },
+  "adapter_settings": {
+    "git-worktree-optional": {
+      "optional": true
+    },
+    "merge-gate": {
+      "phase": "implementation"
+    }
+  }
+}

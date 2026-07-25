@@ -14,7 +14,8 @@ Core logic:
 4. No active task -> allow stop.
 5. Active task found -> read state.json
    - All passed + no quality gate -> allow stop.
-   - All passed + quality gate not accepted -> block at awaiting_acceptance.
+   - All passed + quality gate not accepted -> record awaiting_acceptance and
+     release the execution slot.
    - Has blocked criteria -> allow stop (await user decision).
    - Exceeded max iterations -> allow stop.
    - Has un-passed criteria -> block stop; reason includes next criterion + summary.
@@ -133,22 +134,69 @@ def _quality_required(state: Dict[str, Any]) -> bool:
 
 
 def _quality_accepted(state: Dict[str, Any]) -> bool:
-    if _quality_status(state) == "accepted":
-        return True
+    quality_status = _quality_status(state)
+    if quality_status == "legacy_accepted":
+        return any(
+            str(reference).startswith("migration://")
+            for reference in state.get("history_refs", [])
+        )
+    if quality_status != "accepted":
+        return False
     acceptance = state.get("acceptance")
-    return isinstance(acceptance, dict) and bool(acceptance.get("accepted_at"))
+    return bool(
+        isinstance(acceptance, dict)
+        and acceptance.get("accepted_at")
+        and acceptance.get("accepted_by")
+        and (
+            acceptance.get("evidence")
+            or acceptance.get("evidence_refs")
+        )
+    )
 
 
 def _is_terminal(state: Dict[str, Any]) -> bool:
     if state.get("iteration", 0) >= state.get("max_iterations", 20):
         return True
-    if state.get("status") in ("failed", "blocked", "cancelled"):
+    if state.get("status") in (
+        "failed",
+        "blocked",
+        "waiting",
+        "human_gate",
+        "no_op",
+        "cancelled",
+        "awaiting_acceptance",
+    ):
         return True
     if state.get("status") == "completed":
         return (not _quality_required(state)) or _quality_accepted(state)
-    if state.get("status") == "awaiting_acceptance":
-        return _quality_accepted(state)
     return False
+
+
+def _cooperative_continuation_allowed(state: Dict[str, Any]) -> bool:
+    """Continue only while ready work exists and every budget permits it."""
+    status = state.get("status", "active")
+    if status in (
+        "blocked",
+        "waiting",
+        "human_gate",
+        "no_op",
+        "cancelled",
+        "awaiting_acceptance",
+        "completed",
+        "failed",
+    ):
+        return False
+    ready_work = any(
+        criterion.get("status") in ("pending", "in_progress", "failed")
+        for criterion in state.get("criteria", [])
+    )
+    budgets = state.get("budgets", {})
+    return bool(
+        ready_work
+        and budgets.get("retry_available", True)
+        and budgets.get("review_available", True)
+        and budgets.get("permission_available", True)
+    )
 
 
 def _find_active_or_corrupt_task(project_dir: Path) -> Tuple[Optional[Path], bool]:
@@ -340,7 +388,10 @@ def _build_fallback_reason(state: Dict[str, Any], next_criterion: Optional[Dict[
             lines.append(f"  Last failure: {_truncate(next_criterion['last_error'])}")
         lines.append("")
 
-    lines.append("Keep working on the above criterion. Do NOT stop until all criteria pass.")
+    lines.append(
+        "Continue with the ready criterion while retry, review, and permission "
+        "budgets remain available."
+    )
     return "\n".join(lines)
 
 
@@ -379,9 +430,19 @@ def process_hook(input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     criteria = state.get("criteria", [])
 
-    # All passed -> ordinary loops may stop; quality-gated loops wait for
-    # explicit user/controller acceptance (P1-7: requires at least one criterion).
-    if len(criteria) > 0 and all(c.get("status") in ("passed", "manual_accept") for c in criteria):
+    # All passed -> ordinary loops may stop; quality-gated loops record an
+    # explicit handoff and release the execution slot while awaiting authority.
+    work_completed = (
+        state.get("status") == "completed"
+        or (
+            len(criteria) > 0
+            and all(
+                c.get("status") in ("passed", "manual_accept")
+                for c in criteria
+            )
+        )
+    )
+    if work_completed:
         if _quality_required(state) and not _quality_accepted(state):
             state["status"] = "awaiting_acceptance"
             state["quality_required"] = True
@@ -394,10 +455,10 @@ def process_hook(input_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             _save_state_raw(state, state_path)
             block_hash = _compute_state_hash(state)
             _save_last_block_hash(state_path, block_hash)
-            return {
-                "decision": "block",
-                "reason": _build_acceptance_block_reason(state),
-            }
+            return None
+        return None
+
+    if not _cooperative_continuation_allowed(state):
         return None
 
     # Has blocked criteria -> allow stop (user must decide)

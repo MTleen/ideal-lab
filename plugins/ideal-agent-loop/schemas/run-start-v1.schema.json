@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ideal-agent-loop/run-start-v1",
+  "title": "Immutable Run Start v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "role",
+    "goal_revision",
+    "phase",
+    "task_id",
+    "assignment_hash",
+    "worker",
+    "started_at",
+    "finished_at",
+    "outcome",
+    "artifact_refs",
+    "evidence_refs",
+    "root_cause",
+    "candidate_hash",
+    "criteria_hash",
+    "input_hashes",
+    "validation_fingerprint",
+    "review_kind",
+    "authorized_outputs",
+    "lease_token_hash",
+    "validation_conclusion"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ideal-agent-loop/run-start-v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "execution",
+        "validation"
+      ]
+    },
+    "goal_revision": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "assignment_hash": {
+      "type": "string"
+    },
+    "worker": {
+      "type": "object",
+      "required": [
+        "capability",
+        "locator",
+        "version"
+      ],
+      "properties": {
+        "capability": {
+          "type": "string"
+        },
+        "locator": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "finished_at": {
+      "type": "null"
+    },
+    "outcome": {
+      "const": "running"
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "root_cause": {
+      "type": "null"
+    },
+    "candidate_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "criteria_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "input_hashes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "review_kind": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "authorized_outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lease_token_hash": {
+      "type": "string"
+    },
+    "validation_conclusion": {
+      "type": "null"
+    }
+  },
+  "additionalProperties": false
+}

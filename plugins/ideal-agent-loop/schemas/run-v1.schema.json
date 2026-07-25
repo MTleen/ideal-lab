@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ideal-agent-loop/run-v1",
+  "title": "Run Envelope v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "role",
+    "goal_revision",
+    "phase",
+    "task_id",
+    "assignment_hash",
+    "worker",
+    "started_at",
+    "outcome",
+    "artifact_refs",
+    "evidence_refs"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ideal-agent-loop/run-v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "execution",
+        "validation"
+      ]
+    },
+    "goal_revision": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "assignment_hash": {
+      "type": "string"
+    },
+    "worker": {
+      "type": "object",
+      "required": [
+        "capability",
+        "locator",
+        "version"
+      ]
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "finished_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "outcome": {
+      "enum": [
+        "running",
+        "completed",
+        "blocked",
+        "waiting",
+        "human_gate",
+        "no_op",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "artifact_refs": {
+      "type": "array"
+    },
+    "evidence_refs": {
+      "type": "array"
+    },
+    "root_cause": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "candidate_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "criteria_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "input_hashes": {
+      "type": "array"
+    },
+    "validation_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "review_kind": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "validation_conclusion": {
+      "enum": [
+        null,
+        "pass",
+        "fail"
+      ]
+    },
+    "authorized_outputs": {
+      "type": "array"
+    },
+    "lease_token_hash": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

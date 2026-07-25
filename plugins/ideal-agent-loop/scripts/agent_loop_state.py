@@ -14,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import random
@@ -354,6 +355,37 @@ def to_markdown_report(state: AgentLoopState) -> str:
 # ---------------------------------------------------------------------------
 # Contract helpers
 # ---------------------------------------------------------------------------
+
+def import_legacy_criteria(contract: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Project v1 criterion contracts into validation-owned evidence artifacts.
+
+    This compatibility adapter does not create a second Goal state.  It only
+    preserves criterion requirements as inputs to a v2 Stage Task Plan.
+    """
+    criteria = contract.get("criteria", [])
+    canonical = json.dumps(
+        criteria,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    required_artifacts = []
+    for criterion in criteria:
+        criterion_id = criterion.get("id")
+        required_artifacts.append({
+            "id": f"criterion-{criterion_id}-evidence",
+            "role": "validation",
+            "criterion_id": criterion_id,
+            "description": criterion.get("desc", ""),
+            "verify_type": criterion.get("verify_type", "llm_judgment"),
+            "command": criterion.get("command"),
+            "affected_files": list(criterion.get("affected_files", [])),
+        })
+    return {
+        "required_artifacts": required_artifacts,
+        "criteria_hash": "sha256:" + hashlib.sha256(canonical).hexdigest(),
+    }
 
 def load_contract(contract_path: Path) -> Dict[str, Any]:
     """Load a contract.json."""

@@ -1,719 +1,280 @@
 ---
 name: ideal-agent-loop
-description: Goal-driven Agent Loop（loop engineering 实现）。给定目标→规划最小闭环→持久迭代 plan/act/observe/validate/terminate 直到目标完成。支持单目标验证循环（inner loop）与需求池 goal 接力（outer loop，只读消费 ideal-backlog 维护的需求池）。
+description: "运行 profile-driven bounded Loop Kernel：从 ideal-backlog 绑定 Goal，派生 Stage Task Plan，经 Capability Registry 路由独立 Execution/Validation Run，并按预算 checkpoint、阻塞、等待、验收或 reopen。"
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
-> **agents**: 独立编排器 — 不隶属 ideal-dev-workflow，可调用任何 skill（包括 ideal-dev-workflow 的各 phase skill）完成工作。
+# ideal-agent-loop
 
-# ideal-agent-loop（Goal-driven Agent Loop）
+`ideal-agent-loop` is the domain-neutral control loop that consumes the v2
+Goal Store. **ideal-backlog is the only machine Goal source of truth.** This
+Skill may interpret Profiles and create Run artifacts, but it never edits a raw
+backlog revision or maintains a second Goal status.
 
-> **loop engineering 实现**：本 skill 是 [loop engineering](https://addyosmani.com/blog/loop-engineering) 的落地——把"递归目标（recursive goal）"工程化为持久迭代系统：给定目标 → 规划最小闭环 → plan/act/observe/validate → 满足终止条件（goal 完成 / 错误 / 预算耗尽）。区别于 prompt engineering（只管输入），它管整个反馈环。
+## Kernel boundary
 
-## 角色定位
+The public Kernel owns only these primitives:
 
-**目标驱动循环器** — 给定一个目标，拆解为最小闭环（task/criterion），持久迭代直到每个验收标准被满足、目标完成。
+- Goal Loop;
+- Stage / Task Loop;
+- Loop Profile;
+- Capability Registry;
+- Task Plan and Checkpoint;
+- Execution Run and Validation Run;
+- Gate, reopen, evidence reuse, and bounded stop decisions.
 
-两种循环粒度：
+Domain phases, Worker locators, workspace isolation, integration behavior, and
+acceptance authorities come from a Profile or adapter. A Skill is a Worker; it
+does not own transition authority.
 
-| 粒度 | 范围 | 机制 |
-|------|------|------|
-| **inner loop** | 单个 goal/任务 | CLARIFY 澄清目标生成合约 → LOOP 逐 criterion 最小闭环迭代验证（本 skill 核心） |
-| **outer loop** | 需求池 goal 接力 | 只读消费 `docs/dev/需求池.md`（由 `ideal-backlog` 构建）→ 按优先级+FIFO 出队 goal → inner loop 实现并验证 → 质量门禁 accepted 后出队下一个 |
+## Two-level loop
 
-职责：
-1. 澄清目标（输入、输出、验证、实施方式）→ 生成合约
-2. 规划最小闭环（goal 拆 task / criterion）
-3. 持久迭代，小步推进
-4. 验证每个标准，记录证据（不空承诺）
-5. 全部通过 + 全局审计 → 生成 verified 报告
-6. outer loop 模式下：只有质量态 accepted 后才接力需求池下一个 goal；verified/awaiting_acceptance 不能终止
+### Goal Loop
 
-**不负责**：
-- 替用户决定验收标准（只引导，不替代）
-- 在验收标准不通过时擅自标记通过
-- 跳过任何标准
-- 构建需求池（归 `ideal-backlog`；本 skill 只读消费）
+Each outer iteration:
 
----
+1. inspect the current Goal Store revision through the `ideal-backlog` CLI;
+2. apply the declared source binding;
+3. claim the selected Goal and retain its lease token;
+4. call one bounded Stage / Task Loop iteration;
+5. request one atomic backlog transition or release the lease.
 
-## 核心架构：两阶段执行
+Source binding:
 
-```
-CLARIFY（澄清）        LOOP（迭代循环）
-┌─────────────┐      ┌──────────────────┐
-│ 维度1: 输入  │      │ 读取 state.json   │
-│ 维度2: 输出  │ ──→  │ 找未通过标准      │
-│ 维度3: 验证  │ 确认  │ 执行最小步骤      │
-│ 维度4: 实施  │ 合约  │ 运行验证          │
-│              │      │ 更新 state.json   │
-│ 生成合约文件  │      │ iteration++       │
-└─────────────┘      └──────────────────┘
-```
+- `fixed` stays on the named Goal even if queue ordering changes;
+- `dynamic` selects dependency-satisfied work by priority, deadline, FIFO, then
+  stable ID.
 
----
+The Goal Loop re-reads before every mutation. A stale revision returns `reload`;
+it never overwrites the newer Goal.
 
-## Script Directory（硬约束层）
+### Stage / Task Loop
 
-本插件包含三个 Python 脚本，作为 SKILL.md 软约束的硬约束补充。脚本路径均相对于插件根目录 `plugins/ideal-agent-loop/`。
+Each inner iteration:
 
-| 脚本 | 路径 | 用途 |
-|------|------|------|
-| **agent_loop_state.py** | `scripts/agent_loop_state.py` | JSON 状态管理器。管理 `state.json` 和 `contract.json` 的读写、初始化、查询。 |
-| **agent_loop_stop_hook.py** | `scripts/agent_loop_stop_hook.py` | Claude Code Stop Hook。阻止停止时使用 continuation-template.md 生成结构化 prompt，引导 Agent 继续工作。模板不存在时回退到纯文本。 |
-| **agent_loop_verify.py** | `scripts/agent_loop_verify.py` | 验证执行器。根据 `verify_type` 执行 script / llm_judgment / hybrid 验证并更新状态。 |
+1. load the current phase from the Goal revision;
+2. derive or resume its immutable Task Plan;
+3. select exactly one dependency-satisfied task;
+4. resolve one verified Capability;
+5. create either one Execution Run or one Validation Run;
+6. checkpoint produced artifact or evidence references;
+7. evaluate the phase gate when all required tasks are complete.
 
-### Hook 注册方式
+The Task Plan is a revision-bound derived artifact. It carries no independent
+Goal execution or quality status.
 
-将 `agent_loop_stop_hook.py` 注册到项目的 `.claude/settings.json` 或全局 `~/.claude/settings.json` 中：
+## Loop Profile
 
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 /path/to/plugins/ideal-agent-loop/scripts/agent_loop_stop_hook.py"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+A Profile JSON declares:
 
-### 脚本共同约定
+- phases, required artifacts, tasks, and gates;
+- Capability input/output/permission requirements;
+- retry and review budget;
+- evidence reuse and invalidation policy;
+- permissions and acceptance authorities;
+- optional adapters.
 
-- 所有脚本使用 `#!/usr/bin/env python3`
-- 所有脚本支持 `--help` 参数
-- 状态文件路径使用 `.agent-loop/{task-name}/` 前缀
-- 使用 `pathlib.Path` 处理所有路径
-- 命令超时默认 120 秒
-- 输出截断默认 500 字符
+Use `profiles/development.json` for the included compatibility behavior. A
+second Profile without development adapters must still use exactly the same
+Kernel protocol. See
+[references/profile-contract.md](references/profile-contract.md).
 
-### mark-modified 子命令（agent_loop_state.py）
+## Capability Registry
 
-当 LOOP 中修改了文件，需要将受影响的已通过标准重置为 pending：
+Resolve a Worker only when all conditions hold:
+
+1. inputs exactly match the task requirement;
+2. outputs exactly match the task requirement;
+3. permissions are a subset of the Profile allowance;
+4. locator and version are explicit;
+5. the Capability record is verified.
+
+Sort equal candidates by Profile preference, then stable identity. If none
+match, return `blocked: capability_unavailable`; do not guess a nearby Skill.
+
+## Run authority
+
+Every Run binds:
+
+- Goal revision, phase, and task ID;
+- assignment hash;
+- Capability ID, locator, and version;
+- input/candidate/criteria hashes;
+- Goal lease digest, declared Task outputs, and validator/Profile policy
+  fingerprint;
+- start/finish time, outcome, artifacts, evidence, and root cause.
+
+### Execution Run
+
+An Execution Run may produce only the candidate artifacts declared by its
+Task. It cannot write validation evidence, a validation conclusion, or an
+accepted quality state.
+
+### Validation Run
+
+A Validation Run reads the candidate and produces evidence plus a `pass` or
+`fail` conclusion. It must not return modified candidate artifacts. The
+acceptance authority remains separate from both Run roles.
+
+Finished Runs are immutable. Additional information creates another record
+that references the prior Run.
+
+## Standard workflow
+
+### 1. Inspect and bind
 
 ```bash
-python3 scripts/agent_loop_state.py mark-modified \
-    --state .agent-loop/{task-name}/state.json \
-    --files src/auth/oauth.ts src/routes/auth.ts
+python3 plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --root "$PROJECT_ROOT" inspect --goal-id "$GOAL_ID"
 ```
 
-此命令会：
-1. 检查每个已通过（passed）标准的 `affected_files` 是否包含被修改的文件
-2. 匹配到的标准状态重置为 `pending`，`evidence` 清空
-3. 将修改的文件追加到 `modified_files` 列表
-4. 保存更新后的 state.json
+Use `--goal-id` for `fixed`; inspect the full store for `dynamic`.
 
----
+### 2. Claim
 
-## Phase 0: PREFLIGHT（前置检查）
+Claim through `ideal-backlog` with `--apply`, the expected revision, and a
+unique operation ID. Preserve the returned Goal revision and lease token.
 
-在开始 CLARIFY 之前，**必须**执行以下检查。如果检查不通过， Agent Loop LOOP 的铁律"不停止"无法执行。
+### 3. Plan one phase
 
-### Step 1: 检查 Stop Hook 注册
+Load the selected Profile, derive a revision-bound Task Plan, incorporate only
+provenance-checked artifact references, and select one ready task. When all
+required outputs are satisfied, emit an explicit `gate_passed` transition
+intent; do not disguise Gate completion as `no_op`. A non-final Gate emits
+one phase-advance intent. The final Gate emits the legal Goal Store transition
+sequence `implemented -> verified -> awaiting_acceptance`; apply each patch
+against the newly returned revision rather than collapsing the sequence.
 
-读取项目级 `.claude/settings.json`，检查 `hooks.Stop` 中是否包含 `agent_loop_stop_hook.py`：
+### 4. Route one task
+
+Query the Capability Registry using exact I/O and exact task permissions
+within the Profile permission ceiling. Missing or unverified capability is a
+structured block with an actionable release condition.
+
+### 5. Execute or validate one Run
+
+Do not combine execution and validation in one Run. Start the Run before
+dispatch and finish it with a legal terminal outcome:
+
+```text
+completed | blocked | waiting | human_gate | no_op | failed | cancelled
+```
+
+### 6. Checkpoint
+
+Create an immutable checkpoint referencing the Run and new artifact/evidence
+refs. Do not copy Goal status into the checkpoint.
+
+### 7. Transition, block, or release
+
+Request the transition through the backlog CLI with expected revision, lease
+token, operation ID, reason, and evidence refs. Never edit the Markdown mirror
+or a revision JSON directly.
+
+## Bounded continuation
+
+Continue only when all of these are true:
+
+- ready work exists;
+- the Goal is not `blocked`, `waiting`, `human_gate`, `no_op`, cancelled, or
+  awaiting acceptance;
+- retry budget remains;
+- review budget remains;
+- permission budget allows the assignment.
+
+`waiting`, `human_gate`, `no_op`, and `blocked` are legitimate outcomes and
+release the execution slot. Awaiting acceptance produces a handoff and also
+releases the slot.
+
+Three consecutive failures with the same root cause transition the Goal to
+`blocked`. A different phrasing of the same failure is not a strategy reset.
+
+## Evidence and review policy
+
+- terminal review budget defaults to one per substantive candidate;
+- if candidate, criteria, business input, resolved validator
+  ID/locator/version, and Profile/Gate policy fingerprints are unchanged, use
+  evidence reuse;
+- reviewer, ledger, formatting, or commit-metadata changes do not invalidate
+  business artifacts;
+- changed business inputs invalidate only downstream nodes in the artifact
+  dependency graph;
+- default validation-infrastructure budget is zero;
+- a finding may create one substantive repair assignment and focused
+  regression, never a review-of-review task.
+
+A passing command is evidence about that command, not automatic proof that the
+Goal is complete. Phase gates must inspect required artifacts and relevant
+outcomes.
+
+## Acceptance and reopen
+
+Only an authority allowed by the Goal/Profile may submit `accepted`, and it
+must attach explicit acceptance evidence. A runner cannot accept its own work.
+
+Counterevidence reopens the original Goal and records:
+
+- reason;
+- missing test reason;
+- required regression.
+
+Historical evidence remains queryable. Reopen invalidates only affected
+artifacts.
+
+## Compatibility adapters
+
+The development Profile may enable:
+
+- optional workspace isolation;
+- a phase-scoped integration gate;
+- legacy criterion import as validation-owned required evidence.
+
+These adapters are absent from Kernel defaults. See
+[references/worktree-goal-guide.md](references/worktree-goal-guide.md) and
+[references/merge-gate.md](references/merge-gate.md).
+
+The legacy `agent_loop_state.py`, `agent_loop_verify.py`, and cooperative Stop
+Hook remain compatibility surfaces. Their `.agent-loop/` files are artifacts,
+not Goal truth.
+
+## Kernel CLI
+
+One bounded assignment step:
 
 ```bash
-cat {project_root}/.claude/settings.json | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-hooks = data.get('hooks', {}).get('Stop', [])
-found = any('agent_loop_stop_hook' in h.get('command','') for group in hooks for h in group.get('hooks', []))
-print('registered' if found else 'not_registered')
-"
+python3 plugins/ideal-agent-loop/scripts/loop_kernel.py step \
+  --backlog-cli plugins/ideal-backlog/scripts/ideal_backlog.py \
+  --project-root "$PROJECT_ROOT" \
+  --profile plugins/ideal-agent-loop/profiles/development.json \
+  --capabilities "$CAPABILITY_REGISTRY" \
+  --source-binding fixed \
+  --goal-id "$GOAL_ID" \
+  --apply
 ```
 
-如果结果为 `not_registered` → 继续 Step 2。
-
-### Step 2: 添加 Hook 配置
-
-先检测插件安装路径：
-
-```bash
-find ~/.claude/plugins -name "agent_loop_stop_hook.py" -path "*/ideal-agent-loop/*" 2>/dev/null | head -1
-```
-
-然后向用户说明：
-
-> Agent Loop 需要 Stop Hook 来阻止 Agent 在验收标准未全部通过时停止。检测到项目级 `.claude/settings.json` 中未注册该 Hook，是否添加？
-
-用户确认后，读取现有 `{project_root}/.claude/settings.json`（不存在则创建空对象），合并以下配置（不覆盖已有的其他 hooks）：
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 {检测到的脚本绝对路径}"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-写入后通知用户配置已添加。
-
-### Step 3: 验证 Hook 可执行
-
-```bash
-echo '{"cwd":"{project_root}"}' | python3 {脚本路径}
-```
-
-应输出 `{"decision": "block", ...}` 或无输出（取决于是否有活跃 Agent Loop 任务），不应报错。
-
-验证通过后继续到 Phase 1: CLARIFY。
-
----
-
-## Phase 1: CLARIFY（苏格拉底式澄清）
-
-通过苏格拉底式询问，逐一明确 4 个维度。一次只问一个维度。
-
-### 维度顺序与内容
-
-| # | 维度 | 核心问题 | 典型追问 |
-|---|------|----------|----------|
-| 1 | **输入** | 任务的起点是什么？ | 已有哪些文件？需要什么上下文？数据源在哪里？ |
-| 2 | **输出** | 完成后应该产生什么？ | 具体文件路径？期望的行为？状态变化？ |
-| 3 | **验证方法** | 怎么判断输出是正确的？ | 有现成的测试命令？需要人工评审？客观+主观？ |
-| 4 | **实施方式** | 通过什么途径实现？ | 直接写代码？迭代某个 skill？写文档？混合？ |
-
-### 提问策略
-
-```
-每个维度的提问流程：
-
-1. 开放式引导
-   "让我们先确认一下输入。这个任务的起点是什么？"
-   "你手边已经有哪些文件或上下文？"
-
-2. 追问细节（苏格拉底式）
-   "你提到了 xxx 文件，这个文件在哪个路径？"
-   "除了 xxx，还有其他依赖吗？"
-   "能给我一个具体的例子吗？"
-
-3. 提供选项辅助（当用户不确定时）
-   "验证方法通常有三种：
-    A) 固定脚本验证 — 你提供 test/lint/build 命令
-    B) LLM 自主判断 — 我根据标准逐条评估
-    C) 混合验证 — 脚本做客观检查 + 我做主观判断
-    你倾向哪种？"
-```
-
-### 用户快捷命令（随时可用）
-
-| 命令 | 作用 |
-|------|------|
-| **够了 / 确认** | 跳到下一维度（当前维度按已有信息填充） |
-| **直接开干** | 停止追问剩余维度，使用推断值填充，但仍需确认合约 |
-| **修改 XX** | 回到某维度重新确认 |
-| **取消** | 终止流程 |
-
-### "直接开干"安全性
-
-使用"直接开干"时：
-- 停止追问剩余维度，使用推断值填充
-- 未澄清的维度使用默认值填充，但在合约中标记为 **"推断值（未确认）"**
-- 进入 LOOP 前，**仍需用户确认合约**
-- 合约确认环节会展示所有推断值，让用户有机会修正
-
-### 默认值（用户跳过时使用，均标记为推断值）
-
-| 维度 | 默认值 |
-|------|--------|
-| 输入 | 当前目录下的已有文件 |
-| 输出 | 根据任务描述推断 |
-| 验证方法 | llm_judgment（LLM 自主判断） |
-| 实施方式 | 直接写代码 |
-
-### 合约生成
-
-四个维度澄清完成后：
-
-1. 生成合约文件：
-   - `.agent-loop/{task-name}/contract.json`（机器可读，事实源）
-   - `.agent-loop/{task-name}/contract.md`（人类可读，从 JSON 渲染）
-2. 完整展示合约内容给用户
-3. 等待用户确认：
-   - "确认 / ok" -> 更新 contract.json 中 meta.phase 为 "loop"，进入 LOOP 阶段
-   - "修改 XX" -> 返回对应维度重新确认
-   - "取消" -> 终止
-
----
-
-## Phase 2: LOOP（持久迭代循环）
-
-用户确认合约后进入循环。**循环不会自行停止**，直到所有验收标准通过或触发终止条件。
-
-### 单次迭代流程
-
-```
-Iteration N:
-
-  Step 1: 读取状态
-    ├─ 读取 .agent-loop/{task-name}/state.json
-    ├─ 检查是否有已通过标准因文件修改需重新验证
-    └─ 找到第一个状态不为 passed/manual_accept 的验收标准
-
-  Step 2: 确定最小步骤
-    ├─ 分析当前标准需要什么变更
-    └─ 确定最小操作单元（文件级 / 函数级 / 配置级）
-
-  Step 3: 执行步骤
-    ├─ 直接写代码（简单任务）
-    ├─ 调用 ideal-dev-workflow 的 skill（复杂编码任务）
-    ├─ 调用 ideal-deep-research（调研任务）
-    ├─ 调用其他 skill（文档编写等）
-    └─ 混合方式
-
-  Step 4: 运行验证
-    ├─ IDENTIFY — 确定验证方式（script / llm_judgment / hybrid）
-    ├─ EXECUTE — 执行验证（可调用 agent_loop_verify.py）
-    ├─ READ — 读取验证结果
-    └─ JUDGE — 判定通过/失败
-
-  Step 5: 更新状态
-    ├─ 更新 state.json 中的标准状态
-    ├─ 记录证据 / 错误
-    ├─ 同步生成 state.md（从 JSON 渲染的人类可读版）
-    └─ iteration++
-
-  Step 6: 检查终止条件
-    ├─ 所有标准通过 -> 执行全局审计（Step 6.1）
-    │   ├─ 审计通过 -> 生成 report.md，结束
-    │   └─ 审计发现遗漏 -> 追加新标准到 state.json，回到 Step 1
-    ├─ 超过最大迭代次数 -> 报告进度，等用户决策
-    ├─ 连续 3 次同标准失败 -> 报告卡点，等用户决策
-    └─ 否则 -> 回到 Step 1
-```
-
-### 全局审计（Step 6.1）
-
-所有单项验收标准通过后、生成 report.md 之前，必须执行全局审计。详细指南见 `references/global-audit-guide.md`。
-
-```
-全局审计流程：
-
-1. 重述目标 — 从 contract.json 读取 description，拆解为具体交付物
-2. 构建清单 — 每个交付物对应一行：预期 → 实际证据 → 是否覆盖
-3. 检查证据 — 读取实际文件/运行测试/检查命令输出（禁止依赖记忆）
-4. 识别遗漏 — 缺失、部分完成、仅靠代理信号验证的都算遗漏
-5. 决策：
-   ├─ 无遗漏 → 生成 report.md
-   └─ 有遗漏 → 为每个遗漏创建新标准（source: "global_audit"），回到 LOOP
-```
-
-**约束**：
-- 全局审计最多执行 1 轮。追加新标准后不再执行第二次全局审计。
-- 新追加的标准使用 `llm_judgment` 验证方式，`affected_files` 为空。
-```
-
-### 重新验证机制
-
-当修改已通过标准关联的文件时，该标准状态重置为 `pending`：
-
-- 每个 `CriterionState` 有 `affected_files` 字段，记录该标准涉及的文件
-- 当 LOOP 中修改了某个文件时，检查哪些已通过标准的 `affected_files` 包含该文件
-- 匹配到的标准状态重置为 `pending`，`evidence` 清空
-- 下次迭代时会重新验证这些标准
-
-### 验证流程详解
-
-#### 固定脚本验证（script）
-
-```
-IDENTIFY: 标准 #N 的验证方式为 script: `{命令}`
-EXECUTE:  运行 `{命令}`，捕获 stdout/stderr/exit code
-READ:     读取命令输出
-JUDGE:    exit code == 0 -> 通过；否则 -> 失败（附带输出）
-```
-
-#### LLM 自主判断（llm_judgment）
-
-```
-IDENTIFY: 标准 #N 的验证方式为 llm_judgment
-EXECUTE:  列出该标准的具体要求
-READ:     检查相关文件/代码
-JUDGE:
-  1. 逐条对照标准要求
-  2. 满足 -> 记录证据（引用具体内容）
-  3. 不满足 -> 记录差距（缺少什么）
-  4. 全部满足 -> 通过；有任何不满足 -> 不通过
-```
-
-#### 混合验证（hybrid）
-
-```
-IDENTIFY: 标准 #N 的验证方式为 hybrid
-EXECUTE:
-  1. 先运行脚本部分（客观检查）
-  2. 脚本通过后，执行 LLM 判断（主观检查）
-READ:     读取两部分结果
-JUDGE:    两部分都通过 -> 通过；任一失败 -> 失败
-```
-
----
-
-## 场景：需求池 goal 循环（outer loop）
-
-当目标来自需求池（由 `ideal-backlog` 构建），agent-loop 进入 outer loop 模式。本 skill **只读消费**需求池，不构建。
-
-**需求池路径**：与 ideal-backlog 遵循同一解析规则——先读项目 `AGENTS.md` 的 `需求池路径：X` 声明，否则默认 `docs/dev/需求池.md`。
-
-**loop 配置**（**项目级**，每项目一份，不读全局）：outer loop 的执行环境（worktree 策略、合并 gate）由 loop 配置控制，解析规则同需求池路径——先读 `AGENTS.md` 的 `loop 配置：X` 声明，否则默认 `.ideal/loop.yaml`，文件不存在则用全默认（`worktree: per-goal`、`merge_gate: confirm`、`base_branch: main`、`branch_prefix: feature`、`worktree_root: worktrees`）。字段、取值与声明示例详见 `references/loop-config.md`。
-
-```
-loop（outer，跨 goal 接力）:
-  0. 读 loop 配置（AGENTS.md 声明 → .ideal/loop.yaml → 默认值）
-  1. 按路径解析读需求池.md → 按优先级降序 + 同级 FIFO 取第一个 status=todo 的 goal（尊重 blockedBy 依赖）
-     没有 todo goal → 结束（池空）
-  2. 标该 goal status=doing
-  3. 若 worktree=per-goal：建 goal worktree + cd 进去
-     分支 = {branch_prefix}/REQ-{NNN}-{slug}，从 {base_branch} 拉
-     详见 references/worktree-goal-guide.md
-     （worktree=off 时跳过，直接在当前分支跑）
-  4. 规划最小闭环（goal 级）：
-     ├─ ideal-requirement 澄清 → 需求.md
-     └─ 方案 → 计划 → task-boundary-matrix（每个 task：In Scope / Out Scope / 前置依赖 / RED-GREEN 验收 / 验证命令）
-  5. loop（inner over tasks，在 goal worktree 内）:
-     ├─ 取下一个未 passed 的 task
-     ├─ 委托 ideal-dev-workflow 跑该 task 的完整闭环（flow-control 检测已在 worktree → 复用 goal worktree，task 级只 commit 不另建 worktree）
-     ├─ verification gate 通过 → task passed → 下一个 task
-     └─ 同一 gate 连续 3 次失败 → task blocked → goal blocked → 停 outer loop，报告
-  6. goal 全 task passed + 全局审计通过 → 自动验证通过，写入 quality.status=verified / awaiting_acceptance
-     ├─ Product-Core E2E、对抗性审查、用户/控制者验收均通过 → quality.status=accepted
-     ├─ 审查 / E2E / 用户反馈失败 → reopen 原 goal，记录 missingTestReason + requiredRegression，回 step 4/5
-     └─ 未 accepted 时不得终止，不得出队下一个 goal
-  7. quality.status=accepted → 按 merge_gate 合并 {base_branch}
-     ├─ auto: ff 合并 + 推送 + 清理（全自动接力）
-     ├─ confirm: 暂停展示 report/trace/真机证据 → 用户确认后合并（默认）
-     └─ pr: 委托 ideal-delivery 走 gh pr create → 等合并 → 清理
-     详见 references/merge-gate.md
-  8. 清理 goal worktree + 删分支 → goal status=done 且 quality.status=accepted → 回 step 1（出队下一个，从更新后的 base_branch 拉）
-```
-
-**质量终止条件**：需求池 goal 不能只因实现提交或自动验证通过而终止。只有 `quality.status=accepted` 才是真正完成；`verified` / `awaiting_acceptance` 是等待验收态，后续 bug、审查失败或 E2E 失败必须把原需求转为 `reopened`，并记录为什么之前没测出来、必须补哪条 regression。
-
-**终止条件**：需求池空 / goal blocked（连续 3 次 verification 失败）/ goal awaiting_acceptance（等待用户或控制者验收）/ 用户停止 / `merge_gate: confirm` 或 `pr` 时等用户合并决策（gate 设计的暂停点，非异常停止）。
-
-**与 inner loop 的关系**：outer loop 的 step 4 内部，每个 task 的 ideal-dev-workflow 闭环本身就是一次完整的 inner loop（P1-P15）。一个 goal 触发**多次** dev-workflow 调用（每 task 一次），不是一次。
-
-**需求池格式**：由 `ideal-backlog` 定义并维护（goal 条目含 ID/标题/优先级/创建时间/执行态/质量态/验收标准）。本 skill 读取并更新执行态（todo→doing→done/blocked）和质量态（unverified→verified/awaiting_acceptance→accepted 或 reopened）。旧 `done` 条目可兼容读取为 legacy accepted，但新 goal 必须按质量态收口。
-
----
-
-## 铁律（IRON LAW）
-
-| # | 铁律 | 说明 |
-|---|------|------|
-| 1 | **不停止** | 所有验收标准通过前不允许停止。不输出"完成"或"看起来好了"。 |
-| 2 | **不减范围** | 合约中的标准一个不能少。不能因为"太难了"就删标准。 |
-| 3 | **不空承诺** | 每个"通过"必须有新鲜证据。禁止"应该可以了"、"理论上没问题"。必须展示具体证据。 |
-| 4 | **小步前进** | 每次只做最小可验证步骤。不要一次改 5 个文件然后才验证。 |
-| 5 | **卡点上报** | 连续 3 次同标准失败 -> 暂停，报告卡点，等用户决策。不要无限重试。 |
-| 6 | **不代理** | 禁止用代理信号替代需求完成验证。"测试通过"≠"需求完成"。必须从目标出发逐项核实。全局审计是最后一道防线。 |
-
----
-
-## 任务目录结构
-
-以任务名隔离，所有状态文件放在 `.agent-loop/` 目录下：
-
-```
-.agent-loop/
-├── {task-name-1}/
-│   ├── contract.json       # 任务合约 - 机器可读（事实源）
-│   ├── contract.md         # 任务合约 - 人类可读（从 JSON 渲染）
-│   ├── state.json          # 迭代状态 - 机器可读（事实源）
-│   ├── state.md            # 迭代状态 - 人类可读（从 JSON 渲染）
-│   └── report.md           # 完成报告（全部通过后生成）
-├── {task-name-2}/
-│   ├── contract.json
-│   ├── contract.md
-│   ├── state.json
-│   ├── state.md
-│   └── ...
-```
-
-**命名规则**：`task-name` 使用小写英文 + 短横线，从用户任务描述中提取关键词。例如 `add-auth-module`、`fix-login-bug`、`refactor-api-layer`。
-
-**双格式策略**：
-- `.json` 文件是事实源，所有工具脚本读写 JSON
-- `.md` 文件是人类可读渲染版，从 JSON 生成，仅供阅读
-- 当两者不一致时，以 `.json` 为准
-
----
-
-## 合约文件格式 (contract.json)
-
-```json
-{
-  "description": "用户的原始任务描述",
-  "input": [
-    { "desc": "src/auth/login.ts（当前登录模块）", "inferred": false },
-    { "desc": "当前目录下的已有文件", "inferred": true }
-  ],
-  "output": [
-    { "path": "src/auth/oauth.ts", "type": "新建", "desc": "OAuth2.0 核心逻辑" }
-  ],
-  "criteria": [
-    {
-      "id": 1,
-      "desc": "OAuth 模块可正常导入，无语法错误",
-      "verify_type": "script",
-      "command": "npx tsc --noEmit src/auth/oauth.ts"
-    },
-    {
-      "id": 2,
-      "desc": "GitHub OAuth 登录流程完整",
-      "verify_type": "llm_judgment",
-      "command": null,
-      "affected_files": ["src/auth/oauth.ts", "src/routes/auth.ts"]
-    }
-  ],
-  "implementation": {
-    "method": "写代码",
-    "step": "small"
-  },
-  "constraints": {
-    "max_iterations": 20
-  },
-  "meta": {
-    "phase": "clarify",
-    "created_at": "2026-04-26 14:30"
-  }
-}
-```
-
-### 字段说明
-
-| 字段 | 说明 |
-|------|------|
-| `description` | 用户原始任务描述（不改写） |
-| `input[].desc` | 输入项描述 |
-| `input[].inferred` | 是否为推断值（未确认）。"直接开干"时跳过的维度标记为 true |
-| `output[].path` | 交付物文件路径 |
-| `output[].type` | `新建` 或 `修改` |
-| `criteria[].id` | 标准序号 |
-| `criteria[].desc` | 标准描述（必须可判定通过/不通过） |
-| `criteria[].verify_type` | `script` / `llm_judgment` / `hybrid` |
-| `criteria[].command` | script/hybrid 时的验证命令 |
-| `criteria[].affected_files` | 该标准涉及的文件列表（用于重新验证机制） |
-| `implementation.method` | 实施方式 |
-| `constraints.max_iterations` | 最大迭代次数（默认 20） |
-| `meta.phase` | `clarify` -> `loop`（用户确认后更新） |
-
-详细字段说明见 `references/contract-template.md`。
-
----
-
-## 状态文件格式 (state.json)
-
-```json
-{
-  "task": "add-oauth",
-  "iteration": 3,
-  "max_iterations": 20,
-  "started_at": "2026-04-26T14:30:00",
-  "status": "active",
-  "criteria": [
-    {
-      "id": 1,
-      "desc": "OAuth 模块可正常导入",
-      "verify_type": "script",
-      "command": "npx tsc --noEmit src/auth/oauth.ts",
-      "status": "passed",
-      "attempts": 2,
-      "last_error": null,
-      "evidence": "Command exited with code 0",
-      "updated_at": "2026-04-26T14:35:00",
-      "affected_files": ["src/auth/oauth.ts"]
-    },
-    {
-      "id": 2,
-      "desc": "GitHub OAuth 登录流程完整",
-      "verify_type": "llm_judgment",
-      "command": null,
-      "status": "pending",
-      "attempts": 0,
-      "last_error": null,
-      "evidence": null,
-      "updated_at": null,
-      "affected_files": ["src/auth/oauth.ts", "src/routes/auth.ts"]
-    }
-  ],
-  "modified_files": ["src/auth/oauth.ts"]
-}
-```
-
-### 状态枚举
-
-| 值 | 含义 |
-|----|------|
-| `pending` | 未开始验证 |
-| `in_progress` | 正在验证 |
-| `passed` | 验证通过（附带证据） |
-| `failed` | 验证失败（附带差距） |
-| `blocked` | 卡点（连续 3 次失败，等用户决策） |
-| `manual_accept` | 人工验收通过（用户选择标记） |
-
-### 增强字段
-
-| 字段 | 说明 |
-|------|------|
-| `attempts` | 该标准的验证尝试次数 |
-| `last_error` | 最后一次失败原因 |
-| `evidence` | 通过证据（必须引用具体文件/内容） |
-| `updated_at` | 最后更新时间（ISO 格式） |
-| `affected_files` | 该标准涉及的文件列表（用于重新验证机制） |
-
----
-
-## LLM 判断验证协议
-
-当验证方式为 `llm_judgment` 时，严格按以下协议执行：
-
-```
-1. 列出该标准的具体要求（从合约中提取）
-2. 检查相关文件/代码
-3. 逐条对照：
-   - 满足 -> 记录证据（引用文件路径 + 具体内容/行号）
-   - 不满足 -> 记录差距（描述缺少什么）
-4. 综合判定：
-   - 全部满足 -> 通过，记录每条证据
-   - 有任何不满足 -> 不通过，列出所有差距
-```
-
-**证据要求**：
-- 必须引用具体文件路径
-- 必须引用具体内容（不能只说"已检查"）
-- 禁止模糊描述（"看起来对"、"应该可以"）
-
----
-
-## 终止条件
-
-| 条件 | 处理 |
-|------|------|
-| 所有标准通过 | 生成 `report.md`，展示完成报告 |
-| 迭代超过上限（默认 20） | 报告当前进度和未完成标准，等用户决策 |
-| 连续 3 次同标准失败 | 标记为 `blocked`，报告卡点原因，等用户决策 |
-| 用户取消 | 清理状态（可选保留 contract.json 供参考） |
-
-### 用户决策选项（卡点时）
-
-```
-卡点报告：
-  标准 #N 已连续 3 次验证失败。
-  失败原因：{具体差距}
-
-  请选择后续处理方式：
-    1. [调整标准] — 修改该标准的验证方式或内容
-    2. [手动修复] — 你自己修复后让我重新验证
-    3. [标记为人工验收] — 标记为 "manual_accept"（在最终报告中区分）
-    4. [终止任务] — 生成当前进度报告并结束
-```
-
-**注意**：选项 3 "标记为人工验收" 不等于"跳过标准"。该标准在最终报告中被明确标记为"人工验收通过"，而非"Agent Loop 验证通过"。
-
----
-
-## 完成报告格式 (report.md)
-
-```markdown
-# Agent Loop 完成报告
-
-## 任务
-{任务描述}
-
-## 执行统计
-- 总迭代：{N}
-- 验收结果：{Agent Loop通过数} Agent Loop 通过 / {人工验收数} 人工验收 / 0 失败
-- 耗时：从 {开始时间} 到 {结束时间}
-
-## 验收结果
-| # | 标准 | 验证方式 | 结果 | 证据 |
-|---|------|----------|------|------|
-| 1 | {标准描述} | script | Agent Loop 通过 | {命令输出摘要} |
-| 2 | {标准描述} | llm_judgment | Agent Loop 通过 | {证据摘要} |
-| 3 | {标准描述} | llm_judgment | 人工验收 | 用户确认 |
-
-## 变更文件
-- {文件路径} — {新建/修改} — {简要说明}
-- ...
-
-## 迭代历程
-- 总共 {N} 次迭代
-- 无卡点 / 卡点在第 {X} 次迭代（已解决）
-```
-
----
-
-## 与其他 skill 的关系
-
-ideal-agent-loop 是上层目标驱动编排器（loop engineering），可委托执行：
-
-| 场景 | 委托目标 | 说明 |
-|------|----------|------|
-| task 最小闭环（编码） | `ideal-dev-workflow` | 一个 task 的完整闭环：需求→方案→计划→测试→实现→验证→调试→提交。outer loop 下每 task 调一次 |
-| 需求池构建/入队 | `ideal-backlog` | 维护需求池.md；本 skill 只读消费，不构建 |
-| 调研任务 | `ideal-deep-research` | 技术调研、竞品分析 |
-| 文档编写 | 直接写 / `ideal-wiki` | 根据复杂度选择 |
-| 简单任务 | 直接写代码 | 不需要调度其他 skill |
-
-**调用方式**：inner loop 的 LOOP Step 3 根据合约实施方式委托；outer loop 的 step 4 对每个 task 委托 ideal-dev-workflow 跑完整闭环。
-
----
-
-## 参考文件
-
-| 文件 | 用途 |
-|------|------|
-| `references/contract-template.md` | 合约完整模板 + 字段填写说明 |
-| `references/verification-guide.md` | 三种验证方式的详细指南 |
-| `references/continuation-template.md` | Stop Hook continuation prompt 模板 |
-| `references/global-audit-guide.md` | 全局审计详细指南 |
-| `references/loop-config.md` | loop 配置（loop.yaml）字段、解析规则与 AGENTS.md 声明范式 |
-| `references/worktree-goal-guide.md` | goal 级 worktree 协议（复用 ideal-flow-control 规范） |
-| `references/merge-gate.md` | auto / confirm / pr 三种合并 gate 的执行步骤 |
-| `../../scripts/agent_loop_state.py` | JSON 状态管理器（硬约束） |
-| `../../scripts/agent_loop_stop_hook.py` | Stop Hook 脚本（硬约束） |
-| `../../scripts/agent_loop_verify.py` | 验证执行器（硬约束） |
-
----
-
-## 质量检查清单
-
-### PREFLIGHT 阶段
-- [ ] 检查了项目级 `.claude/settings.json` 的 Stop Hook 注册
-- [ ] 如未注册，已向用户确认并添加
-- [ ] Hook 脚本可执行性已验证
-
-### CLARIFY 阶段
-- [ ] 4 个维度逐一确认（输入、输出、验证、实施）
-- [ ] 合约文件已写入 `.agent-loop/{task-name}/contract.json` + `.agent-loop/{task-name}/contract.md`
-- [ ] 未确认的维度标记为 `inferred: true`
-- [ ] 合约内容已完整展示给用户
-- [ ] 用户已确认合约
-
-### LOOP 阶段
-- [ ] 状态文件已写入 `.agent-loop/{task-name}/state.json` + `.agent-loop/{task-name}/state.md`
-- [ ] 每次迭代只做一个最小可验证步骤
-- [ ] 每个标准通过时有新鲜证据（非空承诺）
-- [ ] 修改已通过标准相关文件时，标准状态重置为 pending
-- [ ] 连续 3 次同标准失败已上报
-- [ ] 所有标准通过后执行了全局审计（非代理信号）
-- [ ] 全局审计通过后生成了 `report.md`
-- [ ] 合约中的标准一个不少
+The command reads backlog state only through its CLI contract and emits at most
+one assignment.
+
+## Completion evidence
+
+Report separately:
+
+- implemented: candidate artifacts and concrete changes;
+- verified: Execution/Validation Run IDs, hashes, checkpoints, tests, gates;
+- accepted: authority and evidence reference;
+- released/published: version, remote revision, and loaded version when
+  applicable.
+
+Do not collapse ordinary tests, final acceptance, release, or runtime loading
+into one success claim.
+
+## References
+
+- [contract-template.md](references/contract-template.md)
+- [verification-guide.md](references/verification-guide.md)
+- [continuation-template.md](references/continuation-template.md)
+- [profile-contract.md](references/profile-contract.md)
+- [global-audit-guide.md](references/global-audit-guide.md)
+- [worktree-goal-guide.md](references/worktree-goal-guide.md)
+- [merge-gate.md](references/merge-gate.md)
+- [loop-config.md](references/loop-config.md)

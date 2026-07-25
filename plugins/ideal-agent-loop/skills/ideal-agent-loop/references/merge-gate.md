@@ -1,6 +1,12 @@
 # 合并 Gate（merge_gate）
 
-goal 全 task passed + 全局审计通过后，只能进入 `verified` / `awaiting_acceptance`。必须完成 Product-Core E2E、对抗性审查和用户/控制者验收并写入 `quality.status=accepted` 后，才按 loop 配置的 `merge_gate` 合并主分支。三种 gate。配置解析见 `loop-config.md`。
+Merge gate 是 development Profile 的 integration adapter，不是 Kernel
+默认行为。它只在 `adapter_settings.merge-gate.phase` 指定的 phase integration
+gate 运行；其他 phase 和未声明该 adapter 的 Profile 不执行合并逻辑。
+
+goal 的 required tasks 和独立 Validation Run 通过后，只能进入 `verified` /
+`awaiting_acceptance`。获得允许的 acceptance authority 并写入证据后，才按
+配置的 merge gate 合并。配置解析见 `loop-config.md`。
 
 ## `auto`（全自动接力）
 
